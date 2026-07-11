@@ -22,3 +22,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Local working assets — source files kept beside the project, not part of the
+# deployed site. Videos are hosted externally (YouTube), so no .mp4 in the repo.
+/Work1/
+/Project 2/
+/Downloads/
+*.mp4

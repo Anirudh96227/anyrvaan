@@ -1,18 +1,45 @@
 ---
+import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import PageHeader from '../components/PageHeader.astro';
+import EntryCard from '../components/EntryCard.astro';
+import Footer from '../components/Footer.astro';
+
+const projects = (await getCollection('work', ({ data }) => !data.draft)).sort(
+	(a, b) => Number(b.data.year) - Number(a.data.year)
+);
 ---
 
-<Layout title="Work — Anyrvaan">
+<Layout
+	title="Work — Anyrvaan"
+	description="Case studies from the studio's practice across design, technology, and experience."
+>
 	<div class="min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
 			<PageHeader
 				eyebrow="Selected Work"
 				title="Work"
-				intro="Case studies told as stories — context, thinking, exploration, iterations, lessons, outcome. Selected projects will live here."
+				intro="Case studies told as stories — context, thinking, exploration, iterations, lessons, outcome. A small set, shown in full, over a long list shown thin."
 			/>
+			<section class="mx-auto max-w-4xl px-6 pb-32">
+				<div class="flex flex-col gap-6">
+					{
+						projects.map((p) => (
+							<EntryCard
+								href={`/work/${p.id}/`}
+								eyebrow="Case Study"
+								title={p.data.title}
+								description={p.data.summary}
+								meta={p.data.year}
+								tags={p.data.tags}
+							/>
+						))
+					}
+				</div>
+			</section>
 		</main>
+		<Footer />
 	</div>
 </Layout>

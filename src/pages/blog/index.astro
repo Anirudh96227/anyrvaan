@@ -1,0 +1,48 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import EntryCard from '../../components/EntryCard.astro';
+import Footer from '../../components/Footer.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const formatDate = (d: Date) =>
+	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+---
+
+<Layout title="Journal — Anyrvaan" description="Field notes on design, technology, and process.">
+	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Notes & Writing"
+				title="Journal"
+				intro="Field notes on design, technology, and process — the thinking behind the work, written as it happens."
+			/>
+			<section class="mx-auto max-w-4xl px-6 pb-32">
+				<div class="flex flex-col gap-6">
+					{
+						posts.map((post) => (
+							<EntryCard
+								href={`/blog/${post.id}/`}
+								eyebrow={post.data.tags[0] ? capitalize(post.data.tags[0]) : 'Journal'}
+								title={post.data.title}
+								description={post.data.description}
+								meta={formatDate(post.data.date)}
+								tags={post.data.tags.slice(1).map((t) => `#${t}`)}
+								ambient
+							/>
+						))
+					}
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>

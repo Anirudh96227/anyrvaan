@@ -2,17 +2,181 @@
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import PageHeader from '../components/PageHeader.astro';
+import Footer from '../components/Footer.astro';
+
+const pillars = [
+	{
+		title: 'Design',
+		body: 'Interfaces, systems, and identities built on restraint — where every decision has to earn its place before it ships.',
+	},
+	{
+		title: 'Technology',
+		body: 'Performance and craft under the hood: fast, resilient, built to disappear so the work can be felt rather than noticed.',
+	},
+	{
+		title: 'Experience',
+		body: 'Motion, sound, and interaction treated as material — used sparingly, and only when it clarifies something a static screen can’t.',
+	},
+];
+
+// Derived from the tags on the studio's own case studies — concrete
+// offerings, not aspirational ones.
+const services = [
+	{
+		title: 'Web & Product Design',
+		body: 'Websites and interfaces built with the same care as the brand behind them — design systems, front-end engineering, performance as a design decision.',
+		tags: ['Web Design', 'Design Systems', 'Front-end Engineering'],
+	},
+	{
+		title: 'Motion & Data Design',
+		body: 'Turning dense or dry information into something legible at a glance — motion graphics, dashboards, explainer pieces built in code.',
+		tags: ['Motion Design', 'Data Visualization', 'Remotion'],
+	},
+	{
+		title: 'Film & Creative Direction',
+		body: 'Short-form film and conceptual direction — locked-camera studies, mood pieces, work built around one real idea instead of a checklist of trends.',
+		tags: ['Film', 'Creative Direction', 'Sound'],
+	},
+];
+
+const steps = [
+	{
+		number: '01',
+		title: 'Listen',
+		body: 'Understand the problem, the constraints, and the people living with them before touching a tool.',
+	},
+	{
+		number: '02',
+		title: 'Shape',
+		body: 'Sketch and prototype in the open. Explore wide, then cut hard — most directions are discarded on purpose.',
+	},
+	{
+		number: '03',
+		title: 'Build',
+		body: 'Engineer with the same care the design demanded. Performance and accessibility are not a later pass.',
+	},
+	{
+		number: '04',
+		title: 'Refine',
+		body: 'Sit with the work. Remove anything that doesn’t earn its place, then remove a little more.',
+	},
+];
+
+const principles = [
+	'Nothing moves without intention.',
+	'Stillness is a decision, not an absence.',
+	'Craft lives in what’s left out.',
+	'Detail is not decoration — it’s evidence of care.',
+];
 ---
 
-<Layout title="Studio — Anyrvaan">
+<Layout
+	title="Studio — Anyrvaan"
+	description="Anyrvaan is a small, independent practice working across design, technology, and experience."
+>
 	<div class="min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
 			<PageHeader
 				eyebrow="About"
 				title="Studio"
-				intro="Anyrvaan is a creative technology studio — design × technology × experiences. More about the practice and its philosophy, soon."
+				intro="Anyrvaan is a small, independent practice working across design, technology, and experience — three disciplines treated as one continuous act of making."
 			/>
+
+			<!-- Practice: the three pillars -->
+			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-5xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-500">The Practice</p>
+					<div class="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
+						{
+							pillars.map((p) => (
+								<div class="reveal">
+									<h2 class="text-h3 text-neutral-50">{p.title}</h2>
+									<p class="mt-4 text-body text-neutral-400">{p.body}</p>
+								</div>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Services: concrete offerings, not just philosophy -->
+			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-5xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-500">Services</p>
+					<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">What that looks like, hired.</h2>
+					<div class="mt-14 flex flex-col divide-y divide-white/5 border-t border-white/5">
+						{
+							services.map((s) => (
+								<div class="reveal flex flex-col gap-4 py-8 sm:flex-row sm:items-start sm:justify-between sm:gap-12">
+									<div class="sm:w-64 sm:shrink-0">
+										<h3 class="text-h3 text-neutral-50">{s.title}</h3>
+									</div>
+									<div class="sm:max-w-xl">
+										<p class="text-body text-neutral-400">{s.body}</p>
+										<ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1">
+											{s.tags.map((t) => (
+												<li class="text-small text-neutral-600">{t}</li>
+											))}
+										</ul>
+									</div>
+								</div>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Approach: numbered process -->
+			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-5xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-500">Approach</p>
+					<div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2">
+						{
+							steps.map((s) => (
+								<div class="reveal flex gap-6">
+									<span class="text-small text-neutral-600">{s.number}</span>
+									<div>
+										<h3 class="text-h3 text-neutral-50">{s.title}</h3>
+										<p class="mt-3 max-w-md text-body text-neutral-400">{s.body}</p>
+									</div>
+								</div>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Principles -->
+			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-4xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-500">Principles</p>
+					<ul class="mt-10 flex flex-col gap-6">
+						{
+							principles.map((line) => (
+								<li class="reveal max-w-2xl text-h3 text-neutral-200">{line}</li>
+							))
+						}
+					</ul>
+				</div>
+			</section>
+
+			<!-- Closing CTA -->
+			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="reveal mx-auto max-w-4xl">
+					<h2 class="max-w-2xl text-h2 text-neutral-100">Have a project in mind?</h2>
+					<p class="mt-8">
+						<a
+							href="/contact"
+							class="group inline-flex items-center gap-2 text-small text-neutral-300 transition-colors hover:text-neutral-50"
+						>
+							Start a conversation
+							<span aria-hidden="true" class="transition-transform group-hover:translate-x-1">&rarr;</span>
+						</a>
+					</p>
+				</div>
+			</section>
 		</main>
+		<Footer />
 	</div>
 </Layout>

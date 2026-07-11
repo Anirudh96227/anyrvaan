@@ -17,12 +17,14 @@ const path = Astro.url.pathname;
 const links = [
 	{ href: '/work', label: 'Work' },
 	{ href: '/experiments', label: 'Experiments' },
+	{ href: '/blog', label: 'Blog' },
 	{ href: '/studio', label: 'Studio' },
 	{ href: '/contact', label: 'Contact' },
 ];
 
-// Treat "/work" and "/work/" as the same page.
-const isActive = (href: string) => path === href || path === `${href}/`;
+// Treat "/work" and "/work/" as the same page, and treat nested routes
+// (e.g. "/blog/some-post") as part of their section for nav highlighting.
+const isActive = (href: string) => path === href || path === `${href}/` || path.startsWith(`${href}/`);
 ---
 
 <header class:list={['z-50 w-full', overlay ? 'absolute inset-x-0 top-0' : 'relative']}>

@@ -1,18 +1,157 @@
 ---
+import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const latestPosts = (await getCollection('blog', ({ data }) => !data.draft))
+	.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+	.slice(0, 2);
+
+const formatDate = (d: Date) =>
+	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+
+// Excludes the studio's own site from this teaser — it stays listed on
+// /work itself, just not alongside the client-facing case studies here.
+const featuredWork = (await getCollection('work', ({ id, data }) => !data.draft && id !== 'anyrvaan-site'))
+	.sort((a, b) => Number(b.data.year) - Number(a.data.year))
+	.slice(0, 3);
 ---
 
-<Layout title="Anyrvaan — Design × Technology × Experiences">
+<Layout
+	title="Anyrvaan — Design × Technology × Experiences"
+	description="An independent studio working across design, technology, and experience. Case studies, experiments, and a journal on the practice."
+>
 	<Nav overlay />
-	<main class="flex min-h-screen flex-col items-center justify-center bg-neutral-950 px-6 text-center text-neutral-50">
-		<h1 class="hero-wordmark">Anyrvaan</h1>
-		<p class="mt-8 text-eyebrow uppercase text-neutral-400">Design × Technology × Experiences</p>
-		<p class="mt-12 text-body-lg text-neutral-300">Motion born from stillness.</p>
+	<!-- Full-page particle field: one continuous world behind every section.
+	     Fixed to the viewport, sits above the body background, below all content. -->
+	<canvas id="hero-particles" aria-hidden="true"></canvas>
+	<main class="relative z-10">
+		<!-- Hero: the "stillness" room -->
+		<section
+			id="hero"
+			class="relative flex min-h-screen flex-col items-center justify-center px-6 text-center text-neutral-50"
+		>
+			<div class="flex flex-col items-center">
+				<h1 class="hero-wordmark">Anyrvaan</h1>
+				<p class="mt-8 text-eyebrow uppercase text-neutral-400">Design × Technology × Experiences</p>
+				<p class="mt-12 text-body-lg text-neutral-300">Motion born from stillness.</p>
+			</div>
+
+			<!-- Scroll cue: a thin line with a light travelling down it, inviting descent.
+			     It's a real link that scrolls to the next room. -->
+			<a href="#intro" class="scroll-cue" aria-label="Scroll to enter">
+				<span class="scroll-cue__line" aria-hidden="true"></span>
+			</a>
+		</section>
+
+		<!-- Intro: the next room, revealed on scroll -->
+		<section id="intro" class="border-t border-white/5 px-6 py-32 sm:py-40">
+			<div class="mx-auto max-w-4xl">
+				<p class="reveal text-eyebrow uppercase text-neutral-500">The Studio</p>
+				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
+					Design, technology, and experience — treated as one practice.
+				</h2>
+				<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-400">
+					Anyrvaan builds digital work that feels less like browsing and more like discovery.
+					Considered, restrained, alive — nothing moves without intention.
+				</p>
+				<p class="reveal mt-12">
+					<a
+						href="/studio"
+						class="group inline-flex items-center gap-2 text-small text-neutral-300 transition-colors hover:text-neutral-50"
+					>
+						Enter the studio
+						<span aria-hidden="true" class="transition-transform group-hover:translate-x-1">&rarr;</span>
+					</a>
+				</p>
+			</div>
+		</section>
+
+		<!-- Selected Work teaser -->
+		<section id="work" class="border-t border-white/5 px-6 py-32 sm:py-40">
+			<div class="mx-auto max-w-4xl">
+				<p class="reveal text-eyebrow uppercase text-neutral-500">Selected Work</p>
+				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">A few things we've made.</h2>
+				<ul class="mt-14 flex flex-col divide-y divide-white/5 border-t border-white/5">
+					{
+						featuredWork.map((p) => (
+							<li class="reveal">
+								<a
+									href={`/work/${p.id}/`}
+									class="group flex flex-col gap-2 py-6 sm:flex-row sm:items-baseline sm:justify-between"
+								>
+									<span class="text-h3 text-neutral-200 transition-colors group-hover:text-neutral-50">
+										{p.data.title}
+									</span>
+									<span class="text-small text-neutral-500">
+										{p.data.tags[0]} — {p.data.year}
+									</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+				<p class="reveal mt-12">
+					<a
+						href="/work"
+						class="group inline-flex items-center gap-2 text-small text-neutral-300 transition-colors hover:text-neutral-50"
+					>
+						View all work
+						<span aria-hidden="true" class="transition-transform group-hover:translate-x-1">&rarr;</span>
+					</a>
+				</p>
+			</div>
+		</section>
+
+		<!-- Journal teaser -->
+		<section id="journal" class="border-t border-white/5 px-6 py-32 sm:py-40">
+			<div class="mx-auto max-w-4xl">
+				<p class="reveal text-eyebrow uppercase text-neutral-500">From the Journal</p>
+				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">Notes on the practice.</h2>
+				<div class="mt-14 flex flex-col gap-10">
+					{
+						latestPosts.map((post) => (
+							<a href={`/blog/${post.id}/`} class="reveal group block">
+								<div class="flex flex-wrap items-baseline justify-between gap-2">
+									<span class="text-h3 text-neutral-200 transition-colors group-hover:text-neutral-50">
+										{post.data.title}
+									</span>
+									<span class="text-small text-neutral-500">{formatDate(post.data.date)}</span>
+								</div>
+								<p class="mt-3 max-w-2xl text-body text-neutral-400">{post.data.description}</p>
+							</a>
+						))
+					}
+				</div>
+				<p class="reveal mt-12">
+					<a
+						href="/blog"
+						class="group inline-flex items-center gap-2 text-small text-neutral-300 transition-colors hover:text-neutral-50"
+					>
+						Read the journal
+						<span aria-hidden="true" class="transition-transform group-hover:translate-x-1">&rarr;</span>
+					</a>
+				</p>
+			</div>
+		</section>
 	</main>
+	<Footer />
 </Layout>
 
 <style>
+	/* Decorative canvas: fills the hero, sits behind content (z-0), and is
+	   invisible to the pointer so it never blocks the nav or text selection. */
+	#hero-particles {
+		position: fixed;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		z-index: 0;
+		pointer-events: none;
+	}
+
 	/* Bespoke hero wordmark — intentionally NOT part of the reusable type scale.
 	   Sized in viewport-width units so it feels monumental on every screen and
 	   fills most of the width without clipping on phones.
@@ -75,4 +214,345 @@ import Nav from '../components/Nav.astro';
 				wordmark-breathe 8s ease-in-out infinite;
 		}
 	}
+
+	/* Scroll cue — a faint hairline with a bright capsule dropping down it.
+	   Fades out as the visitor scrolls (JS sets opacity), so it never floats
+	   awkwardly mid-page. */
+	.scroll-cue {
+		position: absolute;
+		bottom: 2.5rem;
+		left: 50%;
+		z-index: 10;
+		transform: translateX(-50%);
+		display: block;
+		transition: opacity 0.4s ease;
+	}
+	.scroll-cue__line {
+		display: block;
+		position: relative;
+		width: 1px;
+		height: 48px;
+		overflow: hidden;
+		background: rgba(255, 255, 255, 0.14);
+	}
+	.scroll-cue__line::after {
+		content: "";
+		position: absolute;
+		left: -1px;
+		top: 0;
+		width: 3px;
+		height: 10px;
+		border-radius: 2px;
+		background: #f5f5f5;
+		transform: translateY(-16px);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.scroll-cue__line::after {
+			animation: scroll-cue-drop 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+		}
+	}
+	@keyframes scroll-cue-drop {
+		0% {
+			transform: translateY(-16px);
+			opacity: 0;
+		}
+		20% {
+			opacity: 1;
+		}
+		80% {
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(48px);
+			opacity: 0;
+		}
+	}
 </style>
+
+<script>
+	// Cursor-reactive particle field for the hero.
+	// Design principle: at rest, ZERO frames render (0% CPU). Motion is born
+	// only from the cursor — nearby particles are drawn toward it, then ease home.
+	// Honors prefers-reduced-motion and treats touch as a static field.
+	function initParticleField(canvas: HTMLCanvasElement) {
+		const ctx = canvas.getContext('2d', { alpha: true });
+		if (!ctx) return { destroy() {} };
+		const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+		const coarseMQ = matchMedia('(pointer: coarse)');
+		const lowTier = coarseMQ.matches || (navigator.hardwareConcurrency || 8) <= 4;
+
+		const R = 170,
+			R2 = R * R,
+			MAXPULL = 30,
+			EASE = 0.14;
+		const IDLE = 900,
+			SETTLE = 0.05,
+			TAU = Math.PI * 2;
+		// The field's one spot of color: a cool blue glow that blooms around
+		// particles as the cursor nears them, scaled by the same proximity
+		// falloff as the pull itself. Drawn as an explicit radial gradient
+		// rather than ctx.shadowBlur — shadow rendering is unreliable across
+		// browsers (notably suppressed under Safari/macOS "reduce transparency"
+		// and some low-power GPU modes), while a gradient fill always renders.
+		const GLOW_RGB = '96, 165, 250',
+			GLOW_EXTRA = 20,
+			DOT_FILL = 'rgb(235, 235, 235)';
+
+		// Preallocated state — no per-frame allocation.
+		let n = 0;
+		let px: Float32Array,
+			py: Float32Array,
+			hx: Float32Array,
+			hy: Float32Array,
+			rad: Float32Array,
+			alpha: Float32Array;
+		let vw = 0,
+			vh = 0,
+			dpr = 1,
+			rect = { left: 0, top: 0 } as DOMRect | { left: number; top: number };
+		let pointerX = 0,
+			pointerY = 0,
+			pointerActive = false,
+			lastMove = 0;
+		let rafId = 0,
+			visible = true,
+			onScreen = true,
+			resizeTimer = 0;
+
+		const canRun = () => visible && onScreen && !reduceMQ.matches;
+
+		function setup() {
+			// Robust sizing: never allow a zero-sized canvas (which renders nothing).
+			const parent = canvas.parentElement;
+			vw = canvas.clientWidth || (parent ? parent.clientWidth : 0) || window.innerWidth;
+			vh = canvas.clientHeight || (parent ? parent.clientHeight : 0) || window.innerHeight;
+			dpr = Math.min(window.devicePixelRatio || 1, lowTier ? 1 : 1.5);
+			canvas.width = Math.max(1, Math.round(vw * dpr)); // NOTE: resets ctx state
+			canvas.height = Math.max(1, Math.round(vh * dpr));
+			ctx!.setTransform(dpr, 0, 0, dpr, 0, 0); // re-apply after resize
+			ctx!.fillStyle = DOT_FILL; // re-apply after resize
+			rect = canvas.getBoundingClientRect();
+			seed();
+		}
+
+		function seed() {
+			const area = vw * vh;
+			const divisor = 16000 * (lowTier ? 1.5 : 1);
+			const target = Math.max(36, Math.min(130, Math.round(area / divisor)));
+			px = new Float32Array(target);
+			py = new Float32Array(target);
+			hx = new Float32Array(target);
+			hy = new Float32Array(target);
+			rad = new Float32Array(target);
+			alpha = new Float32Array(target);
+			const cell = Math.sqrt(area / target) || 1;
+			const cols = Math.max(1, Math.ceil(vw / cell));
+			const rows = Math.max(1, Math.ceil(vh / cell));
+			let i = 0;
+			for (let r = 0; r < rows && i < target; r++) {
+				for (let c = 0; c < cols && i < target; c++) {
+					const jx = (Math.random() - 0.5) * 0.7 * cell;
+					const jy = (Math.random() - 0.5) * 0.7 * cell;
+					const gx = Math.min(vw, Math.max(0, (c + 0.5) * cell + jx));
+					const gy = Math.min(vh, Math.max(0, (r + 0.5) * cell + jy));
+					hx[i] = px[i] = gx;
+					hy[i] = py[i] = gy;
+					const rr = Math.random() < 0.7 ? 1.2 + Math.random() * 0.8 : 2.0 + Math.random() * 0.9;
+					rad[i] = rr;
+					const inv = 1 - (rr - 1.2) / 1.7; // 1 (small) .. 0 (big)
+					alpha[i] = 0.28 + inv * 0.42 * (0.85 + Math.random() * 0.15);
+					i++;
+				}
+			}
+			n = i;
+		}
+
+		function drawStatic() {
+			ctx!.clearRect(0, 0, vw, vh);
+			for (let i = 0; i < n; i++) {
+				ctx!.globalAlpha = alpha[i];
+				ctx!.beginPath();
+				ctx!.arc((hx[i] + 0.5) | 0, (hy[i] + 0.5) | 0, rad[i], 0, TAU);
+				ctx!.fill();
+			}
+			ctx!.globalAlpha = 1;
+		}
+
+		function frame() {
+			rafId = 0;
+			const now = performance.now();
+			if (pointerActive && now - lastMove > IDLE) pointerActive = false;
+			const active = pointerActive,
+				pxr = pointerX,
+				pyr = pointerY;
+			let moving = false;
+			ctx!.clearRect(0, 0, vw, vh);
+			for (let i = 0; i < n; i++) {
+				let tx = hx[i],
+					ty = hy[i];
+				let near = 0; // 0..1 proximity to the pointer, drives the glow
+				if (active) {
+					const dx = px[i] - pxr,
+						dy = py[i] - pyr;
+					const d2 = dx * dx + dy * dy;
+					if (d2 < R2) {
+						const d = Math.sqrt(d2) || 1e-4; // guard divide-by-zero
+						let f = 1 - d / R;
+						f *= f; // squared falloff
+						near = f;
+						const pull = (MAXPULL * f) / d;
+						tx = hx[i] - dx * pull; // pull toward pointer
+						ty = hy[i] - dy * pull;
+					}
+				}
+				const nx = px[i] + (tx - px[i]) * EASE;
+				const ny = py[i] + (ty - py[i]) * EASE;
+				px[i] = nx;
+				py[i] = ny;
+				if (Math.abs(nx - tx) > SETTLE || Math.abs(ny - ty) > SETTLE) moving = true;
+				const cx = (nx + 0.5) | 0,
+					cy = (ny + 0.5) | 0;
+				if (near > 0.04) {
+					// Full-strength glow, independent of this particle's own resting
+					// dot alpha — proximity to the cursor is what should drive it.
+					const glowR = rad[i] + GLOW_EXTRA * near;
+					const glow = ctx!.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+					glow.addColorStop(0, `rgba(${GLOW_RGB}, ${(0.8 * near).toFixed(3)})`);
+					glow.addColorStop(1, `rgba(${GLOW_RGB}, 0)`);
+					ctx!.globalAlpha = 1;
+					ctx!.fillStyle = glow;
+					ctx!.beginPath();
+					ctx!.arc(cx, cy, glowR, 0, TAU);
+					ctx!.fill();
+					ctx!.fillStyle = DOT_FILL;
+				}
+				ctx!.globalAlpha = alpha[i];
+				ctx!.beginPath();
+				ctx!.arc(cx, cy, rad[i], 0, TAU);
+				ctx!.fill();
+			}
+			ctx!.globalAlpha = 1;
+			if (active || moving) rafId = requestAnimationFrame(frame); // else STOP (0 CPU)
+		}
+
+		function wake() {
+			if (!canRun()) return;
+			if (!rafId) rafId = requestAnimationFrame(frame); // single-loop guard
+		}
+
+		const onMove = (e: PointerEvent) => {
+			if (reduceMQ.matches || coarseMQ.matches) return; // no hover on touch
+			pointerX = e.clientX - rect.left;
+			pointerY = e.clientY - rect.top;
+			pointerActive = true;
+			lastMove = performance.now();
+			wake();
+		};
+		const onScroll = () => {
+			rect = canvas.getBoundingClientRect();
+		};
+		const onResize = () => {
+			clearTimeout(resizeTimer);
+			resizeTimer = window.setTimeout(() => {
+				setup();
+				drawStatic();
+			}, 200);
+		};
+		const onVisibility = () => {
+			visible = !document.hidden;
+			if (!visible) {
+				if (rafId) {
+					cancelAnimationFrame(rafId);
+					rafId = 0;
+				}
+			} else if (canRun()) {
+				drawStatic();
+			}
+		};
+		const onReduce = () => {
+			if (reduceMQ.matches && rafId) {
+				cancelAnimationFrame(rafId);
+				rafId = 0;
+			}
+			drawStatic();
+		};
+		const io =
+			'IntersectionObserver' in window
+				? new IntersectionObserver(
+						(es) => {
+							onScreen = es[0].isIntersecting;
+							if (!onScreen && rafId) {
+								cancelAnimationFrame(rafId);
+								rafId = 0;
+							}
+						},
+						{ threshold: 0 }
+					)
+				: null;
+
+		setup();
+		drawStatic(); // always paint the rest state
+		// Re-measure once layout has definitely settled (fonts, scrollbars), in
+		// case the first measurement ran before the hero had its final size.
+		requestAnimationFrame(() => {
+			setup();
+			drawStatic();
+		});
+		window.addEventListener('load', onResize);
+		window.addEventListener('resize', onResize);
+		window.addEventListener('scroll', onScroll, { passive: true });
+		document.addEventListener('visibilitychange', onVisibility);
+		reduceMQ.addEventListener('change', onReduce);
+		// Always attach; onMove guards internally, so toggling reduce/coarse at
+		// runtime is handled correctly.
+		window.addEventListener('pointermove', onMove, { passive: true });
+		if (io) io.observe(canvas);
+
+		return {
+			destroy() {
+				if (rafId) cancelAnimationFrame(rafId);
+				clearTimeout(resizeTimer);
+				window.removeEventListener('load', onResize);
+				window.removeEventListener('resize', onResize);
+				window.removeEventListener('scroll', onScroll);
+				window.removeEventListener('pointermove', onMove);
+				document.removeEventListener('visibilitychange', onVisibility);
+				reduceMQ.removeEventListener('change', onReduce);
+				if (io) io.disconnect();
+			},
+		};
+	}
+
+	// Fade the scroll cue out as the visitor scrolls away from the top.
+	function initScrollCue() {
+		const cue = document.querySelector<HTMLElement>('.scroll-cue');
+		if (!cue) return;
+		const update = () => {
+			const o = Math.max(0, 1 - window.scrollY / 280);
+			cue.style.opacity = String(o);
+			cue.style.pointerEvents = o < 0.05 ? 'none' : '';
+		};
+		window.addEventListener('scroll', update, { passive: true });
+		update();
+	}
+
+	// Astro lifecycle: works with and without View Transitions. boot() is
+	// idempotent (destroys any prior instance), so it's safe to call twice.
+	let field: { destroy(): void } | null = null;
+	function boot() {
+		const el = document.getElementById('hero-particles') as HTMLCanvasElement | null;
+		if (el) {
+			if (field) field.destroy();
+			field = initParticleField(el);
+		}
+		initScrollCue();
+	}
+	document.addEventListener('astro:before-swap', () => {
+		if (field) {
+			field.destroy();
+			field = null;
+		}
+	});
+	document.addEventListener('astro:page-load', boot);
+	boot();
+</script>

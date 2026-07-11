@@ -68,3 +68,549 @@
 	--text-eyebrow--letter-spacing: 0.22em;
 	--text-eyebrow--font-weight: 500;
 }
+
+/* Page base: near-black so the fixed particle field reads through every
+   (transparent) section on top of it. */
+body {
+	background-color: var(--color-neutral-950);
+}
+
+/* Reveal-on-scroll, shared across every page (see the global script in
+   Layout.astro). Progressive enhancement: elements are visible by default,
+   so with no JS or with reduced motion nothing is ever stuck hidden. Only
+   once the script adds `reveal-init` (JS present + motion allowed) do
+   elements start hidden and transition in on `is-visible`. */
+.reveal-init .reveal {
+	opacity: 0;
+	transform: translateY(1.5rem);
+	transition:
+		opacity 0.9s ease,
+		transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-init .reveal.is-visible {
+	opacity: 1;
+	transform: none;
+}
+/* Staggered entrance for siblings revealed together (e.g. a grid of cards). */
+.reveal-init .reveal:nth-child(2) {
+	transition-delay: 0.08s;
+}
+.reveal-init .reveal:nth-child(3) {
+	transition-delay: 0.16s;
+}
+.reveal-init .reveal:nth-child(4) {
+	transition-delay: 0.24s;
+}
+
+/* Prose — long-form markdown body copy (blog posts). Deliberately narrow and
+   restrained: one typeface, the site's existing neutral palette, no borrowed
+   plugin. Scoped to .prose so it never leaks into card/UI typography. */
+.prose {
+	color: var(--color-neutral-300);
+	font-size: var(--text-body);
+	line-height: var(--text-body--line-height);
+}
+.prose > * + * {
+	margin-top: 1.5em;
+}
+.prose h2 {
+	margin-top: 2.5em;
+	font-size: var(--text-h3);
+	line-height: var(--text-h3--line-height);
+	letter-spacing: var(--text-h3--letter-spacing);
+	font-weight: var(--text-h3--font-weight);
+	color: var(--color-neutral-50);
+}
+.prose h3 {
+	margin-top: 2em;
+	font-size: 1.15rem;
+	font-weight: 500;
+	color: var(--color-neutral-100);
+}
+.prose strong {
+	color: var(--color-neutral-100);
+	font-weight: 500;
+}
+.prose em {
+	color: var(--color-neutral-200);
+}
+.prose a {
+	color: var(--color-neutral-100);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	text-decoration-color: rgba(255, 255, 255, 0.28);
+	transition: text-decoration-color 0.2s ease;
+}
+.prose a:hover {
+	text-decoration-color: rgba(255, 255, 255, 0.8);
+}
+.prose ul,
+.prose ol {
+	padding-left: 1.25em;
+}
+.prose ul {
+	list-style: disc;
+}
+.prose ol {
+	list-style: decimal;
+}
+.prose li {
+	color: var(--color-neutral-300);
+}
+.prose li + li {
+	margin-top: 0.5em;
+}
+.prose li::marker {
+	color: var(--color-neutral-600);
+}
+.prose blockquote {
+	border-left: 2px solid rgba(255, 255, 255, 0.16);
+	padding-left: 1.25em;
+	color: var(--color-neutral-400);
+	font-style: italic;
+}
+.prose code {
+	font-size: 0.9em;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.3em;
+	padding: 0.15em 0.4em;
+	color: var(--color-neutral-100);
+}
+.prose pre {
+	overflow-x: auto;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.75rem;
+	padding: 1.25em;
+}
+.prose .table-wrap {
+	overflow-x: auto;
+	margin: 1.5em 0;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.75rem;
+}
+.prose table {
+	width: 100%;
+	min-width: 32rem;
+	border-collapse: collapse;
+	font-size: 0.9em;
+}
+.prose thead th {
+	text-align: left;
+	padding: 0.75em 1.1em;
+	color: var(--color-neutral-100);
+	font-weight: 500;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+	white-space: nowrap;
+}
+.prose td {
+	padding: 0.75em 1.1em;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	color: var(--color-neutral-400);
+	vertical-align: top;
+}
+.prose tbody tr:last-child td {
+	border-bottom: none;
+}
+
+/* Reading-progress beam — a hairline that fills left-to-right as the article
+   scrolls, green→blue to match the tick/sweep language. (see initReadProgress) */
+.read-progress {
+	position: fixed;
+	inset: 0 0 auto 0;
+	height: 4px;
+	z-index: 60;
+	/* Faint always-visible track so the beam reads as a real, present element
+	   even at the top of the page (0% filled). */
+	background: rgba(255, 255, 255, 0.06);
+	pointer-events: none;
+}
+.read-progress__fill {
+	display: block;
+	height: 100%;
+	width: 0;
+	background: linear-gradient(90deg, #4ade80, #38bdf8 55%, #60a5fa);
+	box-shadow:
+		0 0 12px rgba(96, 165, 250, 0.9),
+		0 0 4px rgba(96, 165, 250, 1);
+}
+
+/* Ambient card background: a faint grid + a glowing neon line that traces and
+   fades through the card's negative space, each card running its own pattern
+   (see initCardFx). Sits behind the card content (which is .relative z-10). */
+.card-fx {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+/* Code-generated post hero: a generative, interactive canvas banner above the
+   title (drawn by initPostHero to a theme-fitting motif) with a caption that
+   names the transformation the title claims. No image or video asset. */
+.post-hero {
+	position: relative;
+	width: 100%;
+	height: clamp(120px, 22vw, 200px);
+	margin-bottom: 2.25rem;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.9rem;
+	overflow: hidden;
+	background: #0a0a0a;
+}
+.post-hero__canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.post-hero__caption {
+	position: absolute;
+	left: 0.9rem;
+	bottom: 0.7rem;
+	display: flex;
+	align-items: baseline;
+	gap: 0.65rem;
+	pointer-events: none;
+}
+.post-hero__verb {
+	font-size: var(--text-eyebrow);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: rgb(147, 197, 253);
+}
+.post-hero__hint {
+	font-size: var(--text-eyebrow);
+	letter-spacing: 0.06em;
+	color: var(--color-neutral-600);
+}
+
+/* Cursor spotlight. A blue radial that follows the pointer, blended with
+   multiply: it colours the bright body text blue where it passes, while the
+   near-black background — multiplied by blue — barely changes. The result is
+   light that appears to land only on the text. Outer stop is white so multiply
+   is a no-op everywhere outside the circle. Pointer-driven; see initSpotlight.
+   Touch devices (no cursor) and reduced-motion visitors never see it. */
+.spotlight {
+	position: fixed;
+	inset: 0;
+	z-index: 45;
+	pointer-events: none;
+	mix-blend-mode: multiply;
+	background: radial-gradient(
+		circle 125px at var(--mx, -9999px) var(--my, -9999px),
+		#a7c8fb 0%,
+		#cddffb 34%,
+		#ffffff 70%
+	);
+	opacity: 0;
+	transition: opacity 0.4s ease;
+}
+.spotlight.is-on {
+	opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+	.spotlight {
+		display: none;
+	}
+}
+
+/* Breathing post title — the headline gently varies its weight (370↔440),
+   the same living-at-rest move as the hero wordmark. Requires a variable
+   font (Space Grotesk is one). Still + solid for reduced-motion visitors. */
+@media (prefers-reduced-motion: no-preference) {
+	.post-title {
+		/* Animate font-weight directly (not font-variation-settings): text-h1
+		   already sets a font-weight, and animating the same property overrides
+		   it cleanly across browsers. Space Grotesk is variable, so any value
+		   between 300–700 renders. */
+		animation: title-breathe 6s ease-in-out infinite;
+		will-change: font-weight;
+	}
+}
+@keyframes title-breathe {
+	0%,
+	100% {
+		font-weight: 320;
+	}
+	50% {
+		font-weight: 560;
+	}
+}
+
+/* Interactive diagnostic — an in-post tool that replaces a static table.
+   Pick a symptom, get its diagnosis and the question that fixes it. Progressive:
+   without JS every panel is simply shown (it reads as a full list); initDiagnostics
+   adds .diagnostic--js, which collapses it to one-at-a-time. */
+.prose .diagnostic {
+	margin: 1.75em 0;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.9rem;
+	padding: 1.25rem;
+	background: rgba(255, 255, 255, 0.02);
+}
+.prose .diagnostic__label {
+	margin: 0 0 1rem;
+	font-size: var(--text-eyebrow);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--color-neutral-500);
+}
+.prose .diagnostic__body {
+	display: grid;
+	gap: 1rem;
+}
+@media (min-width: 640px) {
+	.prose .diagnostic__body {
+		grid-template-columns: 1fr 1fr;
+		align-items: start;
+	}
+}
+.prose .diagnostic__symptoms {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+.prose .diagnostic__symptom {
+	display: block;
+	width: 100%;
+	text-align: left;
+	font: inherit;
+	font-size: 0.92em;
+	color: var(--color-neutral-300);
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.5rem;
+	padding: 0.6rem 0.8rem;
+	cursor: pointer;
+	transition:
+		border-color 0.2s ease,
+		background 0.2s ease,
+		color 0.2s ease,
+		box-shadow 0.2s ease;
+}
+.prose .diagnostic__symptom:hover {
+	border-color: rgba(96, 165, 250, 0.5);
+	color: var(--color-neutral-100);
+}
+.prose .diagnostic__symptom[aria-selected="true"] {
+	border-color: rgb(96, 165, 250);
+	background: rgba(96, 165, 250, 0.1);
+	color: #fff;
+	box-shadow: 0 0 18px rgba(96, 165, 250, 0.25);
+}
+.prose .diagnostic__result {
+	border-left: 1px solid rgba(255, 255, 255, 0.08);
+	padding-left: 1.25rem;
+}
+.prose .diagnostic--js .diagnostic__panel {
+	display: none;
+}
+.prose .diagnostic--js .diagnostic__panel.is-active {
+	display: block;
+	animation: diag-in 0.4s ease;
+}
+@keyframes diag-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+.prose .diagnostic__panel + .diagnostic__panel {
+	margin-top: 1.25rem;
+}
+.prose .diagnostic__means,
+.prose .diagnostic__fix {
+	margin: 0;
+}
+.prose .diagnostic__fix {
+	margin-top: 0.8rem;
+	color: rgb(147, 197, 253);
+}
+.prose .diagnostic__means b,
+.prose .diagnostic__fix b {
+	display: block;
+	font-size: var(--text-eyebrow);
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--color-neutral-500);
+	margin-bottom: 0.3rem;
+}
+
+/* "How to Proceed" checklist. The step text stays plainly readable; the tick
+   beside each step is a living ornament, not a control — green ticks draw
+   themselves in and fade back out at random, independent intervals (see
+   initTicks in Layout.astro), so the list quietly breathes the way the hero
+   particle field does. Hovering any tick reveals it, in the site's blue. */
+.prose .checklist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.85em;
+}
+.prose .checklist li {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75em;
+	color: var(--color-neutral-300);
+}
+.prose .checklist .tick {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.35em;
+	height: 1.35em;
+	margin-top: 0.1em;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 0.35em;
+	transition: border-color 0.3s ease;
+}
+.prose .checklist .tick svg {
+	width: 78%;
+	height: 78%;
+	fill: none;
+	stroke: #4ade80; /* green-400 — the "done" tick */
+	stroke-width: 2.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* The checkmark path draws in/out by animating its dash offset. Hidden at
+   rest; JS toggles .tick--on at random to draw it. */
+.prose .checklist .tick svg path {
+	stroke-dasharray: 24;
+	stroke-dashoffset: 24;
+	transition:
+		stroke-dashoffset 0.5s ease,
+		stroke 0.3s ease;
+}
+.prose .checklist .tick--on svg path {
+	stroke-dashoffset: 0;
+}
+/* Hover forces the tick visible AND recolors it to the site's blue. */
+.prose .checklist .tick:hover {
+	border-color: rgba(96, 165, 250, 0.6);
+}
+.prose .checklist .tick:hover svg {
+	stroke: rgb(96, 165, 250);
+}
+.prose .checklist .tick:hover svg path {
+	stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	/* No ambient motion: every tick simply sits drawn and green. */
+	.prose .checklist .tick svg path {
+		stroke-dashoffset: 0;
+		transition: none;
+	}
+}
+
+/* Blue light-sweep on subheadings — never the post's main h1, which lives
+   outside .prose. A single blue band crosses each subhead once as it scrolls
+   into view (see initHeadingSweep in Layout.astro), then rests. At rest the
+   heading is its normal solid color; the sweep only engages via .swept.
+   Explicit base colors (not currentColor) so the transparent-fill trick during
+   the sweep doesn't wipe the base color out. */
+.prose h2 {
+	--sweep-base: #fafafa; /* matches neutral-50 */
+}
+.prose h3 {
+	--sweep-base: #f5f5f5; /* matches neutral-100 */
+}
+.prose h2,
+.prose h3 {
+	/* Wide, soft band with a bright near-white-blue core, so the pass reads as
+	   a beam of light rather than a hard color stripe. */
+	background-image: linear-gradient(
+		100deg,
+		var(--sweep-base) 0%,
+		var(--sweep-base) 36%,
+		#60a5fa 46%,
+		#dbeafe 50%,
+		#60a5fa 54%,
+		var(--sweep-base) 64%,
+		var(--sweep-base) 100%
+	);
+	background-size: 200% auto;
+	background-position: 200% center;
+	-webkit-background-clip: text;
+	background-clip: text;
+}
+.prose h2.swept,
+.prose h3.swept {
+	color: transparent;
+	-webkit-text-fill-color: transparent;
+	/* Slow, eased pass + a blue glow that blooms and fades with it. */
+	animation:
+		heading-sweep 3.4s cubic-bezier(0.45, 0, 0.2, 1) forwards,
+		heading-glow 3.4s ease-in-out forwards;
+}
+@keyframes heading-sweep {
+	from {
+		background-position: 200% center;
+	}
+	to {
+		background-position: -100% center;
+	}
+}
+@keyframes heading-glow {
+	0% {
+		filter: drop-shadow(0 0 0 rgba(96, 165, 250, 0));
+	}
+	45% {
+		filter: drop-shadow(0 0 18px rgba(96, 165, 250, 0.65));
+	}
+	60% {
+		filter: drop-shadow(0 0 22px rgba(147, 197, 253, 0.55));
+	}
+	100% {
+		filter: drop-shadow(0 0 0 rgba(96, 165, 250, 0));
+	}
+}
+
+/* Give headings clear breathing room below them — more than the 1.5em default
+   sibling gap, so a subhead isn't crammed against the text under it. */
+.prose h2 + * {
+	margin-top: 2.25em;
+}
+.prose h3 + * {
+	margin-top: 1.9em;
+}
+/* The checklist sets its own margin: 0, which (being more specific) would
+   otherwise beat the heading-spacing rule above and cram it under the head.
+   These higher-specificity rules restore that breathing room. */
+.prose h2 + .checklist {
+	margin-top: 2.25em;
+}
+.prose h3 + .checklist {
+	margin-top: 1.9em;
+}
+.prose h2 + .table-wrap {
+	margin-top: 2.25em;
+}
+.prose h3 + .table-wrap {
+	margin-top: 1.9em;
+}
+
+.prose pre code {
+	background: none;
+	border: none;
+	padding: 0;
+}
+.prose hr {
+	border: none;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

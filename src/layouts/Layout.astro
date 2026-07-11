@@ -4,9 +4,17 @@ import '../styles/global.css';
 interface Props {
 	title: string;
 	description?: string;
+	// 'article' for blog posts and case studies, 'website' for everything else.
+	type?: 'website' | 'article';
 }
 
-const { title, description = 'Anyrvaan — Design × Technology × Experiences' } = Astro.props;
+const {
+	title,
+	description = 'Anyrvaan — Design × Technology × Experiences',
+	type = 'website',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <html lang="en">
@@ -16,6 +24,13 @@ const { title, description = 'Anyrvaan — Design × Technology × Experiences' 
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalURL} />
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="Anyrvaan — Journal"
+			href="/rss.xml"
+		/>
 		<link
 			rel="preload"
 			href="/fonts/space-grotesk-variable.woff2"
@@ -24,8 +39,884 @@ const { title, description = 'Anyrvaan — Design × Technology × Experiences' 
 			crossorigin
 		/>
 		<title>{title}</title>
+
+		<!-- Open Graph / Twitter — no dedicated share image yet, so previews
+		     render as a clean title + description card until one exists. -->
+		<meta property="og:type" content={type} />
+		<meta property="og:site_name" content="Anyrvaan" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalURL} />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
 	</head>
 	<body>
 		<slot />
 	</body>
 </html>
+
+<script>
+	// Reveal-on-scroll for any element marked .reveal, on every page. Progressive:
+	// only hides them once we know JS is present and motion is allowed, so a
+	// visitor with no JS or reduced motion never sees a stuck-hidden element.
+	function initReveal() {
+		const els = document.querySelectorAll<HTMLElement>('.reveal:not(.is-visible)');
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (!els.length || reduce || !('IntersectionObserver' in window)) return;
+		document.documentElement.classList.add('reveal-init');
+		const io = new IntersectionObserver(
+			(entries, obs) => {
+				for (const e of entries) {
+					if (e.isIntersecting) {
+						e.target.classList.add('is-visible');
+						obs.unobserve(e.target);
+					}
+				}
+			},
+			{ threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+		);
+		els.forEach((el) => io.observe(el));
+	}
+	document.addEventListener('astro:page-load', initReveal);
+	initReveal();
+
+	// Ambient checklist ticks. Each tick draws itself in (green) and fades back
+	// out at its own random interval — some appearing while others leave, the
+	// "motion born from stillness" idea applied to a list. Purely decorative;
+	// hovering a tick (handled in CSS) reveals it in blue. Honors reduced motion.
+	function initTicks() {
+		const ticks = document.querySelectorAll<HTMLElement>(
+			'.checklist .tick:not([data-tick-init])'
+		);
+		if (!ticks.length) return;
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		ticks.forEach((tick) => {
+			tick.dataset.tickInit = 'true';
+			if (reduce) {
+				tick.classList.add('tick--on');
+				return;
+			}
+			const loop = () => {
+				if (!document.contains(tick)) return; // node gone — stop the timer
+				tick.classList.toggle('tick--on', Math.random() > 0.4);
+				setTimeout(loop, 1200 + Math.random() * 3600);
+			};
+			setTimeout(loop, Math.random() * 2600); // stagger the starts
+		});
+	}
+	document.addEventListener('astro:page-load', initTicks);
+	initTicks();
+
+	// Blue light-sweep across each prose subheading (h2/h3) once, as it scrolls
+	// into view — the raking-light idea from the hero wordmark, applied to
+	// section heads. One pass, then rest. The post's main h1 lives outside
+	// .prose, so it's never touched. Honors reduced motion (no sweep at all).
+	function initHeadingSweep() {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (reduce || !('IntersectionObserver' in window)) return;
+		const heads = document.querySelectorAll<HTMLElement>(
+			'.prose h2:not([data-sweep-init]), .prose h3:not([data-sweep-init])'
+		);
+		if (!heads.length) return;
+		const io = new IntersectionObserver(
+			(entries, obs) => {
+				for (const e of entries) {
+					if (e.isIntersecting) {
+						e.target.classList.add('swept');
+						obs.unobserve(e.target);
+					}
+				}
+			},
+			{ threshold: 0.6 }
+		);
+		heads.forEach((h) => {
+			h.dataset.sweepInit = 'true';
+			io.observe(h);
+		});
+	}
+	document.addEventListener('astro:page-load', initHeadingSweep);
+	initHeadingSweep();
+
+	// Reading-progress beam: fill the top hairline in proportion to how far the
+	// page has been scrolled. Only present on long-form pages (blog posts).
+	function initReadProgress() {
+		const fill = document.querySelector<HTMLElement>('.read-progress__fill');
+		if (!fill) return;
+		const update = () => {
+			const el = document.documentElement;
+			const max = el.scrollHeight - el.clientHeight;
+			fill.style.width = (max > 0 ? (el.scrollTop / max) * 100 : 0) + '%';
+		};
+		window.addEventListener('scroll', update, { passive: true });
+		window.addEventListener('resize', update);
+		update();
+	}
+	document.addEventListener('astro:page-load', initReadProgress);
+	initReadProgress();
+
+	// Interactive diagnostic widget: clicking a symptom reveals its panel. Adds
+	// .diagnostic--js so that, without JS, every panel just shows as a plain list.
+	function initDiagnostics() {
+		const widgets = document.querySelectorAll<HTMLElement>(
+			'[data-diagnostic]:not([data-diag-init])'
+		);
+		widgets.forEach((w) => {
+			w.dataset.diagInit = 'true';
+			w.classList.add('diagnostic--js');
+			const buttons = w.querySelectorAll<HTMLButtonElement>('[data-diag]');
+			const panels = w.querySelectorAll<HTMLElement>('[data-diag-panel]');
+			const select = (id: string) => {
+				buttons.forEach((b) =>
+					b.setAttribute('aria-selected', b.dataset.diag === id ? 'true' : 'false')
+				);
+				panels.forEach((p) => p.classList.toggle('is-active', p.dataset.diagPanel === id));
+			};
+			buttons.forEach((b) => b.addEventListener('click', () => select(b.dataset.diag as string)));
+			if (buttons[0]?.dataset.diag) select(buttons[0].dataset.diag);
+		});
+	}
+	document.addEventListener('astro:page-load', initDiagnostics);
+	initDiagnostics();
+
+	// Cursor spotlight: track the pointer and move the blue multiply-blended
+	// light with it. rAF-throttled; disabled on touch (no cursor to follow).
+	function initSpotlight() {
+		const el = document.querySelector<HTMLElement>('.spotlight');
+		if (!el || matchMedia('(pointer: coarse)').matches) return;
+		let raf = 0;
+		let x = -9999;
+		let y = -9999;
+		const apply = () => {
+			raf = 0;
+			el.style.setProperty('--mx', x + 'px');
+			el.style.setProperty('--my', y + 'px');
+		};
+		window.addEventListener(
+			'pointermove',
+			(e) => {
+				if (e.pointerType === 'touch') return;
+				x = e.clientX;
+				y = e.clientY;
+				el.classList.add('is-on');
+				if (!raf) raf = requestAnimationFrame(apply);
+			},
+			{ passive: true }
+		);
+		document.addEventListener('pointerleave', () => el.classList.remove('is-on'));
+	}
+	document.addEventListener('astro:page-load', initSpotlight);
+	initSpotlight();
+
+	// Code-generated post heroes. Each motif is a small canvas "visual verb"
+	// that enacts the post's title. initPostHero dispatches to the renderer named
+	// by the hero's data-motif. All pause off-screen / when the tab is hidden and
+	// fall back to a static frame under reduced motion.
+	function initPostHero() {
+		const wrap = document.querySelector<HTMLElement>('.post-hero');
+		const canvas = wrap?.querySelector<HTMLCanvasElement>('canvas.post-hero__canvas');
+		const ctx = canvas?.getContext('2d');
+		if (!wrap || !canvas || !ctx) return;
+		const motif = wrap.dataset.motif;
+		if (motif === 'ripple') runRipple(wrap, canvas, ctx);
+		else if (motif === 'graph') runGraph(wrap, canvas, ctx);
+		else runFunnel(wrap, canvas, ctx);
+	}
+
+	// "funnel" (many → one): many faint glyphs pour in and converge; most are
+	// absorbed at the neck, and every few seconds exactly one blue keeper drops
+	// out the bottom with a glow.
+	function runFunnel(
+		wrap: HTMLElement,
+		canvas: HTMLCanvasElement,
+		ctx: CanvasRenderingContext2D
+	) {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+		type Glyph = { p: number; y: number; vy: number; a: number; keep: boolean; fade: boolean };
+		const parts: Glyph[] = [];
+		let w = 0,
+			h = 0,
+			cx = 0,
+			mouthY = 0,
+			neckY = 0,
+			exitY = 0,
+			halfMouth = 0,
+			halfNeck = 0;
+		let raf = 0,
+			spawnAcc = 0,
+			keeperAcc = 0,
+			lastT = 0,
+			running = false,
+			onScreen = true;
+
+		function layout() {
+			w = canvas!.clientWidth;
+			h = canvas!.clientHeight;
+			canvas!.width = Math.round(w * dpr);
+			canvas!.height = Math.round(h * dpr);
+			ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+			cx = w / 2;
+			mouthY = h * 0.22;
+			neckY = h * 0.64;
+			exitY = h * 0.82;
+			halfMouth = w * 0.34;
+			halfNeck = Math.max(6, w * 0.02);
+		}
+		const halfAt = (y: number) => {
+			if (y <= mouthY) return halfMouth;
+			if (y >= neckY) return halfNeck;
+			return halfMouth + (halfNeck - halfMouth) * ((y - mouthY) / (neckY - mouthY));
+		};
+		const spawnGrey = () =>
+			parts.push({
+				p: Math.random() * 2 - 1,
+				y: mouthY - Math.random() * 18,
+				vy: 0.5 + Math.random() * 0.5,
+				a: 0,
+				keep: false,
+				fade: false,
+			});
+		const spawnKeeper = () =>
+			parts.push({ p: (Math.random() - 0.5) * 0.5, y: mouthY - 10, vy: 0.7, a: 0, keep: true, fade: false });
+
+		function step(dt: number) {
+			spawnAcc += dt;
+			while (spawnAcc > 55 && parts.length < 70) {
+				spawnAcc -= 55;
+				spawnGrey();
+			}
+			keeperAcc += dt;
+			if (keeperAcc > 3000) {
+				keeperAcc = 0;
+				spawnKeeper();
+			}
+			for (let i = parts.length - 1; i >= 0; i--) {
+				const pt = parts[i];
+				pt.y += pt.vy * dt * 0.07;
+				pt.vy += 0.0022 * dt;
+				if (pt.a < 1) pt.a = Math.min(1, pt.a + dt * 0.006);
+				if (!pt.keep && pt.y >= neckY) pt.fade = true;
+				if (pt.fade) pt.a -= dt * 0.009;
+				if (pt.a <= 0.02 || pt.y > h + 24) parts.splice(i, 1);
+			}
+		}
+
+		function draw() {
+			ctx!.clearRect(0, 0, w, h);
+			ctx!.strokeStyle = 'rgba(255,255,255,0.14)';
+			ctx!.lineWidth = 1.5;
+			ctx!.beginPath();
+			ctx!.moveTo(cx - halfMouth, mouthY);
+			ctx!.lineTo(cx - halfNeck, neckY);
+			ctx!.lineTo(cx - halfNeck, exitY);
+			ctx!.moveTo(cx + halfMouth, mouthY);
+			ctx!.lineTo(cx + halfNeck, neckY);
+			ctx!.lineTo(cx + halfNeck, exitY);
+			ctx!.stroke();
+			for (const pt of parts) {
+				const x = cx + pt.p * halfAt(pt.y);
+				if (pt.keep) {
+					// Additive glow: a radial bloom plus a soft trailing streak, so
+					// the kept glyph reads as a genuine light dropping through.
+					ctx!.save();
+					ctx!.globalCompositeOperation = 'lighter';
+					const gr = 26;
+					const halo = ctx!.createRadialGradient(x, pt.y, 0, x, pt.y, gr);
+					halo.addColorStop(0, `rgba(96,165,250,${0.6 * pt.a})`);
+					halo.addColorStop(0.5, `rgba(96,165,250,${0.22 * pt.a})`);
+					halo.addColorStop(1, 'rgba(96,165,250,0)');
+					ctx!.fillStyle = halo;
+					ctx!.beginPath();
+					ctx!.arc(x, pt.y, gr, 0, Math.PI * 2);
+					ctx!.fill();
+					const streak = ctx!.createLinearGradient(0, pt.y - 46, 0, pt.y);
+					streak.addColorStop(0, 'rgba(96,165,250,0)');
+					streak.addColorStop(1, `rgba(96,165,250,${0.28 * pt.a})`);
+					ctx!.fillStyle = streak;
+					ctx!.fillRect(x - 3, pt.y - 46, 6, 46);
+					ctx!.restore();
+					const s = 6;
+					ctx!.fillStyle = `rgba(198,220,255,${pt.a})`;
+					ctx!.fillRect(x - s / 2, pt.y - s / 2, s, s);
+					ctx!.strokeStyle = `rgba(147,197,253,${pt.a})`;
+					ctx!.lineWidth = 1;
+					ctx!.strokeRect(x - s / 2 - 2, pt.y - s / 2 - 2, s + 4, s + 4);
+				} else {
+					const s = 4;
+					ctx!.fillStyle = `rgba(255,255,255,${0.32 * pt.a})`;
+					ctx!.fillRect(x - s / 2, pt.y - s / 2, s, s);
+				}
+			}
+		}
+
+		function frame(t: number) {
+			if (!running) return;
+			const dt = Math.min(50, t - lastT || 16);
+			lastT = t;
+			step(dt);
+			draw();
+			raf = requestAnimationFrame(frame);
+		}
+		function start() {
+			if (running) return;
+			running = true;
+			lastT = performance.now();
+			raf = requestAnimationFrame(frame);
+		}
+		function stop() {
+			running = false;
+			if (raf) cancelAnimationFrame(raf);
+			raf = 0;
+		}
+		const maybe = () => (onScreen && !document.hidden ? start() : stop());
+
+		layout();
+		if (reduce) {
+			draw();
+			const s = 6;
+			ctx!.fillStyle = 'rgba(96,165,250,1)';
+			ctx!.fillRect(cx - s / 2, exitY + 16, s, s);
+			return;
+		}
+		keeperAcc = 1600; // first keeper drops fairly soon
+		// A moving cursor spawns a few extra glyphs — you're generating more.
+		canvas.addEventListener(
+			'pointermove',
+			(e) => {
+				if (e.pointerType !== 'touch' && parts.length < 70) spawnGrey();
+			},
+			{ passive: true }
+		);
+		const io =
+			'IntersectionObserver' in window
+				? new IntersectionObserver(
+						(es) => {
+							onScreen = es[0].isIntersecting;
+							maybe();
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (io) io.observe(wrap);
+		else start();
+		document.addEventListener('visibilitychange', maybe);
+		let resizeT = 0;
+		window.addEventListener('resize', () => {
+			clearTimeout(resizeT);
+			resizeT = window.setTimeout(layout, 200);
+		});
+	}
+
+	// "ripple" (stillness → motion): a still, near-empty field. Every few seconds
+	// a single blue ring expands from a point and fades — motion born from
+	// stillness. Moving the cursor sends a ripple from where you touch. The loop
+	// only runs while a ring is alive, so at rest it costs nothing.
+	function runRipple(
+		wrap: HTMLElement,
+		canvas: HTMLCanvasElement,
+		ctx: CanvasRenderingContext2D
+	) {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		type Ring = { x: number; y: number; r: number; max: number; a: number; speed: number };
+		const rings: Ring[] = [];
+		let w = 0,
+			h = 0,
+			raf = 0,
+			running = false,
+			onScreen = true,
+			lastT = 0,
+			lastSpawn = 0;
+
+		function layout() {
+			w = canvas.clientWidth;
+			h = canvas.clientHeight;
+			canvas.width = Math.round(w * dpr);
+			canvas.height = Math.round(h * dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		}
+		function spawn(x: number, y: number) {
+			rings.push({ x, y, r: 1, max: Math.max(w, h) * 0.62, a: 1, speed: 0.05 + Math.random() * 0.02 });
+			ensure();
+		}
+		function step(dt: number) {
+			for (let i = rings.length - 1; i >= 0; i--) {
+				const g = rings[i];
+				g.r += g.speed * dt;
+				g.a = Math.max(0, 1 - g.r / g.max);
+				if (g.a <= 0.01) rings.splice(i, 1);
+			}
+		}
+		function draw() {
+			ctx.clearRect(0, 0, w, h);
+			ctx.fillStyle = 'rgba(255,255,255,0.16)';
+			ctx.fillRect(w / 2 - 2, h / 2 - 2, 4, 4); // the still point
+			ctx.save();
+			ctx.globalCompositeOperation = 'lighter';
+			for (const g of rings) {
+				ctx.beginPath();
+				ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
+				ctx.strokeStyle = `rgba(96,165,250,${0.55 * g.a})`;
+				ctx.lineWidth = 2;
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
+				ctx.strokeStyle = `rgba(147,197,253,${0.16 * g.a})`;
+				ctx.lineWidth = 9;
+				ctx.stroke();
+			}
+			ctx.restore();
+		}
+		function frame(t: number) {
+			if (!running) return;
+			const dt = Math.min(50, t - lastT || 16);
+			lastT = t;
+			step(dt);
+			draw();
+			if (rings.length) raf = requestAnimationFrame(frame);
+			else {
+				raf = 0;
+				running = false;
+			}
+		}
+		function ensure() {
+			if (!running && onScreen && !document.hidden) {
+				running = true;
+				lastT = performance.now();
+				raf = requestAnimationFrame(frame);
+			}
+		}
+		function ambient() {
+			if (onScreen && !document.hidden)
+				spawn(w * (0.3 + Math.random() * 0.4), h * (0.3 + Math.random() * 0.4));
+			window.setTimeout(ambient, 2400 + Math.random() * 2200);
+		}
+
+		layout();
+		if (reduce) {
+			rings.push({ x: w / 2, y: h / 2, r: h * 0.28, max: h * 0.62, a: 0.5, speed: 0 });
+			draw();
+			return;
+		}
+		draw();
+		canvas.addEventListener(
+			'pointermove',
+			(e) => {
+				if (e.pointerType === 'touch') return;
+				const now = performance.now();
+				if (now - lastSpawn < 260) return;
+				lastSpawn = now;
+				const rect = canvas.getBoundingClientRect();
+				spawn(e.clientX - rect.left, e.clientY - rect.top);
+			},
+			{ passive: true }
+		);
+		const io =
+			'IntersectionObserver' in window
+				? new IntersectionObserver(
+						(es) => {
+							onScreen = es[0].isIntersecting;
+							if (onScreen) ensure();
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (io) io.observe(wrap);
+		document.addEventListener('visibilitychange', () => {
+			if (onScreen && !document.hidden) ensure();
+		});
+		window.setTimeout(ambient, 800);
+		let rt = 0;
+		window.addEventListener('resize', () => {
+			clearTimeout(rt);
+			rt = window.setTimeout(layout, 200);
+		});
+	}
+
+	// "graph" (parts → a connected system): a faint network of nodes and edges,
+	// with a glowing blue pulse travelling node to node along the edges — a
+	// signal moving through a pipeline. Runs continuously while visible.
+	function runGraph(
+		wrap: HTMLElement,
+		canvas: HTMLCanvasElement,
+		ctx: CanvasRenderingContext2D
+	) {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		type Node = { nx: number; ny: number; x: number; y: number };
+		let w = 0,
+			h = 0,
+			raf = 0,
+			running = false,
+			onScreen = true,
+			lastT = 0;
+		let nodes: Node[] = [];
+		let edges: { a: number; b: number }[] = [];
+		let pulse = { from: 0, to: 1, t: 0, speed: 0.0007 };
+
+		function build() {
+			const N = Math.max(9, Math.min(16, Math.round(w / 70)));
+			nodes = [];
+			for (let i = 0; i < N; i++)
+				nodes.push({ nx: 0.08 + Math.random() * 0.84, ny: 0.16 + Math.random() * 0.68, x: 0, y: 0 });
+			edges = [];
+			for (let i = 0; i < N; i++) {
+				const d: [number, number][] = [];
+				for (let j = 0; j < N; j++)
+					if (j !== i) {
+						const dx = nodes[i].nx - nodes[j].nx;
+						const dy = nodes[i].ny - nodes[j].ny;
+						d.push([dx * dx + dy * dy, j]);
+					}
+				d.sort((a, b) => a[0] - b[0]);
+				for (let k = 0; k < 2; k++) {
+					const j = d[k][1];
+					if (!edges.some((e) => (e.a === i && e.b === j) || (e.a === j && e.b === i)))
+						edges.push({ a: i, b: j });
+				}
+			}
+			pulse = { from: 0, to: neighbors(0)[0] ?? 1, t: 0, speed: 0.0007 };
+		}
+		function neighbors(i: number) {
+			const r: number[] = [];
+			for (const e of edges) {
+				if (e.a === i) r.push(e.b);
+				else if (e.b === i) r.push(e.a);
+			}
+			return r;
+		}
+		function layout() {
+			w = canvas.clientWidth;
+			h = canvas.clientHeight;
+			canvas.width = Math.round(w * dpr);
+			canvas.height = Math.round(h * dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			for (const n of nodes) {
+				n.x = n.nx * w;
+				n.y = n.ny * h;
+			}
+		}
+		function step(dt: number) {
+			pulse.t += pulse.speed * dt;
+			if (pulse.t >= 1) {
+				pulse.t = 0;
+				const nb = neighbors(pulse.to).filter((n) => n !== pulse.from);
+				pulse.from = pulse.to;
+				pulse.to = nb.length ? nb[(Math.random() * nb.length) | 0] : neighbors(pulse.to)[0] ?? 0;
+			}
+		}
+		function draw() {
+			ctx.clearRect(0, 0, w, h);
+			ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+			ctx.lineWidth = 1;
+			for (const e of edges) {
+				ctx.beginPath();
+				ctx.moveTo(nodes[e.a].x, nodes[e.a].y);
+				ctx.lineTo(nodes[e.b].x, nodes[e.b].y);
+				ctx.stroke();
+			}
+			for (const n of nodes) {
+				ctx.fillStyle = 'rgba(255,255,255,0.22)';
+				ctx.beginPath();
+				ctx.arc(n.x, n.y, 2.2, 0, Math.PI * 2);
+				ctx.fill();
+			}
+			const a = nodes[pulse.from],
+				b = nodes[pulse.to];
+			if (!a || !b) return;
+			const px = a.x + (b.x - a.x) * pulse.t;
+			const py = a.y + (b.y - a.y) * pulse.t;
+			ctx.save();
+			ctx.globalCompositeOperation = 'lighter';
+			const gr = ctx.createRadialGradient(px, py, 0, px, py, 22);
+			gr.addColorStop(0, 'rgba(96,165,250,0.7)');
+			gr.addColorStop(1, 'rgba(96,165,250,0)');
+			ctx.fillStyle = gr;
+			ctx.beginPath();
+			ctx.arc(px, py, 22, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.restore();
+			ctx.fillStyle = 'rgba(198,220,255,1)';
+			ctx.beginPath();
+			ctx.arc(px, py, 3, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.fillStyle = 'rgba(147,197,253,0.85)';
+			ctx.beginPath();
+			ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+			ctx.fill();
+		}
+		function frame(t: number) {
+			if (!running) return;
+			const dt = Math.min(50, t - lastT || 16);
+			lastT = t;
+			step(dt);
+			draw();
+			raf = requestAnimationFrame(frame);
+		}
+		function start() {
+			if (running || !onScreen || document.hidden) return;
+			running = true;
+			lastT = performance.now();
+			raf = requestAnimationFrame(frame);
+		}
+		function stop() {
+			running = false;
+			if (raf) cancelAnimationFrame(raf);
+			raf = 0;
+		}
+
+		build();
+		layout();
+		if (reduce) {
+			draw();
+			return;
+		}
+		const io =
+			'IntersectionObserver' in window
+				? new IntersectionObserver(
+						(es) => {
+							onScreen = es[0].isIntersecting;
+							onScreen ? start() : stop();
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (io) io.observe(wrap);
+		else start();
+		document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+		let rt = 0;
+		window.addEventListener('resize', () => {
+			clearTimeout(rt);
+			rt = window.setTimeout(layout, 200);
+		});
+	}
+	document.addEventListener('astro:page-load', initPostHero);
+	initPostHero();
+
+	// Ambient card backgrounds (.card-fx): a faint grid plus a glowing blue line
+	// that traces a random path, fades, and starts a new one — each card runs its
+	// own pattern, so no two animate alike. Only on-screen cards animate; reduced
+	// motion gets a static frame.
+	function initCardFx() {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		document
+			.querySelectorAll<HTMLCanvasElement>('canvas.card-fx:not([data-fx-init])')
+			.forEach((c) => setupCardFx(c, reduce));
+	}
+	function setupCardFx(canvas: HTMLCanvasElement, reduce: boolean) {
+		canvas.dataset.fxInit = 'true';
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		const G = 30; // grid pitch — traces snap to these lines
+		let w = 0,
+			h = 0,
+			raf = 0,
+			running = false,
+			onScreen = false,
+			lastT = 0;
+		// Negative-space band on the right, clear of the top (eyebrow/date) and
+		// bottom (tags/read) rows where the card's text lives.
+		let zx0 = 0,
+			zx1 = 0,
+			ymin = 0,
+			ymax = 0;
+		let pts: number[][] = [];
+		let segLen: number[] = [];
+		let total = 0,
+			mode: 'draw' | 'fade' | 'rest' = 'draw',
+			prog = 0,
+			fade = 1,
+			speed = 0,
+			restT = 0,
+			restDur = 0;
+
+		function layout() {
+			w = canvas.clientWidth;
+			h = canvas.clientHeight;
+			canvas.width = Math.round(w * dpr);
+			canvas.height = Math.round(h * dpr);
+			ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+			zx0 = Math.ceil((w * 0.6) / G) * G;
+			zx1 = Math.floor((w - 8) / G) * G;
+			ymin = 2 * G;
+			ymax = Math.max(ymin + G, Math.floor((h - 2 * G) / G) * G);
+		}
+		function newPath() {
+			pts = [];
+			segLen = [];
+			total = 0;
+			const xs: number[] = [];
+			for (let x = zx0; x <= zx1; x += G) xs.push(x);
+			const ys: number[] = [];
+			for (let y = ymin; y <= ymax; y += G) ys.push(y);
+			if (xs.length < 2 || ys.length < 2) {
+				mode = 'rest';
+				restT = 0;
+				restDur = 1400;
+				return;
+			}
+			// Orthogonal walk along grid nodes — like a circuit trace.
+			let xi = (Math.random() * xs.length) | 0;
+			let yi = (Math.random() * ys.length) | 0;
+			pts.push([xs[xi], ys[yi]]);
+			const steps = 2 + ((Math.random() * 3) | 0);
+			let horiz = Math.random() < 0.5;
+			for (let s = 0; s < steps; s++) {
+				if (horiz) {
+					const d = (Math.random() < 0.5 ? -1 : 1) * (1 + ((Math.random() * 2) | 0));
+					let n = Math.min(xs.length - 1, Math.max(0, xi + d));
+					if (n === xi) n = xi < xs.length - 1 ? xi + 1 : xi - 1;
+					xi = n;
+				} else {
+					const d = (Math.random() < 0.5 ? -1 : 1) * (1 + ((Math.random() * 2) | 0));
+					let n = Math.min(ys.length - 1, Math.max(0, yi + d));
+					if (n === yi) n = yi < ys.length - 1 ? yi + 1 : yi - 1;
+					yi = n;
+				}
+				pts.push([xs[xi], ys[yi]]);
+				horiz = !horiz;
+			}
+			for (let i = 1; i < pts.length; i++) {
+				const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+				segLen.push(l);
+				total += l;
+			}
+			prog = 0;
+			fade = 1;
+			mode = 'draw';
+			speed = 0.22 + Math.random() * 0.16;
+		}
+		function grid() {
+			ctx!.strokeStyle = 'rgba(255,255,255,0.035)';
+			ctx!.lineWidth = 1;
+			for (let x = G; x < w; x += G) {
+				ctx!.beginPath();
+				ctx!.moveTo(x, 0);
+				ctx!.lineTo(x, h);
+				ctx!.stroke();
+			}
+			for (let y = G; y < h; y += G) {
+				ctx!.beginPath();
+				ctx!.moveTo(0, y);
+				ctx!.lineTo(w, y);
+				ctx!.stroke();
+			}
+		}
+		function strokePartial(frac: number, alpha: number) {
+			if (pts.length < 2 || total <= 0) return;
+			const targetLen = frac * total;
+			let acc = 0;
+			let head: number[] | null = null;
+			ctx!.save();
+			ctx!.globalCompositeOperation = 'lighter';
+			ctx!.beginPath();
+			ctx!.moveTo(pts[0][0], pts[0][1]);
+			for (let i = 1; i < pts.length; i++) {
+				const l = segLen[i - 1];
+				if (acc + l <= targetLen) {
+					ctx!.lineTo(pts[i][0], pts[i][1]);
+					acc += l;
+					head = pts[i];
+				} else {
+					const r = l > 0 ? (targetLen - acc) / l : 0;
+					const hx = pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * r;
+					const hy = pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * r;
+					ctx!.lineTo(hx, hy);
+					head = [hx, hy];
+					break;
+				}
+			}
+			ctx!.strokeStyle = `rgba(96,165,250,${0.08 * alpha})`;
+			ctx!.lineWidth = 4;
+			ctx!.stroke();
+			ctx!.strokeStyle = `rgba(147,197,253,${0.4 * alpha})`;
+			ctx!.lineWidth = 1;
+			ctx!.stroke();
+			if (head) {
+				const gr = ctx!.createRadialGradient(head[0], head[1], 0, head[0], head[1], 9);
+				gr.addColorStop(0, `rgba(147,197,253,${0.5 * alpha})`);
+				gr.addColorStop(1, 'rgba(96,165,250,0)');
+				ctx!.fillStyle = gr;
+				ctx!.beginPath();
+				ctx!.arc(head[0], head[1], 9, 0, Math.PI * 2);
+				ctx!.fill();
+			}
+			ctx!.restore();
+		}
+		function frame(t: number) {
+			if (!running) return;
+			const dt = Math.min(50, t - lastT || 16);
+			lastT = t;
+			ctx!.clearRect(0, 0, w, h);
+			grid();
+			if (mode === 'draw') {
+				prog += speed * (dt / 1000);
+				if (prog >= 1) {
+					prog = 1;
+					mode = 'fade';
+				}
+				strokePartial(prog, 1);
+			} else if (mode === 'fade') {
+				fade -= dt * 0.0016;
+				strokePartial(1, Math.max(0, fade));
+				if (fade <= 0) {
+					mode = 'rest';
+					restT = 0;
+					restDur = 900 + Math.random() * 1600;
+				}
+			} else {
+				restT += dt;
+				if (restT >= restDur) newPath();
+			}
+			raf = requestAnimationFrame(frame);
+		}
+		function start() {
+			if (running || !onScreen) return;
+			running = true;
+			lastT = performance.now();
+			raf = requestAnimationFrame(frame);
+		}
+		function stop() {
+			running = false;
+			if (raf) cancelAnimationFrame(raf);
+			raf = 0;
+		}
+		layout();
+		newPath();
+		if (reduce) {
+			ctx!.clearRect(0, 0, w, h);
+			grid();
+			strokePartial(1, 0.4);
+			return;
+		}
+		const io =
+			'IntersectionObserver' in window
+				? new IntersectionObserver(
+						(es) => {
+							onScreen = es[0].isIntersecting;
+							onScreen ? start() : stop();
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (io) io.observe(canvas);
+		else {
+			onScreen = true;
+			start();
+		}
+		document.addEventListener('visibilitychange', () => {
+			if (document.hidden) stop();
+			else if (onScreen) start();
+		});
+		let rt = 0;
+		window.addEventListener('resize', () => {
+			clearTimeout(rt);
+			rt = window.setTimeout(layout, 200);
+		});
+	}
+	document.addEventListener('astro:page-load', initCardFx);
+	initCardFx();
+</script>

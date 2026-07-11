@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Page Not Found — Anyrvaan" description="This page doesn't exist.">
+	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<div class="mx-auto flex min-h-[70vh] max-w-4xl flex-col justify-center px-6 py-32">
+				<p class="reveal text-eyebrow uppercase text-neutral-500">404</p>
+				<h1 class="reveal mt-6 text-h1 text-neutral-50">Nothing here.</h1>
+				<p class="reveal mt-8 max-w-xl text-body-lg text-neutral-400">
+					Not every room in this site is built yet — and this particular one was never here to begin
+					with. The link that brought you here is either old or wrong.
+				</p>
+				<p class="reveal mt-12">
+					<a
+						href="/"
+						class="group inline-flex items-center gap-2 text-small text-neutral-300 transition-colors hover:text-neutral-50"
+					>
+						<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+						Back to the studio
+					</a>
+				</p>
+			</div>
+		</main>
+		<Footer />
+	</div>
+</Layout>
