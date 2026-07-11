@@ -5,6 +5,22 @@ made. Newest at the top. Format: **Decision** — reasoning.
 
 ---
 
+### 2026-07-11 — Site skeleton: file-based routes + shared components
+
+Added `/work`, `/experiments`, `/studio`, `/contact` as `.astro` files in
+`src/pages/` (Astro routing = one file per route, no router config). Extracted
+a `Nav` component (active link via `Astro.url.pathname` + `aria-current`, and
+an `overlay` prop so it floats over the homepage hero vs. normal flow on inner
+pages) and a `PageHeader` component (eyebrow/title/intro props) so pages are
+thin compositions, not copy-paste.
+
+### 2026-07-11 — Nav is interim, not the final emergent nav
+
+The brief calls for navigation that *emerges* from the particle hero (M4).
+This skeleton nav is a deliberate placeholder to make the site navigable
+during development; it will be reconciled with the emergent-nav concept when
+the real hero is built.
+
 ### 2026-07-11 — Monumental hero wordmark, sized to the viewport
 
 Homepage "Anyrvaan" scaled with `clamp(3rem, 19vw, 16rem)` so it fills most

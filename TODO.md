@@ -10,10 +10,12 @@ working state.
       Self-hosted Space Grotesk (variable woff2) + OFL license, `@font-face`
       + preload, Tailwind v4 `@theme` type scale, homepage moved onto the
       semantic scale. Documented in DESIGN_SYSTEM.md.
-- [ ] **Milestone 2 — Site skeleton**
-      Real routes for Home / Work / Experiments / Studio / Contact (static
-      placeholder content), shared navigation, confirm Astro's file-based
-      routing end to end.
+- [x] **Milestone 2 — Site skeleton**
+      Routes for Home / Work / Experiments / Studio / Contact with placeholder
+      content, a shared `Nav` component (active-link state + `overlay` prop)
+      and a reusable `PageHeader` component. Astro file-based routing confirmed
+      end to end. Nav is a quiet interim version — to be reconciled with the
+      emergent-nav hero in M3–M4.
 - [ ] **Milestone 3 — Hero: stillness state**
       Build the empty, unmoving hero (Anyrvaan / descriptor / tagline) with
       zero motion — the "before" state the rest of the philosophy depends

@@ -1,0 +1,63 @@
+---
+// Shared site navigation.
+// Props:
+//   overlay — when true, the nav floats transparently over the homepage hero
+//             (absolute, no layout height). When false (default), it sits in
+//             normal document flow at the top of inner pages.
+interface Props {
+	overlay?: boolean;
+}
+
+const { overlay = false } = Astro.props;
+
+// The current URL path, used to mark the active link. Astro gives us this on
+// every request/build via Astro.url.
+const path = Astro.url.pathname;
+
+const links = [
+	{ href: '/work', label: 'Work' },
+	{ href: '/experiments', label: 'Experiments' },
+	{ href: '/studio', label: 'Studio' },
+	{ href: '/contact', label: 'Contact' },
+];
+
+// Treat "/work" and "/work/" as the same page.
+const isActive = (href: string) => path === href || path === `${href}/`;
+---
+
+<header class:list={['z-50 w-full', overlay ? 'absolute inset-x-0 top-0' : 'relative']}>
+	<nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+		{
+			overlay ? (
+				<span aria-hidden="true" />
+			) : (
+				<a
+					href="/"
+					class="text-small tracking-wide text-neutral-200 transition-colors hover:text-neutral-50"
+				>
+					Anyrvaan
+				</a>
+			)
+		}
+		<ul class="flex items-center gap-6 sm:gap-8">
+			{
+				links.map((link) => (
+					<li>
+						<a
+							href={link.href}
+							aria-current={isActive(link.href) ? 'page' : undefined}
+							class:list={[
+								'text-small tracking-wide transition-colors',
+								isActive(link.href)
+									? 'text-neutral-50'
+									: 'text-neutral-400 hover:text-neutral-200',
+							]}
+						>
+							{link.label}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</nav>
+</header>

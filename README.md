@@ -34,6 +34,7 @@ npm run preview   # preview the production build locally
 /
 ├── public/            static assets served as-is (favicons, fonts, images)
 ├── src/
+│   ├── components/     reusable pieces (Nav, PageHeader, …)
 │   ├── layouts/        shared page shells (html/head/body wrappers)
 │   ├── pages/          one file = one route (Astro's file-based routing)
 │   └── styles/         global CSS, Tailwind entry point

@@ -1,0 +1,18 @@
+---
+// Reusable page header for inner pages.
+// One consistent, editorial title block instead of copy-pasted markup on every
+// page. Uses the type scale from global.css (text-eyebrow / text-h1 / body-lg).
+interface Props {
+	eyebrow: string;
+	title: string;
+	intro: string;
+}
+
+const { eyebrow, title, intro } = Astro.props;
+---
+
+<header class="mx-auto max-w-4xl px-6 pt-40 pb-24">
+	<p class="text-eyebrow uppercase text-neutral-500">{eyebrow}</p>
+	<h1 class="mt-6 text-h1 text-neutral-50">{title}</h1>
+	<p class="mt-8 max-w-2xl text-body-lg text-neutral-300">{intro}</p>
+</header>
