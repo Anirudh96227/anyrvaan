@@ -5,6 +5,43 @@ made. Newest at the top. Format: **Decision** — reasoning.
 
 ---
 
+### 2026-07-11 — Space Grotesk self-hosted as a variable woff2
+
+Downloaded the variable font (latin, weights 300–700 in one ~22 KB file)
+from Fontsource's CDN, pinned to `@fontsource-variable/space-grotesk@5.2.10`,
+and committed it to `public/fonts/`. Self-hosting (vs Google Fonts CDN) for
+privacy, performance, and control — no third-party request per visit.
+Variable format chosen so one file covers every weight. `public/` (not
+`src/assets/`) so the URL stays stable and unhashed, which the hardcoded
+`@font-face` src and preload href depend on.
+
+### 2026-07-11 — OFL license committed alongside the font
+
+Self-hosting an OFL font is redistribution, which requires the license text
+to travel with the file. `public/fonts/OFL.txt` committed for compliance. No
+on-page attribution required.
+
+### 2026-07-11 — `font-display: swap`, preload with `crossorigin`
+
+`swap` guarantees text is never invisible while the font loads (brand font
+appears the instant it arrives); the preload keeps that swap window tiny.
+`crossorigin` is mandatory on the preload even same-origin — fonts fetch in
+anonymous CORS mode, so without it the preload wouldn't match and the font
+would download twice.
+
+### 2026-07-11 — Type scale as Tailwind v4 `@theme` tokens
+
+Scale defined in CSS (`--text-*` tokens with line-height/tracking/weight
+companions), not ad-hoc utility classes in markup. Gives semantic utilities
+(`text-display`, `text-eyebrow`) that describe *what* an element is rather
+than *how* it looks, and keeps every size decision in one place. `clamp()`
+for fluid sizing without breakpoint classes.
+
+### 2026-07-11 — No italic utility
+
+The variable file is upright-only; the `italic` utility would fake a slant.
+Dropped the tagline's italic in favor of honest upright light weight.
+
 ### 2026-07-11 — Project lives at `D:\Anyrvaan`, own folder
 
 Kept separate from Documents/Downloads/OneDrive so it's a clean, dedicated

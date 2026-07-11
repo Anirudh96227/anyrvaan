@@ -6,10 +6,10 @@ working state.
 - [x] **Milestone 0 — Foundation**
       Astro + Tailwind scaffolded, project docs created, Git initialized,
       first commit made, dev server verified locally.
-- [ ] **Milestone 1 — Typography & fonts**
-      Self-host Space Grotesk, establish the real type scale in
-      DESIGN_SYSTEM.md, replace ad-hoc Tailwind classes on the homepage
-      with it.
+- [x] **Milestone 1 — Typography & fonts**
+      Self-hosted Space Grotesk (variable woff2) + OFL license, `@font-face`
+      + preload, Tailwind v4 `@theme` type scale, homepage moved onto the
+      semantic scale. Documented in DESIGN_SYSTEM.md.
 - [ ] **Milestone 2 — Site skeleton**
       Real routes for Home / Work / Experiments / Studio / Contact (static
       placeholder content), shared navigation, confirm Astro's file-based

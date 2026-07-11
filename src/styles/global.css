@@ -1,1 +1,70 @@
+/* 1. Tailwind must be imported first — everything below extends or layers on top of it. */
 @import "tailwindcss";
+
+/* 2. Self-hosted Space Grotesk (variable font).
+   One file covers every weight from 300–700, so `font-weight` is a RANGE, not a single value.
+   `font-display: swap` means: if the font hasn't loaded yet, show a fallback immediately and
+   swap Space Grotesk in the instant it arrives — text is never invisible. The <link rel="preload">
+   in Layout.astro keeps that swap window tiny. */
+@font-face {
+	font-family: "Space Grotesk";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 300 700;
+	src: url("/fonts/space-grotesk-variable.woff2") format("woff2");
+}
+
+/* 3. Register design tokens with Tailwind v4's @theme directive.
+   In Tailwind v4 there is no tailwind.config.js — the theme lives here, in CSS.
+   Overriding --font-sans makes Space Grotesk the default font for the whole site. */
+@theme {
+	--font-sans:
+		"Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+		Helvetica, Arial, sans-serif;
+
+	/* --- Type scale ---
+	   Each step is one Tailwind utility (e.g. `text-display`) that carries its own size,
+	   line-height, letter-spacing, and weight. Sizes use clamp(min, fluid, max) so type
+	   scales smoothly between phone and desktop without breakpoint classes.
+	   Assumes a 16px root — do not shrink html { font-size }. */
+
+	--text-display: clamp(3.25rem, 2.4rem + 4.25vw, 6rem);
+	--text-display--line-height: 1.02;
+	--text-display--letter-spacing: -0.03em;
+	--text-display--font-weight: 400;
+
+	--text-h1: clamp(2.5rem, 2.1rem + 2vw, 3.5rem);
+	--text-h1--line-height: 1.08;
+	--text-h1--letter-spacing: -0.02em;
+	--text-h1--font-weight: 400;
+
+	--text-h2: clamp(1.9rem, 1.7rem + 1vw, 2.45rem);
+	--text-h2--line-height: 1.15;
+	--text-h2--letter-spacing: -0.015em;
+	--text-h2--font-weight: 500;
+
+	--text-h3: clamp(1.5rem, 1.4rem + 0.5vw, 1.75rem);
+	--text-h3--line-height: 1.25;
+	--text-h3--letter-spacing: -0.01em;
+	--text-h3--font-weight: 500;
+
+	--text-body-lg: clamp(1.2rem, 1.15rem + 0.25vw, 1.3rem);
+	--text-body-lg--line-height: 1.6;
+	--text-body-lg--letter-spacing: 0em;
+	--text-body-lg--font-weight: 300;
+
+	--text-body: 1.0625rem;
+	--text-body--line-height: 1.65;
+	--text-body--letter-spacing: 0em;
+	--text-body--font-weight: 400;
+
+	--text-small: 0.875rem;
+	--text-small--line-height: 1.5;
+	--text-small--letter-spacing: 0.005em;
+	--text-small--font-weight: 400;
+
+	--text-eyebrow: 0.75rem;
+	--text-eyebrow--line-height: 1.4;
+	--text-eyebrow--letter-spacing: 0.22em;
+	--text-eyebrow--font-weight: 500;
+}
