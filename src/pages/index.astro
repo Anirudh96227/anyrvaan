@@ -4,8 +4,73 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="Anyrvaan — Design × Technology × Experiences">
 	<main class="flex min-h-screen flex-col items-center justify-center bg-neutral-950 px-6 text-center text-neutral-50">
-		<h1 class="text-display">Anyrvaan</h1>
-		<p class="mt-6 text-eyebrow uppercase text-neutral-400">Design × Technology × Experiences</p>
+		<h1 class="hero-wordmark">Anyrvaan</h1>
+		<p class="mt-8 text-eyebrow uppercase text-neutral-400">Design × Technology × Experiences</p>
 		<p class="mt-12 text-body-lg text-neutral-300">Motion born from stillness.</p>
 	</main>
 </Layout>
+
+<style>
+	/* Bespoke hero wordmark — intentionally NOT part of the reusable type scale.
+	   Sized in viewport-width units so it feels monumental on every screen and
+	   fills most of the width without clipping on phones.
+	   Baseline (below) is what reduced-motion users see: a still, bright,
+	   perfectly legible wordmark. All motion + light live in the media query. */
+	.hero-wordmark {
+		font-size: clamp(3rem, 19vw, 16rem);
+		line-height: 1;
+		letter-spacing: -0.03em;
+		/* Descenders (the 'y' tail) hang below the line box; background-clip: text
+		   only paints the gradient within the box, so without this the tail gets
+		   clipped. The bottom padding extends the paint area under the descenders. */
+		padding-bottom: 0.22em;
+		font-variation-settings: "wght" 400;
+		color: #fafafa; /* neutral-50 */
+	}
+
+	/* Subtle "breathing" of the variable weight axis — the surface feels alive. */
+	@keyframes wordmark-breathe {
+		0%,
+		100% {
+			font-variation-settings: "wght" 370;
+		}
+		50% {
+			font-variation-settings: "wght" 440;
+		}
+	}
+
+	/* Raking light — a single bright band travels diagonally across the glyphs,
+	   then rests off-screen. Monochrome; light revealing form, not neon.
+	   The gradient is clipped to the letter shapes via background-clip: text. */
+	@keyframes wordmark-sheen {
+		from {
+			background-position: 200% center;
+		}
+		to {
+			background-position: -200% center;
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.hero-wordmark {
+			/* Dim base (letters in shadow) + one bright highlight band. */
+			background: linear-gradient(
+				100deg,
+				#a3a3a3 0%,
+				#a3a3a3 38%,
+				#ffffff 50%,
+				#a3a3a3 62%,
+				#a3a3a3 100%
+			);
+			background-size: 200% auto;
+			-webkit-background-clip: text;
+			background-clip: text;
+			-webkit-text-fill-color: transparent;
+			color: transparent;
+			/* Light sweep (6s, with a rest between passes) + slow breathing (8s). */
+			animation:
+				wordmark-sheen 6s linear infinite,
+				wordmark-breathe 8s ease-in-out infinite;
+		}
+	}
+</style>

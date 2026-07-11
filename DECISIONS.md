@@ -5,6 +5,29 @@ made. Newest at the top. Format: **Decision** — reasoning.
 
 ---
 
+### 2026-07-11 — Monumental hero wordmark, sized to the viewport
+
+Homepage "Anyrvaan" scaled with `clamp(3rem, 19vw, 16rem)` so it fills most
+of the screen width and feels architectural, rather than a fixed pixel size
+that would clip on phones. Bespoke — deliberately outside the reusable type
+scale.
+
+### 2026-07-11 — "Glow" resolved as raking light, not neon
+
+Requested glow was reframed as a monochrome light sweep raking across the
+letterforms (`background-clip: text` + moving gradient), plus subtle variable-
+weight "breathing." Chosen over a colored/neon glow because neon reads as
+generic startup aesthetic and violates the manifesto; raking light supports
+the "discovery / light revealing form" emotional goal. All gated behind
+`prefers-reduced-motion: no-preference`.
+
+### 2026-07-11 — padding-bottom on the hero wordmark
+
+`background-clip: text` only paints the gradient within the element's line
+box, so descenders (the 'y' tail) were clipped. Added `padding-bottom: 0.22em`
+to extend the paint area rather than loosening line-height (which would add
+symmetric space and weaken the tight display setting).
+
 ### 2026-07-11 — Space Grotesk self-hosted as a variable woff2
 
 Downloaded the variable font (latin, weights 300–700 in one ~22 KB file)

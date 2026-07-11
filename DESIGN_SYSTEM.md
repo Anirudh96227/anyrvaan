@@ -66,13 +66,40 @@ lean generous — this is a stated brand value, not just a default.
 
 ## Motion
 
-Not yet implemented. Rules to establish once GSAP/Lenis are introduced:
+Rules (GSAP/Lenis not yet introduced — the hero motion below is pure CSS):
 
 - Nothing moves without intention — no motion "because it's possible."
 - Motion should originate from stillness (per the tagline), not run
   automatically on load unless it *is* the intentional stillness-to-motion
   moment (e.g. the hero).
-- Respect `prefers-reduced-motion`.
+- Monochrome only. No colored/neon glow. Light is treated as a physical
+  phenomenon (raking across form), never as emitted color.
+- Every motion feature must have a `prefers-reduced-motion: reduce` fallback
+  that renders a calm, still, fully legible state.
+
+## Hero wordmark
+
+The homepage "Anyrvaan" wordmark is a **bespoke** treatment, intentionally
+NOT part of the reusable type scale. Lives in a scoped `<style>` in
+`src/pages/index.astro`.
+
+- **Scale:** `clamp(3rem, 19vw, 16rem)` — sized in viewport-width units so it
+  fills most of the screen on every device without clipping on phones.
+- **Raking light sweep:** the glyphs are filled with a moving gradient (dim
+  `#a3a3a3` base + one bright `#ffffff` band) via `background-clip: text`; the
+  band sweeps diagonally across every ~6s, then rests off-screen. Reads as
+  light revealing form, not neon.
+- **Breathing:** the variable weight axis oscillates ~370↔440 over ~8s so the
+  surface feels alive between light passes.
+- **Descender note:** `background-clip: text` only paints within the line box,
+  so a `padding-bottom` is required or descenders (the 'y' tail) get clipped.
+- **Reduced motion:** all of the above is gated behind
+  `@media (prefers-reduced-motion: no-preference)`; otherwise the wordmark is
+  a still, solid `#fafafa`.
+
+> Note: this is the *current* hero. The Milestone 3–4 concept (dissolve into
+> particles / cursor-gravity) still stands as a future direction; when we get
+> there we'll decide whether it replaces or layers with this treatment.
 
 ## Accessibility baseline
 
