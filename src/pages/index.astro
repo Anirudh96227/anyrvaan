@@ -12,7 +12,11 @@ const formatDate = (d: Date) =>
 	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 
 const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
-	.sort((a, b) => Number(b.data.year) - Number(a.data.year))
+	.sort(
+		(a, b) =>
+			(a.data.order ?? Infinity) - (b.data.order ?? Infinity) ||
+			Number(b.data.year) - Number(a.data.year)
+	)
 	.slice(0, 3);
 ---
 
@@ -32,8 +36,8 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 		>
 			<div class="flex flex-col items-center">
 				<h1 class="hero-wordmark">Anyrvaan</h1>
-				<p class="mt-8 text-eyebrow uppercase text-neutral-400">Design × Technology × Experiences</p>
-				<p class="mt-12 text-body-lg text-neutral-300">Motion born from stillness.</p>
+				<p class="hero-line hero-line--1 mt-8 text-eyebrow uppercase text-neutral-400">Design × Technology × Experiences</p>
+				<p class="hero-line hero-line--2 mt-12 text-body-lg text-neutral-300">Motion born from stillness.</p>
 			</div>
 
 			<!-- Scroll cue: a thin line with a light travelling down it, inviting descent.
@@ -70,7 +74,7 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 		<section id="work" class="border-t border-white/5 px-6 py-32 sm:py-40">
 			<div class="mx-auto max-w-4xl">
 				<p class="reveal text-eyebrow uppercase text-neutral-400">Selected Work</p>
-				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">A few things we've made.</h2>
+				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">A few things I've made.</h2>
 				<ul class="mt-14 flex flex-col divide-y divide-white/5 border-t border-white/5">
 					{
 						featuredWork.map((p) => (
@@ -213,6 +217,44 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 		}
 	}
 
+	/* Hero subtext — each line "arrives" by drawing its letters in from wide
+	   tracking to their natural spacing as it brightens, staggered so the
+	   second follows the first. Pure CSS, like the wordmark's own sheen: no JS,
+	   so there's no flash of visible-then-hidden. Each line settles to its OWN
+	   base tracking (eyebrow 0.22em, body-lg 0em), so there's no jump at the
+	   end. Baseline (below / reduced motion) is fully visible, still text — the
+	   animation only exists inside the no-preference query. As each line lands,
+	   the particle field emits one blue shockwave from its center (see
+	   initHeroPulse) — text arrives, one ripple, then back to stillness. */
+	@keyframes hero-line-settle-1 {
+		from {
+			opacity: 0;
+			letter-spacing: 0.5em;
+		}
+		to {
+			opacity: 1;
+			letter-spacing: 0.22em;
+		}
+	}
+	@keyframes hero-line-settle-2 {
+		from {
+			opacity: 0;
+			letter-spacing: 0.2em;
+		}
+		to {
+			opacity: 1;
+			letter-spacing: 0em;
+		}
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.hero-line--1 {
+			animation: hero-line-settle-1 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+		}
+		.hero-line--2 {
+			animation: hero-line-settle-2 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+		}
+	}
+
 	/* Scroll cue — a faint hairline with a bright capsule dropping down it.
 	   Fades out as the visitor scrolls (JS sets opacity), so it never floats
 	   awkwardly mid-page. */
@@ -274,7 +316,7 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 	// Honors prefers-reduced-motion and treats touch as a static field.
 	function initParticleField(canvas: HTMLCanvasElement) {
 		const ctx = canvas.getContext('2d', { alpha: true });
-		if (!ctx) return { destroy() {} };
+		if (!ctx) return { destroy() {}, emitRipple() {} };
 		const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
 		const coarseMQ = matchMedia('(pointer: coarse)');
 		const lowTier = coarseMQ.matches || (navigator.hardwareConcurrency || 8) <= 4;
@@ -295,6 +337,26 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 		const GLOW_RGB = '96, 165, 250',
 			GLOW_EXTRA = 20,
 			DOT_FILL = 'rgb(235, 235, 235)';
+
+		// Shockwave ripples: a blue ring that expands from a point, brightening
+		// (and optionally pushing) the particles its leading edge sweeps over,
+		// then dying. Two callers: a hero subtext line landing (glow-only, slow),
+		// and a mobile tap (glow + a slight outward push, quicker). Both reuse
+		// the same GLOW_RGB blue as the cursor for a consistent look.
+		const RIPPLE_LIFE = 1150, // default ms a ripple stays alive
+			RIPPLE_SPEED = 0.52, // px/ms the ring expands
+			RIPPLE_BAND = 64, // px thickness of the bright leading band
+			RIPPLE_STRENGTH = 0.6, // peak glow, kept below the cursor's 0.8
+			RIPPLE_PUSH = 22; // px a tap ripple nudges particles outward
+		const ripples: { x: number; y: number; start: number; life: number; push: number }[] = [];
+
+		// Shared emit — pushes a ripple in canvas coordinates. Both the public
+		// emitRipple (client coords) and the tap handler route through this.
+		function emit(cx: number, cy: number, life: number, push: number) {
+			ripples.push({ x: cx, y: cy, start: performance.now(), life, push });
+			if (ripples.length > 6) ripples.shift(); // safety cap
+			wake();
+		}
 
 		// Preallocated state — no per-frame allocation.
 		let n = 0;
@@ -383,12 +445,17 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 			const active = pointerActive,
 				pxr = pointerX,
 				pyr = pointerY;
+			// Advance and prune ripples once per frame, before the particle loop.
+			for (let r = ripples.length - 1; r >= 0; r--) {
+				if (now - ripples[r].start > ripples[r].life) ripples.splice(r, 1);
+			}
+			const hasRipples = ripples.length > 0;
 			let moving = false;
 			ctx!.clearRect(0, 0, vw, vh);
 			for (let i = 0; i < n; i++) {
 				let tx = hx[i],
 					ty = hy[i];
-				let near = 0; // 0..1 proximity to the pointer, drives the glow
+				let near = 0; // 0..1 glow strength, from cursor and/or ripples
 				if (active) {
 					const dx = px[i] - pxr,
 						dy = py[i] - pyr;
@@ -401,6 +468,31 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 						const pull = (MAXPULL * f) / d;
 						tx = hx[i] - dx * pull; // pull toward pointer
 						ty = hy[i] - dy * pull;
+					}
+				}
+				// Ripple influence — the ring's leading band brightens particles
+				// (glow) and, for tap ripples, nudges them outward. Measured from
+				// the home position; the outward push is added to the ease target
+				// so it springs back home naturally as the ripple fades.
+				if (hasRipples) {
+					for (let r = 0; r < ripples.length; r++) {
+						const rp = ripples[r];
+						const elapsed = now - rp.start;
+						const ringR = elapsed * RIPPLE_SPEED;
+						const ddx = hx[i] - rp.x,
+							ddy = hy[i] - rp.y;
+						const dd = Math.sqrt(ddx * ddx + ddy * ddy);
+						const band = 1 - Math.abs(dd - ringR) / RIPPLE_BAND;
+						if (band > 0) {
+							const fade = 1 - elapsed / rp.life;
+							const infl = band * fade * RIPPLE_STRENGTH;
+							if (infl > near) near = infl;
+							if (rp.push) {
+								const p = (band * fade * rp.push) / (dd || 1);
+								tx += ddx * p; // push the ease target outward from origin
+								ty += ddy * p;
+							}
+						}
 					}
 				}
 				const nx = px[i] + (tx - px[i]) * EASE;
@@ -430,7 +522,9 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 				ctx!.fill();
 			}
 			ctx!.globalAlpha = 1;
-			if (active || moving) rafId = requestAnimationFrame(frame); // else STOP (0 CPU)
+			// Keep running while the cursor is active, particles are still easing,
+			// or any ripple is alive — otherwise STOP the loop (0 CPU at rest).
+			if (active || moving || hasRipples) rafId = requestAnimationFrame(frame);
 		}
 
 		function wake() {
@@ -445,6 +539,17 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 			pointerActive = true;
 			lastMove = performance.now();
 			wake();
+		};
+		// Touch has no hovering cursor, so the field's gravity never fires there.
+		// Instead a tap sends a quick blue wave that pushes the nearby particles
+		// out and settles — the mobile equivalent of the cursor's pull. Taps on
+		// links/buttons are left alone so they navigate normally.
+		const onTap = (e: PointerEvent) => {
+			if (e.pointerType !== 'touch' || !canRun()) return;
+			const t = e.target as HTMLElement | null;
+			if (t && t.closest('a, button, input, textarea, select, [role="button"]')) return;
+			rect = canvas.getBoundingClientRect();
+			emit(e.clientX - rect.left, e.clientY - rect.top, 700, RIPPLE_PUSH);
 		};
 		const onScroll = () => {
 			rect = canvas.getBoundingClientRect();
@@ -501,12 +606,22 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 		window.addEventListener('scroll', onScroll, { passive: true });
 		document.addEventListener('visibilitychange', onVisibility);
 		reduceMQ.addEventListener('change', onReduce);
-		// Always attach; onMove guards internally, so toggling reduce/coarse at
-		// runtime is handled correctly.
+		// Always attach; onMove/onTap guard internally, so toggling reduce/coarse
+		// at runtime is handled correctly.
 		window.addEventListener('pointermove', onMove, { passive: true });
+		window.addEventListener('pointerdown', onTap, { passive: true });
 		if (io) io.observe(canvas);
 
 		return {
+			// Fire a glow-only shockwave from a point in client (viewport)
+			// coordinates — used by the hero subtext lines as they land. No-ops
+			// under reduced motion / off-screen. Re-measures rect in case the
+			// page has scrolled.
+			emitRipple(clientX: number, clientY: number) {
+				if (!canRun()) return;
+				rect = canvas.getBoundingClientRect();
+				emit(clientX - rect.left, clientY - rect.top, RIPPLE_LIFE, 0);
+			},
 			destroy() {
 				if (rafId) cancelAnimationFrame(rafId);
 				clearTimeout(resizeTimer);
@@ -514,6 +629,7 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 				window.removeEventListener('resize', onResize);
 				window.removeEventListener('scroll', onScroll);
 				window.removeEventListener('pointermove', onMove);
+				window.removeEventListener('pointerdown', onTap);
 				document.removeEventListener('visibilitychange', onVisibility);
 				reduceMQ.removeEventListener('change', onReduce);
 				if (io) io.disconnect();
@@ -534,14 +650,34 @@ const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 		update();
 	}
 
+	// Each hero subtext line, as its letter-spacing settle animation lands,
+	// sends one shockwave through the particle field from its own center —
+	// text arrives, one ripple, then back to stillness. animationend only
+	// fires when the animation runs (no-preference), so this is inherently
+	// gated to motion-allowed visitors; emitRipple is a no-op otherwise.
+	function initHeroPulse(f: { emitRipple(x: number, y: number): void }) {
+		document.querySelectorAll<HTMLElement>('.hero-line:not([data-pulse-init])').forEach((line) => {
+			line.dataset.pulseInit = 'true';
+			line.addEventListener(
+				'animationend',
+				() => {
+					const r = line.getBoundingClientRect();
+					f.emitRipple(r.left + r.width / 2, r.top + r.height / 2);
+				},
+				{ once: true }
+			);
+		});
+	}
+
 	// Astro lifecycle: works with and without View Transitions. boot() is
 	// idempotent (destroys any prior instance), so it's safe to call twice.
-	let field: { destroy(): void } | null = null;
+	let field: { destroy(): void; emitRipple(x: number, y: number): void } | null = null;
 	function boot() {
 		const el = document.getElementById('hero-particles') as HTMLCanvasElement | null;
 		if (el) {
 			if (field) field.destroy();
 			field = initParticleField(el);
+			initHeroPulse(field);
 		}
 		initScrollCue();
 	}

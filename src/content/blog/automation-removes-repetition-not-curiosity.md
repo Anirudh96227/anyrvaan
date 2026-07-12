@@ -6,13 +6,13 @@ tags: ["automation", "process", "craft"]
 heroMotif: "graph"
 ---
 
-There's a real fear underneath the automation conversation: that if you automate the making, you hollow out the craft, and eventually there's nothing left that's actually *you*. It's a reasonable worry, and the answer to it isn't reassurance — it's a line. Some things should be automated. Some never should. Knowing which is which is the entire skill.
+There's a fear sitting under most conversations about automation, and I don't think it's an irrational one: that if you automate the making, you hollow out the craft, and one day there's nothing left in the work that's actually you. I've felt it myself, staring at a script I'd just written to do something I used to do by hand. The answer I've landed on isn't reassurance. It's a line — some things should be automated, some never should, and figuring out which is which turns out to be most of the skill.
 
 ## What automation actually removes
 
-Automation is good at exactly one thing: doing the same decision the same way, repeatedly, without getting tired or bored. That's it. And it turns out a huge amount of creative work is that — resizing exports, renaming files, applying the same grade, laying out the same structure for the hundredth time. None of that repetition was ever the craft. It was the tax you paid to get to the craft.
+Automation is good at exactly one thing: doing the same decision the same way, over and over, without getting tired or bored of it. That's the whole trick. And a surprising amount of creative work turns out to *be* that — resizing exports, renaming files, laying out the same structure for the hundredth time. None of that repetition was ever the craft. It was the toll you paid on the way to the craft.
 
-What automation *can't* remove — because it can't do it in the first place — is the curiosity. The "what if we tried it the other way." The noticing that something's slightly off. The decision about what the thing should even be. Those aren't repetitive, which is exactly why no machine reaches them.
+What automation can't touch — because it was never built to — is the curiosity. The "what if I tried it backwards." The noticing that something's slightly off, before you can even say why. Those moments aren't repetitive, and that's exactly why no machine gets near them.
 
 <div class="table-wrap">
 
@@ -28,20 +28,20 @@ What automation *can't* remove — because it can't do it in the first place —
 
 ## The trap: automating the curiosity by accident
 
-The danger isn't automation itself — it's automating one square too far. The moment you let the machine decide *what to make*, not just *how to churn it out*, you've handed over the part that was yours. This is subtle, because it often feels like efficiency. "Just have it generate the concepts too" sounds like the same kind of time-saving as "have it resize the exports." It isn't. One removes tax; the other removes the point.
+The danger was never automation itself. It's automating one square too far. The moment you let the machine decide *what* to make, not just *how* to churn it out, you've quietly handed over the part that was yours. It's subtle, because it feels like the same move as before. "Just have it generate the concepts too" sounds like the same time-saving as "have it resize the exports." It isn't, though — one removes a toll, the other removes the point of doing it at all.
 
-The test is the left-hand column above: automate the thing whose answer is already decided. Protect the thing where the answer *is* the work.
+The test, I think, is that left-hand column. Automate the thing whose answer is already decided. Protect the thing where the answer *is* the work.
 
-## Curiosity is the thing you're freeing up *for*
+## Curiosity is what you're freeing up time *for*
 
-Done right, automation isn't a subtraction from craft — it's a reallocation toward it. Every hour you don't spend renaming files is an hour of attention you get back for the part only you can do. That's the whole promise: not less work, but the *interesting* fraction of the work taking up a bigger share of your day. (This is the practical cousin of a point I make in [The Thing That Makes the Thing](/blog/the-thing-that-makes-the-thing/) — building the system that handles the repetition so you can think about better questions.)
+Done right, automation isn't a subtraction from craft. It's a reallocation toward it. Every hour you don't spend renaming files is an hour you get back for the part only you can actually do. That's the whole promise, when it works — not less work, but the interesting fraction of the work taking up more of your day. (This is the practical cousin of a point I make in [The Thing That Makes the Thing](/blog/the-thing-that-makes-the-thing/) — build the system that handles the repetition so you're free to think about harder questions.)
 
 ## How to Proceed
 
 <ul class="checklist">
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>List the tasks in your week that are identical every time. Those are your automation candidates — the tax, not the craft.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>For each, confirm the answer is genuinely always the same. If it varies with judgment, it's not repetition — leave it alone.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Draw your line explicitly: name one thing you will never automate because deciding it *is* the work.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>After automating something, notice where the freed hour goes. If it's not going to the curious part, you automated the wrong thing.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Watch for scope creep toward "let it decide too." The moment automation starts choosing what to make, pull it back.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>List the tasks in your week that are identical every time. Those are your automation candidates — the toll, not the craft.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>For each, check the answer really is always the same. If it varies with judgment, it's not repetition — leave it alone.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Draw your line out loud: name one thing you'll never automate, because deciding it is the work.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>After automating something, notice where the freed hour actually goes. If it's not going to the curious part, you automated the wrong thing.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Watch for the moment someone suggests "let it decide too." That's the line. Pull it back.</span></li>
 </ul>

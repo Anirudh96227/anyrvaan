@@ -26,7 +26,25 @@ const ogImageURL = new URL(image, Astro.site);
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<!-- Two mark colors, one per color scheme: black reads on the light tab
+		     background, white reads on the dark one. Browsers without
+		     prefers-color-scheme support in <link media> fall back to the SVG. -->
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="32x32"
+			media="(prefers-color-scheme: light)"
+			href="/favicon-32-light.png"
+		/>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="32x32"
+			media="(prefers-color-scheme: dark)"
+			href="/favicon-32-dark.png"
+		/>
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />

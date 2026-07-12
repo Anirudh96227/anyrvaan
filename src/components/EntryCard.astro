@@ -22,8 +22,8 @@ const Tag = href ? 'a' : 'div';
 <Tag
 	href={href}
 	class:list={[
-		'reveal group relative block overflow-hidden rounded-2xl border border-white/10 p-8 transition-colors sm:p-10',
-		href && 'hover:border-white/25 hover:bg-white/[0.02]',
+		'frost-card reveal group relative block overflow-hidden rounded-2xl p-8 sm:p-10',
+		href && 'frost-card--link',
 	]}
 >
 	{ambient && <canvas class="card-fx" aria-hidden="true"></canvas>}

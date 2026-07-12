@@ -33,9 +33,16 @@ const work = defineCollection({
 			title: z.string(),
 			summary: z.string(),
 			year: z.string(),
+			// Explicit position in the /work list and homepage featured set —
+			// lower comes first; entries without one sort after, by year.
+			order: z.number().optional(),
 			tags: z.array(z.string()).default([]),
 			video: z.string().optional(),
 			poster: z.string().optional(),
+			// A single-piece case study can lead with an embedded Behance project
+			// instead of a video — same centered hero treatment, sized to
+			// Behance's own embed ratio rather than 16:9.
+			behanceId: z.string().optional(),
 			// The single line naming the connecting idea across the piece — shown as
 			// a large pull-quote right under the header, swept in the site's heading
 			// light-sweep treatment. What used to live buried in the closing
@@ -78,7 +85,10 @@ const studies = defineCollection({
 			// project's connecting thread — shown on the grid tile beneath the
 			// title, so the grid reads as chapters of one idea, not a video wall.
 			thread: z.string().optional(),
-			video: z.string(),
+			// A study is either a video (local file or YouTube URL) or an embedded
+			// Behance project — exactly one of `video` / `behanceId` is set.
+			video: z.string().optional(),
+			behanceId: z.string().optional(),
 			poster: z.string().optional(),
 			// A second, graphite-style AI-generated illustration of the same
 			// subject — an alternate rendering shown alongside the video, not

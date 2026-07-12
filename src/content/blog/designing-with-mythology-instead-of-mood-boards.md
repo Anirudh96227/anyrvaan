@@ -6,11 +6,13 @@ tags: ["symbolism", "process", "creative-direction"]
 heroMotif: "graph"
 ---
 
-Most creative projects start with a mood board — a wall of references that captures a *look*. It's useful, but it has a ceiling: it tells you what things should resemble, not what they should *mean*. When you're stuck on a mood board, all you can do is add more images. When you're working from a myth, you have something that generates answers.
+Most creative projects start the same way for me: a mood board, a wall of references that says, more or less, "like this." It's useful. It's also got a ceiling, and I only noticed the ceiling once I started running into it on purpose. A mood board tells you what things should resemble. It never tells you what they should mean. And when you're stuck staring at one, the only move you have left is pinning up more images.
 
-## A mood board describes; a myth explains
+A myth does something a mood board can't. It's not a look, it's a structure — a character, a want, a conflict, a change — and that structure keeps making decisions for you long after the reference wall has gone quiet.
 
-The difference is that a myth carries a structure — a character, a want, a conflict, a change — and that structure keeps making decisions for you long after a reference wall has gone quiet. Ask a mood board "what should happen at the edge of this frame?" and it shrugs. Ask a myth, and the answer is usually already implied by the story you chose.
+## A mood board describes. A myth explains.
+
+Ask a mood board what should happen at the edge of the frame, and it shrugs — it was never built to answer that. Ask a myth the same question, and the answer is usually already sitting inside the story you picked.
 
 <div class="table-wrap">
 
@@ -26,18 +28,18 @@ The difference is that a myth carries a structure — a character, a want, a con
 
 ## A worked example
 
-The [*Heroes, Off Duty*](/work/heroes-off-duty/) series was briefed as mythology, not mood. The rule wasn't "make it look like handmade claymation" (that's the mood-board layer, and it mattered too). The generative rule was a *mythic* one: take a legendary figure and show the one moment their story leaves out — the hero setting the instrument down instead of using it. That single mythic premise decided every scene. It told me what Arthur does (returns the sword), what Odysseus does (plants the oar), what Daedalus does (never wears the wings) — nine scenes, one structure, no wall of references required. The myth was the engine; the mood was just the finish.
+I used this properly on [*Rough Cut Divinity*](/work/rough-cut-divinity/), eight short pieces built around figures and forces from Indian mythology and mythic imagery — Hanuman, Shiva, lightning, fire. The rule wasn't "make it look devotional." That's the mood-board layer, and it mattered, but it wasn't the engine. The engine was a genuinely mythic premise: catch the subject one beat before it resolves into what it's famous for being. A bolt of lightning that knows it's about to be a sword, but isn't one yet. Two forms mid-merge, both present, neither finished. That one sentence told me what almost every piece needed to do, before I'd storyboarded a single one of them.
 
-## You don't need a hero to use this
+## You don't need a god to use this
 
-The technique generalizes to any project, including ones with no characters in them. The move is to find the *story structure* under the brief. A product launch has a protagonist (the user), a want, an obstacle, and a transformation. A brand has an origin myth whether it admits it or not. Once you name that structure, you have something that answers hard questions consistently — because you're no longer asking "what looks good here," you're asking "what would *this story* do here," which has far fewer valid answers.
+The trick generalizes past anything with a face in it. What you're really looking for is the story structure hiding under the brief. A product launch has a protagonist — the user — a want, an obstacle, a transformation. A brand has an origin myth whether it admits to one or not. Once you can name that structure, hard questions get easier, because you've stopped asking "what looks good here" and started asking "what would this story do here" — which, it turns out, has a lot fewer valid answers.
 
 ## How to Proceed
 
 <ul class="checklist">
 <li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Before building your next mood board, write one sentence of story: who wants what, and what stands in the way. That sentence is your engine.</span></li>
 <li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Pick an existing myth or archetype that matches the feeling you're after. You inherit its whole structure for free — use it.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>When you hit a hard decision, don't ask "what looks right." Ask "what would this story do here." The options narrow fast.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Keep the mood board — but demote it. It's the finish, not the framework. Meaning first, look second.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Check that every piece serves the one story. If an element is beautiful but off-narrative, it's a mood-board decision sneaking back in.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>When you hit a hard decision, don't ask what looks right. Ask what this story would do here. Watch the options narrow.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Keep the mood board. Just demote it — it's the finish, not the framework. Meaning first, look second.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Check that every piece serves the one story. If something's beautiful but off-narrative, that's a mood-board decision sneaking back in.</span></li>
 </ul>

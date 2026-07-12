@@ -35,13 +35,13 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 			) : (
 				<a
 					href="/"
-					class="text-small tracking-wide text-neutral-200 transition-colors hover:text-neutral-50"
+					class="shrink-0 text-small tracking-wide text-neutral-200 transition-colors hover:text-neutral-50"
 				>
 					Anyrvaan
 				</a>
 			)
 		}
-		<ul class="flex items-center gap-6 sm:gap-8">
+		<ul class="hidden items-center gap-6 sm:flex sm:gap-8">
 			{
 				links.map((link) => (
 					<li>
@@ -61,5 +61,111 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 				))
 			}
 		</ul>
+
+		<!-- Mobile: the link row collapses into this toggle below sm, so the
+		     brand and nav items never fight for space in one unwrapped row. -->
+		<button
+			type="button"
+			class="nav-toggle relative z-50 flex h-10 w-10 shrink-0 items-center justify-center sm:hidden"
+			aria-expanded="false"
+			aria-controls="mobile-nav-panel"
+			aria-label="Open menu"
+		>
+			<span class="nav-toggle__bar" aria-hidden="true" />
+			<span class="nav-toggle__bar" aria-hidden="true" />
+		</button>
 	</nav>
+
+	<div id="mobile-nav-panel" class="mobile-nav-panel sm:hidden" hidden>
+		<ul class="flex flex-col gap-1 px-6 py-4">
+			{
+				links.map((link) => (
+					<li>
+						<a
+							href={link.href}
+							aria-current={isActive(link.href) ? 'page' : undefined}
+							class:list={[
+								'block py-3 text-h3 tracking-wide transition-colors',
+								isActive(link.href)
+									? 'text-neutral-50'
+									: 'text-neutral-400 hover:text-neutral-200',
+							]}
+						>
+							{link.label}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</div>
 </header>
+
+<style>
+	.nav-toggle__bar {
+		position: absolute;
+		width: 20px;
+		height: 1.5px;
+		background: currentColor;
+		color: var(--color-neutral-200);
+		transition:
+			transform 0.25s ease,
+			opacity 0.25s ease;
+	}
+	.nav-toggle__bar:first-child {
+		transform: translateY(-4px);
+	}
+	.nav-toggle__bar:last-child {
+		transform: translateY(4px);
+	}
+	.nav-toggle[aria-expanded='true'] .nav-toggle__bar:first-child {
+		transform: rotate(45deg);
+	}
+	.nav-toggle[aria-expanded='true'] .nav-toggle__bar:last-child {
+		transform: rotate(-45deg);
+	}
+
+	.mobile-nav-panel {
+		position: absolute;
+		inset-inline: 0;
+		top: 100%;
+		background: var(--color-neutral-950);
+		border-bottom: 1px solid rgb(255 255 255 / 0.05);
+	}
+	.mobile-nav-panel[hidden] {
+		display: none;
+	}
+</style>
+
+<script>
+	// One toggle button per Nav instance; each page only ever renders one Nav,
+	// but :not([data-nav-init]) keeps this safe to re-run after view transitions.
+	function initMobileNav() {
+		const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle:not([data-nav-init])');
+		if (!toggle) return;
+		toggle.dataset.navInit = 'true';
+		const panel = document.getElementById('mobile-nav-panel');
+		if (!panel) return;
+
+		const close = () => {
+			toggle.setAttribute('aria-expanded', 'false');
+			toggle.setAttribute('aria-label', 'Open menu');
+			panel.hidden = true;
+		};
+		const open = () => {
+			toggle.setAttribute('aria-expanded', 'true');
+			toggle.setAttribute('aria-label', 'Close menu');
+			panel.hidden = false;
+		};
+
+		toggle.addEventListener('click', () => {
+			if (toggle.getAttribute('aria-expanded') === 'true') close();
+			else open();
+		});
+		panel.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') close();
+		});
+	}
+	document.addEventListener('astro:page-load', initMobileNav);
+	initMobileNav();
+</script>

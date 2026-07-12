@@ -1,18 +1,20 @@
 ---
 title: "Death by a Thousand Cells"
-description: "Why I built a live spreadsheet-to-dashboard animation in React instead of writing about the idea — and what watching data actually move taught me that a sentence couldn't."
+description: "A spreadsheet doesn't fail because the numbers are wrong. It fails because nothing about it moves — and that's reason enough to rebuild it as a dashboard."
 date: 2026-07-13
 tags: ["data visualization", "react", "process"]
 demo: "sheet-to-dashboard"
 ---
 
-The piece above is running live in your browser, not playing back as a video. A spreadsheet on the left, a dashboard on the right, and a stream of small blue squares carrying each value across the gap — arriving, and the bar it belongs to filling in as it lands. It loops forever, costs nothing when it's off screen, and it's the whole argument of this post: **a spreadsheet doesn't fail because the numbers are wrong. It fails because nothing about it moves.**
+I've sat in a lot of meetings where someone shares their screen, and it's a spreadsheet, and the first thirty seconds are just everyone squinting at it trying to find the number that matters. Nobody in that room thinks the spreadsheet is wrong. The math is fine. What's actually happening is that every cell is shouting at the same volume, so the one number that changed has to fight for attention against forty that didn't.
 
-## Why I built it instead of writing it
+That's the whole case for a dashboard, once you strip away the buzzwords. Not that the numbers were bad. That nothing about how they were shown told you where to look.
 
-I could have made this point in a paragraph — "raw data is hard to read, a chart is easy to read." True, and forgettable. What actually convinced me wasn't the sentence, it was watching a single number leave a cell and become part of a shape. The value doesn't change identity when it moves; the *display* of it does. Seeing that happen, over and over, made an abstract claim about "legibility" into something I could point at.
+## Why a spreadsheet loses your attention before it loses your trust
 
-That's really the whole case for building demonstrations instead of describing them: some ideas only land once you can watch them happen.
+Watch above and you'll see the same forty-odd numbers rendered two ways — a spreadsheet on the left, a dashboard on the right, with the values themselves streaming across the gap between them. What I keep noticing, watching it loop, is that the number never actually changes. Only the way it's presented does. That's a strange thing to sit with. The data was never the problem.
+
+A spreadsheet asks you to read. Row by row, column by column, holding a running comparison in your head as you go, because the sheet itself isn't going to do that comparison for you. A dashboard asks you to look. The bar that grew is the bar that grew — you don't have to hold anything in your head, because the shape already did the holding for you.
 
 ## What actually separates the two panels
 
@@ -21,25 +23,27 @@ That's really the whole case for building demonstrations instead of describing t
 | The spreadsheet (left) | The dashboard (right) |
 |---|---|
 | Every value has equal visual weight | The one that changed is the one that's obvious |
-| You have to *read* it, row by row | You can *see* it, at a glance |
+| You have to read it, row by row | You can see it, at a glance |
 | A snapshot — "last edited: stale copy" | Live — it updates as data arrives |
 | Answers "what is the number" | Answers "what does the number mean" |
 | Correct, but static | Correct, and legible |
 
 </div>
 
-Neither panel is lying. The spreadsheet's numbers and the dashboard's numbers are the same numbers. The only thing that changed is which one respects how attention actually works — and that's the entire pitch for a dashboard, stripped of every buzzword.
+Neither panel is lying. I want to be careful about that, because it's tempting to talk about spreadsheets like they're deceptive, and they're not. The spreadsheet's numbers and the dashboard's numbers are the same numbers, always. The only thing that changed is which one respects how attention actually works, and which one just assumes you'll supply the attention yourself.
 
-## The build, briefly
+## The part that's easy to get wrong
 
-This is the one piece on the site built in React and TypeScript rather than plain JavaScript — a deliberate exception, not a drift in stack. The two panels are real DOM, tilted in 3D with a CSS `perspective`, because text set in an actual 3D transform stays crisp in a way a flat image or a canvas-rendered label never quite does. The data packets crossing the gap are a separate `<canvas>` layer on top, reading the live screen position of each source cell and target bar every frame — so the light genuinely travels from one to the other, not along a pre-baked path. React's job here is narrow and specific: keep two DOM trees and one canvas in sync as the same state ticks forward. That's a good reason to reach for a framework. It is not, on this site, the default.
+Here's where I think a lot of dashboards quietly fail, even good-looking ones: they animate the destination and skip the journey. A bar that just appears, fully grown, teaches you nothing about where the number came from. It's not really a step up from the spreadsheet — it's just a spreadsheet wearing a nicer shirt.
+
+What seemed to matter more, watching this over and over, was the transfer itself — a value visibly leaving its source and arriving somewhere, the bar filling as it lands rather than snapping into place. That's the difference between a dashboard that shows you an answer and one that lets you watch the answer get made. The second kind is the one people actually start to trust, because they've seen where the number was standing a second ago.
 
 ## How to try this yourself
 
 <ul class="checklist">
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Pick one claim you'd normally write a sentence to argue. Ask if it would land harder as something a viewer watches happen instead.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Find the "before" and "after" state of your data — the raw form and the readable form — and make the difference between them the whole point.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Animate the transfer, not just the destination. A bar that appears fully formed teaches nothing; a bar that visibly fills teaches where the number came from.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Reach for a framework only for the part that needs it. Here, that was two views staying in sync — everywhere else on this site, plain JavaScript is still enough.</span></li>
-<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Let it loop, and let it rest when no one's looking — an intersection observer pausing the animation off-screen costs you nothing and saves a visitor's battery.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Find the spreadsheet in your own work that everyone squints at before a meeting. That's your dashboard candidate, not the one that already looks fine.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Identify the one number people actually scan for first. Design so that number is the loudest thing on the screen, and let everything else go quiet.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Animate the journey, not just the destination. A bar that visibly fills teaches where the number came from; one that appears fully formed teaches nothing.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Don't dress up the same static snapshot as a dashboard. If it doesn't update, it's still a spreadsheet, just with a chart pasted over it.</span></li>
+<li><span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4 4L19 6.5"/></svg></span><span>Ask what a stranger would notice first, with no context. If the honest answer is "nothing in particular," the spreadsheet hasn't finished becoming a dashboard yet.</span></li>
 </ul>

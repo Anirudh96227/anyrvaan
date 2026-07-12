@@ -83,6 +83,23 @@ const principles = [
 				intro="Anyrvaan is a small, independent practice working across design, technology, and experience — three disciplines treated as one continuous act of making."
 			/>
 
+			<!-- Portfolio reel: same hero-video treatment (glow-frame, scroll-triggered
+			     muted autoplay via initHeroVideo in Layout.astro) as a case study's hero. -->
+			<div class="mx-auto max-w-4xl px-6 pb-16">
+				<div class="hero-video glow-frame reveal rounded-2xl">
+					<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
+						<iframe
+							class="h-full w-full"
+							src="https://www.youtube-nocookie.com/embed/84ceFWedjds?rel=0&modestbranding=1"
+							data-autoplay-src="https://www.youtube-nocookie.com/embed/84ceFWedjds?rel=0&modestbranding=1&autoplay=1&mute=1"
+							title="Portfolio"
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+							allowfullscreen
+						/>
+					</div>
+				</div>
+			</div>
+
 			<!-- Practice: the three pillars -->
 			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
 				<div class="mx-auto max-w-5xl">

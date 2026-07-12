@@ -1,19 +1,20 @@
 ---
 title: "Rough Cut Divinity"
-summary: "Eight vertical shorts from two artists, all of them stopped at the same unfashionable place — after the spark, before the credit. A sword still just lightning. A god still mid-merge. Nothing here has been allowed to finish becoming legendary."
+summary: "Eight short films that stay with the moment before something finishes becoming what it's about to become — a bow still lowering, a god still merging, a storm still deciding what it wants to be."
 year: "2026"
+order: 2
 tags: ["Motion Design", "AI Art Direction", "Devotional & Character Animation"]
-thesis: "Every myth already has an ending you know by heart. This one only ever films the take before it."
+thesis: "Every story like this already has an ending you know by heart. What's rare is the quiet moment just before it arrives."
 studiesEyebrow: "The Cuts"
-studiesHeading: "Eight takes, none of them final."
-studiesIntro: "Play any of them and you'll notice the same thing missing: the part where it all pays off. That's not an accident — it's the edit."
+studiesHeading: "Eight moments, none of them finished."
+studiesIntro: "Every one of these plays for a few seconds and stops right before you expect it to. That's not an accident. It's the whole idea."
 draft: false
 ---
 
-"Rough cut" is film-editing slang for the version before anyone's smoothed it out — beats still raw, nothing locked. It's also, unintentionally, the most accurate description of what devotional and mythic art almost never shows you: the deity mid-assembly, the miracle before its punchline, the hero one splice away from being heroic.
+Some moments feel more beautiful before they become complete. A flower that's still opening. A bow that's still lowering. A storm that's just beginning to decide what it wants to become. Most stories rush toward the ending. These eight films stay with the moment right before it.
 
-Kshyv shoots in the devotional register — Hanuman, Shiva, Krishna, painted the way they've always been painted — then keeps the scissors away from the finished gesture. Anyrvaan shoots in the elemental register — lightning, fire, spirit — and does the identical thing from the opposite direction, catching force a beat before it resolves into "hero" or "weapon." Different vocabularies, same footage: everyone here got cut before the crowd could applaud.
+I called this collection Rough Cut Divinity because every piece intentionally stops before the ending you'd expect. The miracle isn't hidden. It just isn't rushed.
 
-Eight clips, most under ten seconds, one stretching past three minutes, and not one of them lets its subject finish arriving. A lotus mid-bloom, never fully open. A bolt of lightning that knows it's about to be a sword but isn't one yet. Two forms mid-merge, both present, neither finished. Reverence caught kneeling, not yet bowed.
+Kshyv and I are drawn to different subjects — he shoots devotion and mythology, I shoot light, fire, and elemental force — but we keep circling the same question: can the transformation itself be the story, instead of whatever it turns into?
 
-Watched in sequence, the two artists' footage starts to look like dailies from the same unmade film — one about the instant right before anything gets to be legendary.
+Seen together, the eight films start to feel like different reflections of the same idea. Each one pauses exactly where most stories would speed up, and leaves you standing inside that uncertainty a little longer than feels entirely comfortable. In a good way.
