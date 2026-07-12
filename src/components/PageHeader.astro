@@ -6,13 +6,17 @@ interface Props {
 	eyebrow: string;
 	title: string;
 	intro: string;
+	// Optional small line under the intro — e.g. a live count ("24 Active
+	// Prototypes"). Kept separate from intro so its type stays visually distinct.
+	label?: string;
 }
 
-const { eyebrow, title, intro } = Astro.props;
+const { eyebrow, title, intro, label } = Astro.props;
 ---
 
 <header class="mx-auto max-w-4xl px-6 pt-40 pb-24">
 	<p class="text-eyebrow uppercase text-neutral-400">{eyebrow}</p>
 	<h1 class="mt-6 text-h1 text-neutral-50">{title}</h1>
 	<p class="mt-8 max-w-2xl text-body-lg text-neutral-300">{intro}</p>
+	{label && <p class="mt-8 text-small uppercase tracking-wide text-neutral-500">{label}</p>}
 </header>

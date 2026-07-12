@@ -2,70 +2,40 @@
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import PageHeader from '../components/PageHeader.astro';
-import EntryCard from '../components/EntryCard.astro';
+import ExperimentCard from '../components/ExperimentCard.astro';
 import Footer from '../components/Footer.astro';
+import { experiments } from '../data/experiments';
 
-// These are real technical studies, still live elsewhere on this site — not
-// placeholder content. See the Journal for write-ups of a couple of them.
-const experiments = [
-	{
-		eyebrow: 'Canvas · Motion',
-		title: 'Idle Field',
-		description:
-			'A cursor-reactive particle field that renders zero frames at rest and wakes only when a pointer comes near. Live on the homepage hero.',
-		meta: 'Live on this site',
-		tags: ['Canvas', 'Performance'],
-	},
-	{
-		eyebrow: 'Type · Motion',
-		title: 'Raking Light',
-		description:
-			'A variable-weight wordmark with a single bright highlight sweeping across the glyphs, as if lit from the side and passing.',
-		meta: 'Live on this site',
-		tags: ['Variable fonts', 'CSS'],
-	},
-	{
-		eyebrow: 'Type · System',
-		title: 'Typeset',
-		description:
-			'A fluid, clamp()-based editorial type scale — eight steps, one variable font, no breakpoints — that this entire site is set in.',
-		meta: 'Live on this site',
-		tags: ['Typography', 'Design tokens'],
-	},
-	{
-		eyebrow: 'Motion · Micro-interaction',
-		title: 'Scroll Cue',
-		description:
-			'A hairline with a small capsule of light dropping down it, inviting a visitor to keep scrolling — and fading out the moment they do.',
-		meta: 'Live on this site',
-		tags: ['CSS', 'Micro-interaction'],
-	},
-];
+const sorted = [...experiments].sort((a, b) => a.order - b.order);
 ---
 
 <Layout
-	title="Experiments — Anyrvaan"
-	description="Sketches, prototypes, and technical studies from the studio."
+	title="UI Experiments — Anyrvaan"
+	description="An internal interaction lab: 24 prototypes exploring motion, physics, perception, and interface design."
 >
 	<div class="min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
 			<PageHeader
-				eyebrow="In Progress"
-				title="Experiments"
-				intro="Sketches, prototypes, and technical studies — where ideas are tested before they become work. A few of these graduated straight onto this site."
+				eyebrow="Interaction Lab"
+				title="UI Experiments"
+				intro="A growing collection of interaction prototypes exploring motion, physics, perception, and interface design. Each experiment begins with a small live preview before unfolding into a fully interactive playground."
+				label={`${sorted.length} Active Prototypes`}
 			/>
 			<section class="mx-auto max-w-4xl px-6 pb-32">
 				<div class="grid gap-6 sm:grid-cols-2">
 					{
-						experiments.map((e) => (
-							<EntryCard
-								eyebrow={e.eyebrow}
-								title={e.title}
-								description={e.description}
-								meta={e.meta}
-								tags={e.tags}
-							/>
+						sorted.map((e) => (
+							<div class="reveal">
+								<ExperimentCard
+									slug={e.slug}
+									order={e.order}
+									codename={e.codename}
+									classification={e.classification}
+									description={e.description}
+									tags={e.tags}
+								/>
+							</div>
 						))
 					}
 				</div>
