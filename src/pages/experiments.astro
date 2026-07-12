@@ -21,6 +21,7 @@ const sorted = [...experiments].sort((a, b) => a.order - b.order);
 				title="UI Experiments"
 				intro="A growing collection of interaction prototypes exploring motion, physics, perception, and interface design. Each experiment begins with a small live preview before unfolding into a fully interactive playground."
 				label={`${sorted.length} Active Prototypes`}
+				fx
 			/>
 			<section class="mx-auto max-w-4xl px-6 pb-32">
 				<div class="grid gap-6 sm:grid-cols-2">
@@ -44,3 +45,28 @@ const sorted = [...experiments].sort((a, b) => a.order - b.order);
 		<Footer />
 	</div>
 </Layout>
+
+<script>
+	import { mountExperimentPreview, RENDERERS } from '../scripts/experiment-previews';
+
+	// The page's own title joins the lab: hovering the header block (or tapping
+	// it on mobile — each tap re-rolls) runs a randomly sampled sketch from the
+	// 24 on the "UI Experiments" text itself.
+	function initHeaderFx() {
+		const header = document.querySelector<HTMLElement>('[data-fx-header]:not([data-fx-init])');
+		if (!header) return;
+		header.dataset.fxInit = 'true';
+		const canvas = header.querySelector<HTMLCanvasElement>('canvas.title-fx__canvas');
+		const textEl = header.querySelector<HTMLElement>('.title-fx__text');
+		if (!canvas || !textEl) return;
+		const slugs = Object.keys(RENDERERS);
+		const pick = () => slugs[(Math.random() * slugs.length) | 0];
+		mountExperimentPreview(canvas, pick, textEl.textContent?.trim() ?? 'UI Experiments', {
+			trigger: header,
+			textEl,
+			touchTap: 'retrigger',
+		});
+	}
+	document.addEventListener('astro:page-load', initHeaderFx);
+	initHeaderFx();
+</script>

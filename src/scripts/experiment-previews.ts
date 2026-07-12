@@ -691,15 +691,25 @@ export const RENDERERS: Record<string, Renderer> = {
 // effects can overflow the glyph box; while running, the DOM text is hidden
 // and the canvas replica (same computed font/size/color) performs instead.
 // Hover-gated by default (cards); `auto: true` runs continuously (full page).
+// `slug` may be a function — it's called at each start, so a host (like the
+// gallery's own page title) can sample a different sketch on every hover.
+// `touchTap` makes taps meaningful where hover doesn't exist: 'gate' plays
+// the sketch on the first tap and lets the second tap through (card links
+// navigate on the second touch); 'retrigger' restarts the sketch every tap.
 export function mountExperimentPreview(
 	canvas: HTMLCanvasElement,
-	slug: string,
+	slug: string | (() => string),
 	codename: string,
-	opts: { auto?: boolean; trigger?: HTMLElement | null; textEl: HTMLElement }
+	opts: {
+		auto?: boolean;
+		trigger?: HTMLElement | null;
+		textEl: HTMLElement;
+		touchTap?: 'gate' | 'retrigger';
+	}
 ) {
-	const renderer = RENDERERS[slug];
 	const ctx = canvas.getContext('2d');
-	if (!renderer || !ctx) return { destroy() {} };
+	if (!ctx || (typeof slug === 'string' && !RENDERERS[slug])) return { destroy() {} };
+	let renderer: Renderer | null = null;
 	// Reduced motion: never swap the text out — the static word is the baseline.
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return { destroy() {} };
 
@@ -769,12 +779,13 @@ export function mountExperimentPreview(
 			stop();
 			return;
 		}
-		renderer.draw(ctx!, env!, t - startT, state, pointer);
+		renderer!.draw(ctx!, env!, t - startT, state, pointer);
 		raf = requestAnimationFrame(frame);
 	}
 	function start() {
 		if (running) return;
-		if (!layout()) return;
+		renderer = RENDERERS[typeof slug === 'function' ? slug() : slug] ?? null;
+		if (!renderer || !layout()) return;
 		state = renderer.init ? renderer.init(env!) : {};
 		textEl.style.visibility = 'hidden';
 		running = true;
@@ -800,8 +811,34 @@ export function mountExperimentPreview(
 		pointer.x = null;
 		pointer.y = null;
 	};
+	// Track what kind of pointer last went down: the click handler below only
+	// intercepts touch-driven clicks, so mouse clicks always navigate straight
+	// through. A touch's coordinates also feed the pointer-reactive sketches —
+	// the tap point plays the role the hovering cursor plays on desktop.
+	let lastPtrType = '';
+	const onPtrDown = (e: PointerEvent) => {
+		lastPtrType = e.pointerType;
+		if (e.pointerType === 'touch') {
+			const rect = canvas.getBoundingClientRect();
+			pointer.x = e.clientX - rect.left;
+			pointer.y = e.clientY - rect.top;
+		}
+	};
+	const onTap = (e: Event) => {
+		if (lastPtrType !== 'touch') return;
+		if (!running) {
+			e.preventDefault();
+			start();
+		} else if (opts.touchTap === 'retrigger') {
+			e.preventDefault();
+			stop();
+			start();
+		}
+		// touchTap 'gate' while running: fall through — the second tap navigates.
+	};
 	target.addEventListener('pointermove', onMove, { passive: true });
 	target.addEventListener('pointerleave', onPtrGone, { passive: true });
+	target.addEventListener('pointerdown', onPtrDown, { passive: true });
 
 	let resizeT = 0;
 	const onResize = () => {
@@ -822,9 +859,12 @@ export function mountExperimentPreview(
 		// Wait for the real webfont so the canvas replica measures/matches it.
 		if (document.fonts?.ready) document.fonts.ready.then(() => start());
 		else start();
-	} else if (!isTouch) {
-		target.addEventListener('pointerenter', onEnter);
-		target.addEventListener('pointerleave', onLeave);
+	} else {
+		if (!isTouch) {
+			target.addEventListener('pointerenter', onEnter);
+			target.addEventListener('pointerleave', onLeave);
+		}
+		if (opts.touchTap) target.addEventListener('click', onTap);
 	}
 
 	return {
@@ -832,8 +872,10 @@ export function mountExperimentPreview(
 			stop();
 			target.removeEventListener('pointermove', onMove);
 			target.removeEventListener('pointerleave', onPtrGone);
+			target.removeEventListener('pointerdown', onPtrDown);
 			target.removeEventListener('pointerenter', onEnter);
 			target.removeEventListener('pointerleave', onLeave);
+			target.removeEventListener('click', onTap);
 			window.removeEventListener('resize', onResize);
 		},
 	};

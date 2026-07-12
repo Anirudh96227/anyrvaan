@@ -9,14 +9,29 @@ interface Props {
 	// Optional small line under the intro — e.g. a live count ("24 Active
 	// Prototypes"). Kept separate from intro so its type stays visually distinct.
 	label?: string;
+	// When true, the title is wrapped in the title-fx swap markup so a page
+	// script can mount an experiment-previews sketch on it (see the
+	// UI Experiments page, which runs a random lab sketch on header hover).
+	fx?: boolean;
 }
 
-const { eyebrow, title, intro, label } = Astro.props;
+const { eyebrow, title, intro, label, fx = false } = Astro.props;
 ---
 
-<header class="mx-auto max-w-4xl px-6 pt-40 pb-24">
+<header class="mx-auto max-w-4xl px-6 pt-40 pb-24" data-fx-header={fx ? '' : undefined}>
 	<p class="text-eyebrow uppercase text-neutral-400">{eyebrow}</p>
-	<h1 class="mt-6 text-h1 text-neutral-50">{title}</h1>
+	<h1 class="mt-6 text-h1 text-neutral-50">
+		{
+			fx ? (
+				<span class="title-fx relative inline-block">
+					<span class="title-fx__text">{title}</span>
+					<canvas class="title-fx__canvas pointer-events-none absolute" aria-hidden="true" />
+				</span>
+			) : (
+				title
+			)
+		}
+	</h1>
 	<p class="mt-8 max-w-2xl text-body-lg text-neutral-300">{intro}</p>
 	{label && <p class="mt-8 text-small uppercase tracking-wide text-neutral-500">{label}</p>}
 </header>

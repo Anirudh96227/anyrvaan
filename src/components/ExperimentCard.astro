@@ -74,7 +74,13 @@ const { slug, order, codename, classification, description, tags = [] } = Astro.
 				const slug = canvas.dataset.slug;
 				const codename = canvas.dataset.codename;
 				if (!slug || !codename) return;
-				mountExperimentPreview(canvas, slug, codename, { trigger: card, textEl });
+				// touchTap 'gate': on mobile the first tap plays the effect on the
+				// card itself; a second tap follows the link into the experiment.
+				mountExperimentPreview(canvas, slug, codename, {
+					trigger: card,
+					textEl,
+					touchTap: 'gate',
+				});
 			});
 	}
 	document.addEventListener('astro:page-load', initExperimentPreviews);
