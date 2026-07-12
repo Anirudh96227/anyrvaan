@@ -20,41 +20,50 @@ const rawStudies = await getCollection(
 	(s) => s.data.project === project.id && !s.data.draft
 );
 
-// Render each study's prose up front so the lightbox only ever has to reveal
-// pre-rendered HTML, never parse markdown client-side.
-const studiesWithContent = await Promise.all(
-	rawStudies
-		.sort((a, b) => a.data.number - b.data.number)
-		.map(async (study) => ({ study, Content: (await render(study)).Content }))
-);
-
-// Always show all 8 slots — published studies are playable tiles, the rest
-// read as "coming soon" so the series reads as complete-in-progress rather
-// than incomplete.
-const TOTAL_STUDIES = 8;
-const slots = Array.from({ length: TOTAL_STUDIES }, (_, i) => {
-	const number = i + 1;
-	const match = studiesWithContent.find((s) => s.study.data.number === number);
-	return { number, study: match?.study ?? null };
-});
-
-// A project's hero `video` can be a local file (starts with "/") or a
+// A project's or study's `video` can be a local file (starts with "/") or a
 // YouTube URL — extract the video ID so we know which player to render.
 function getYouTubeId(url: string): string | null {
 	const match = url.match(
-		/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+		/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
 	);
 	return match ? match[1] : null;
 }
 const youtubeId = project.data.video ? getYouTubeId(project.data.video) : null;
 
-// An image-plate project's gallery renders as a grid, with its last plate
-// (the "finale" — e.g. a group shot) shown wide beneath it, matching how
-// this content is actually authored: N individual pieces, then one that
-// brings them together.
+// Render each study's prose up front so the lightbox only ever has to reveal
+// pre-rendered HTML, never parse markdown client-side. Also resolve each
+// study's own video source: a YouTube study renders a thumbnail image on its
+// grid tile (an <iframe> can't silently autoplay/loop the way a local
+// <video> does) and opens as an embed in the lightbox instead of a <video>.
+const studiesWithContent = await Promise.all(
+	rawStudies
+		.sort((a, b) => a.data.number - b.data.number)
+		.map(async (study) => {
+			const studyYoutubeId = getYouTubeId(study.data.video);
+			return {
+				study,
+				Content: (await render(study)).Content,
+				youtubeId: studyYoutubeId,
+				thumb: studyYoutubeId
+					? `https://i.ytimg.com/vi/${studyYoutubeId}/hqdefault.jpg`
+					: (study.data.poster ?? ''),
+			};
+		})
+);
+
+// An image-plate project's gallery renders as a sequential, alternating
+// image/text sequence (same rhythm as a video-studies project), with its
+// last plate (the "finale" — e.g. a group shot) shown wide beneath it,
+// matching how this content is actually authored: N individual pieces, then
+// one that brings them together. A plate's caption is authored as
+// "House — Character"; split it so the house name can lead as an eyebrow.
 const gallery = project.data.gallery ?? [];
-const galleryGrid = gallery.length > 1 ? gallery.slice(0, -1) : gallery;
+const galleryPlates = gallery.length > 1 ? gallery.slice(0, -1) : gallery;
 const galleryFinale = gallery.length > 1 ? gallery[gallery.length - 1] : null;
+const platesWithCaption = galleryPlates.map((img) => {
+	const [eyebrow, name] = (img.caption ?? '').split('—').map((s) => s.trim());
+	return { img, eyebrow: eyebrow || null, name: name || img.caption || '' };
+});
 ---
 
 <Layout
@@ -66,12 +75,12 @@ const galleryFinale = gallery.length > 1 ? gallery[gallery.length - 1] : null;
 		<Nav />
 		<main>
 			<header class="mx-auto max-w-4xl px-6 pt-40 pb-16">
-				<p class="text-eyebrow uppercase text-neutral-500">Case Study — {project.data.year}</p>
-				<h1 class="mt-6 text-h1 text-neutral-50">{project.data.title}</h1>
-				<p class="mt-8 max-w-2xl text-body-lg text-neutral-300">{project.data.summary}</p>
+				<p class="reveal text-eyebrow uppercase text-neutral-500">Case Study — {project.data.year}</p>
+				<h1 class="post-title reveal mt-6 text-h1 text-neutral-50">{project.data.title}</h1>
+				<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">{project.data.summary}</p>
 				{
 					project.data.tags.length > 0 && (
-						<ul class="mt-8 flex flex-wrap gap-x-4 gap-y-1">
+						<ul class="reveal mt-8 flex flex-wrap gap-x-4 gap-y-1">
 							{project.data.tags.map((t) => (
 								<li class="text-small text-neutral-500">{t}</li>
 							))}
@@ -81,54 +90,39 @@ const galleryFinale = gallery.length > 1 ? gallery[gallery.length - 1] : null;
 			</header>
 
 			{
-				project.data.video && (
-					<div class="mx-auto max-w-4xl px-6 pb-16">
-						<div class="hero-video reveal aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
-							{youtubeId ? (
-								<iframe
-									class="h-full w-full"
-									src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
-									data-autoplay-src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&autoplay=1&mute=1`}
-									title={project.data.title}
-									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-									allowfullscreen
-								/>
-							) : (
-								<video
-									class="h-full w-full"
-									src={project.data.video}
-									poster={project.data.poster}
-									controls
-									playsinline
-									preload="metadata"
-								/>
-							)}
-						</div>
+				project.data.thesis && (
+					<div class="mx-auto max-w-4xl px-6 pb-20">
+						<p class="thesis-sweep reveal max-w-3xl text-h2 text-neutral-50">{project.data.thesis}</p>
 					</div>
 				)
 			}
 
 			{
-				gallery.length > 0 && (
-					<div class="mx-auto max-w-5xl px-6 pb-16">
-						<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-							{galleryGrid.map((img) => (
-								<figure class="reveal overflow-hidden rounded-xl border border-white/10 bg-black">
-									<img src={img.src} alt={img.alt} loading="lazy" class="aspect-square w-full object-cover" />
-									{img.caption && (
-										<figcaption class="px-3 py-2 text-small text-neutral-500">{img.caption}</figcaption>
-									)}
-								</figure>
-							))}
-						</div>
-						{galleryFinale && (
-							<figure class="reveal mt-4 overflow-hidden rounded-xl border border-white/10 bg-black">
-								<img src={galleryFinale.src} alt={galleryFinale.alt} loading="lazy" class="w-full object-cover" />
-								{galleryFinale.caption && (
-									<figcaption class="px-3 py-2 text-small text-neutral-500">{galleryFinale.caption}</figcaption>
+				project.data.video && (
+					<div class="mx-auto max-w-4xl px-6 pb-16">
+						<div class="hero-video glow-frame reveal rounded-2xl">
+							<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
+								{youtubeId ? (
+									<iframe
+										class="h-full w-full"
+										src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+										data-autoplay-src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&autoplay=1&mute=1`}
+										title={project.data.title}
+										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+										allowfullscreen
+									/>
+								) : (
+									<video
+										class="h-full w-full"
+										src={project.data.video}
+										poster={project.data.poster}
+										controls
+										playsinline
+										preload="metadata"
+									/>
 								)}
-							</figure>
-						)}
+							</div>
+						</div>
 					</div>
 				)
 			}
@@ -140,54 +134,114 @@ const galleryFinale = gallery.length > 1 ? gallery[gallery.length - 1] : null;
 			</article>
 
 			{
+				gallery.length > 0 && (
+					<div class="mx-auto max-w-5xl px-6 pb-16">
+						<div class="flex flex-col gap-20 sm:gap-28">
+							{platesWithCaption.map(({ img, eyebrow, name }, i) => (
+								<article class="reveal grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
+									<div
+										class:list={['mx-auto w-full max-w-xs sm:mx-0', i % 2 === 1 && 'sm:order-2']}
+									>
+										<figure class="glow-frame rounded-2xl">
+											<div class="glow-frame__inner relative aspect-square border border-white/10 bg-black">
+												<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
+													{String(i + 1).padStart(2, '0')}
+												</span>
+												<img src={img.src} alt={img.alt} loading="lazy" class="h-full w-full object-cover" />
+											</div>
+										</figure>
+									</div>
+									<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && 'sm:order-1']}>
+										{eyebrow && <p class="text-eyebrow uppercase text-neutral-500">{eyebrow}</p>}
+										<h3 class="mt-4 text-h3 text-neutral-50">{name}</h3>
+										{img.note && <p class="mt-6 text-body text-neutral-400">{img.note}</p>}
+									</div>
+								</article>
+							))}
+						</div>
+						{galleryFinale && (
+							<figure class="glow-frame reveal mt-20 rounded-2xl sm:mt-28">
+								<div class="glow-frame__inner border border-white/10 bg-black">
+									<img src={galleryFinale.src} alt={galleryFinale.alt} loading="lazy" class="w-full object-cover" />
+									{galleryFinale.caption && (
+										<figcaption class="px-4 py-3 text-small text-neutral-500">{galleryFinale.caption}</figcaption>
+									)}
+								</div>
+							</figure>
+						)}
+					</div>
+				)
+			}
+
+			{
 				rawStudies.length > 0 && (
 					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
 						<div class="mx-auto max-w-5xl">
-							<p class="reveal text-eyebrow uppercase text-neutral-500">The Studies</p>
+							<p class="reveal text-eyebrow uppercase text-neutral-500">
+								{project.data.studiesEyebrow ?? 'The Studies'}
+							</p>
 							<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
-								Eight short studies, one rhythm.
+								{project.data.studiesHeading ?? 'Eight short studies, one rhythm.'}
 							</h2>
 							<p class="reveal mt-6 max-w-2xl text-body text-neutral-500">
-								Each clip plays while it's on screen and rests the moment it isn't. Open one for the
-								full concept behind it.
+								{project.data.studiesIntro ??
+									"Each clip plays while it's on screen and rests the moment it isn't. Open one for the full concept behind it."}
 							</p>
-							<div class="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
-								{slots.map(({ number, study }) =>
-									study ? (
-										<button
-											type="button"
-											class="study-tile reveal group relative block aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black text-left transition-colors hover:border-white/25"
-											data-number={number}
-											data-title={study.data.title}
-											data-video={study.data.video}
-											data-poster={study.data.poster ?? ''}
-											aria-label={`Open Study ${String(number).padStart(3, '0')}: ${study.data.title}`}
+							<div class="mt-16 flex flex-col gap-20 sm:gap-28">
+								{studiesWithContent.map(({ study, Content: StudyContent, youtubeId: studyYoutubeId }, i) => (
+									<article
+										class:list={[
+											'reveal grid items-center gap-8 sm:grid-cols-2 sm:gap-12',
+										]}
+									>
+										<div
+											class:list={[
+												'mx-auto w-full max-w-xs sm:mx-0',
+												i % 2 === 1 && 'sm:order-2',
+											]}
 										>
-											<video
-												class="h-full w-full object-cover"
-												src={study.data.video}
-												poster={study.data.poster}
-												muted
-												loop
-												playsinline
-												preload="none"
-												aria-hidden="true"
-											/>
-											<span class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent p-3 pt-8">
-												<span class="block text-small text-neutral-300">
-													{String(number).padStart(3, '0')}
-												</span>
-											</span>
-										</button>
-									) : (
-										<div class="reveal flex aspect-video flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/10 text-center">
-											<span class="text-small text-neutral-600">
-												{String(number).padStart(3, '0')}
-											</span>
-											<span class="text-small text-neutral-700">Coming soon</span>
+											<div class="glow-frame rounded-2xl">
+												<div class="study-reel glow-frame__inner relative aspect-9/16 border border-white/10 bg-black">
+													<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
+														{String(i + 1).padStart(2, '0')}
+													</span>
+													{studyYoutubeId ? (
+														<iframe
+															class="h-full w-full"
+															src=""
+															data-lazy-src={`https://www.youtube-nocookie.com/embed/${studyYoutubeId}?rel=0&modestbranding=1&playsinline=1`}
+															title={study.data.title}
+															loading="lazy"
+															allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+															allowfullscreen
+														/>
+													) : (
+														<video
+															class="h-full w-full object-cover"
+															src={study.data.video}
+															poster={study.data.poster}
+															controls
+															playsinline
+															preload="none"
+														/>
+													)}
+												</div>
+											</div>
 										</div>
-									)
-								)}
+										<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && 'sm:order-1']}>
+											<p class="text-eyebrow uppercase text-neutral-500">
+												{study.data.creator ?? project.data.title}
+											</p>
+											<h3 class="mt-4 text-h3 text-neutral-50">{study.data.title}</h3>
+											{study.data.thread && (
+												<p class="mt-2 text-small text-neutral-500">{study.data.thread}</p>
+											)}
+											<div class="prose prose--study mt-6">
+												<StudyContent />
+											</div>
+										</div>
+									</article>
+								))}
 							</div>
 						</div>
 					</section>
@@ -206,39 +260,6 @@ const galleryFinale = gallery.length > 1 ? gallery[gallery.length - 1] : null;
 		</main>
 		<Footer />
 	</div>
-
-	<!-- Shared lightbox: one overlay, populated from whichever tile was opened. -->
-	<div
-		id="study-lightbox"
-		class="study-lightbox fixed inset-0 z-50 hidden"
-		role="dialog"
-		aria-modal="true"
-		aria-label="Study detail"
-	>
-		<div class="study-lightbox__backdrop absolute inset-0 bg-black/90"></div>
-		<div class="relative mx-auto flex h-full max-w-3xl flex-col overflow-y-auto px-6 py-20">
-			<button
-				type="button"
-				class="study-lightbox__close absolute right-6 top-6 text-small text-neutral-400 transition-colors hover:text-neutral-50"
-			>
-				Close &times;
-			</button>
-			<p class="study-lightbox__eyebrow text-eyebrow uppercase text-neutral-500"></p>
-			<h3 class="study-lightbox__title mt-4 text-h2 text-neutral-50"></h3>
-			<div class="mt-10 aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
-				<video class="study-lightbox__video h-full w-full" controls playsinline></video>
-			</div>
-			<div class="study-lightbox__body prose mt-10"></div>
-		</div>
-	</div>
-
-	{
-		studiesWithContent.map(({ study, Content: StudyContent }) => (
-			<template data-study-template={study.data.number}>
-				<StudyContent />
-			</template>
-		))
-	}
 </Layout>
 
 <script>
@@ -274,78 +295,37 @@ const galleryFinale = gallery.length > 1 ? gallery[gallery.length - 1] : null;
 	document.addEventListener('astro:page-load', initHeroVideo);
 	initHeroVideo();
 
-	// Grid tiles play muted + looping while on screen, pause and rewind the
-	// instant they leave — the "motion born from stillness" rule applied to a
-	// wall of clips instead of one hero. Opening a tile reveals the full
-	// concept text (pre-rendered into a <template>, just cloned into place)
-	// alongside a louder, controllable copy of the same clip.
-	function initStudies() {
-		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-		const tiles = document.querySelectorAll<HTMLButtonElement>('.study-tile:not([data-study-init])');
-		if (!tiles.length) return;
-		tiles.forEach((tile) => (tile.dataset.studyInit = 'true'));
+	// Each study's vertical reel is a real embed, sitting inline in the page —
+	// no lightbox. Its iframe only gets a `src` once it scrolls near view (via
+	// data-lazy-src), so eight simultaneous YouTube embeds don't all start
+	// loading on page load. Playback after that is entirely native YouTube
+	// chrome — visitors press play themselves.
+	function initStudyReels() {
+		const frames = document.querySelectorAll<HTMLIFrameElement>(
+			'.study-reel iframe[data-lazy-src]:not([data-lazy-init])'
+		);
+		if (!frames.length) return;
+		frames.forEach((f) => (f.dataset.lazyInit = 'true'));
 
-		const lightbox = document.getElementById('study-lightbox');
-		if (!lightbox) return;
-		const backdrop = lightbox.querySelector('.study-lightbox__backdrop');
-		const closeBtn = lightbox.querySelector<HTMLButtonElement>('.study-lightbox__close');
-		const eyebrow = lightbox.querySelector<HTMLElement>('.study-lightbox__eyebrow');
-		const titleEl = lightbox.querySelector<HTMLElement>('.study-lightbox__title');
-		const video = lightbox.querySelector<HTMLVideoElement>('.study-lightbox__video');
-		const body = lightbox.querySelector<HTMLElement>('.study-lightbox__body');
-
-		if ('IntersectionObserver' in window && !reduce) {
-			const io = new IntersectionObserver(
-				(entries) => {
-					for (const entry of entries) {
-						const v = entry.target.querySelector('video');
-						if (!v) continue;
-						if (entry.isIntersecting) v.play().catch(() => {});
-						else {
-							v.pause();
-							v.currentTime = 0;
-						}
-					}
-				},
-				{ threshold: 0.4 }
-			);
-			tiles.forEach((tile) => io.observe(tile));
+		if (!('IntersectionObserver' in window)) {
+			frames.forEach((f) => {
+				if (f.dataset.lazySrc) f.src = f.dataset.lazySrc;
+			});
+			return;
 		}
-
-		function openStudy(tile: HTMLButtonElement) {
-			const number = tile.dataset.number;
-			const tmpl = document.querySelector<HTMLTemplateElement>(
-				`template[data-study-template="${number}"]`
-			);
-			if (!tmpl || !video || !body || !titleEl || !eyebrow || !lightbox) return;
-			eyebrow.textContent = `Study ${String(number).padStart(3, '0')}`;
-			titleEl.textContent = tile.dataset.title ?? '';
-			video.src = tile.dataset.video ?? '';
-			if (tile.dataset.poster) video.poster = tile.dataset.poster;
-			body.replaceChildren(tmpl.content.cloneNode(true));
-			lightbox.classList.remove('hidden');
-			document.body.style.overflow = 'hidden';
-			video.currentTime = 0;
-			video.play().catch(() => {});
-		}
-
-		function closeStudy() {
-			if (!video || !lightbox) return;
-			video.pause();
-			video.removeAttribute('src');
-			video.load();
-			lightbox.classList.add('hidden');
-			document.body.style.overflow = '';
-		}
-
-		tiles.forEach((tile) => tile.addEventListener('click', () => openStudy(tile)));
-		closeBtn?.addEventListener('click', closeStudy);
-		backdrop?.addEventListener('click', closeStudy);
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' && lightbox && !lightbox.classList.contains('hidden')) closeStudy();
-		});
+		const io = new IntersectionObserver(
+			(entries, obs) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					const f = entry.target as HTMLIFrameElement;
+					if (f.dataset.lazySrc) f.src = f.dataset.lazySrc;
+					obs.unobserve(f);
+				}
+			},
+			{ rootMargin: '400px 0px' }
+		);
+		frames.forEach((f) => io.observe(f));
 	}
-
-	document.addEventListener('astro:page-load', initStudies);
-	initStudies();
+	document.addEventListener('astro:page-load', initStudyReels);
+	initStudyReels();
 </script>

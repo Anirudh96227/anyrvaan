@@ -44,7 +44,7 @@ The real discipline is in the field names. To name `summary` and require it in o
 
 ## The discipline transfers off the screen
 
-This is why building the content structure for this site clarified the work more than any amount of moodboarding did. Defining "what every case study must contain" forced decisions I'd been happily deferring. (The site's structure is written up as [its own case study](/work/anyrvaan-site/), and the broader mindset in [The Thing That Makes the Thing](/blog/the-thing-that-makes-the-thing/).) You can borrow the discipline without writing a line of code: for any project, ask what its schema *would* be. What are the required fields? What's the one identifying thing? The questions are clarifying whether or not you ever store the answer in a file.
+This is why building the content structure for this site clarified the work more than any amount of moodboarding did. Defining "what every case study must contain" forced decisions I'd been happily deferring. (The broader mindset behind it is in [The Thing That Makes the Thing](/blog/the-thing-that-makes-the-thing/).) You can borrow the discipline without writing a line of code: for any project, ask what its schema *would* be. What are the required fields? What's the one identifying thing? The questions are clarifying whether or not you ever store the answer in a file.
 
 ## How to Proceed
 

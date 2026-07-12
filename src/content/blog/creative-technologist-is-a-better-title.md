@@ -14,7 +14,7 @@ heroMotif: "graph"
 
 Consider the background animation on this site's homepage. You cannot fully judge whether it's *well designed* without understanding why it costs nothing when nobody's interacting with it — that restraint is the design. And you cannot *build* it well without knowing what it's supposed to feel like when a cursor drifts close. The design decision and the engineering decision are the same decision, wearing two hats.
 
-Split that across two people and two handoffs, and you reliably get one of two failures: something beautiful and slow, or something fast and forgettable. The single idea that made it both beautiful *and* nearly free had to live in one head. (The full build is in [Building a Cursor-Reactive Particle Field](/blog/building-a-cursor-reactive-particle-field/), and the site it lives on is written up as [its own case study](/work/anyrvaan-site/).)
+Split that across two people and two handoffs, and you reliably get one of two failures: something beautiful and slow, or something fast and forgettable. The single idea that made it both beautiful *and* nearly free had to live in one head. (The full build is in [Building a Cursor-Reactive Particle Field](/blog/building-a-cursor-reactive-particle-field/).)
 
 ## Three titles, honestly compared
 

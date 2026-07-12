@@ -26,7 +26,7 @@ The instinct to build a rich, always-on dashboard comes from a good place — vi
 
 ## From "many cells" to "one signal"
 
-This is really the same move as turning a spreadsheet into a dashboard in the first place — collapsing a wall of raw numbers into the one thing you actually need to see. The disappearing dashboard just takes that one step further: collapse it all the way down to *nothing, until it matters.* (The studio explored the spreadsheet-to-dashboard shift as a motion piece — [Death by a Thousand Cells](/work/spreadsheets-to-dashboards/) — and the "best design is invisible" idea more broadly in [The Design System Nobody Sees](/blog/the-design-system-nobody-sees/).)
+This is really the same move as turning a spreadsheet into a dashboard in the first place — collapsing a wall of raw numbers into the one thing you actually need to see. The disappearing dashboard just takes that one step further: collapse it all the way down to *nothing, until it matters.* (I built and animated that first move literally — [Death by a Thousand Cells](/blog/death-by-a-thousand-cells/) — and the "best design is invisible" idea more broadly in [The Design System Nobody Sees](/blog/the-design-system-nobody-sees/).)
 
 None of this means data views are bad. It means the *default* state should be quiet. Keep the rich view for when someone deliberately goes looking — the deep-dive, the investigation. But the everyday state shouldn't require anyone to sit and watch, because a person watching a dashboard is a person the system failed to notify.
 

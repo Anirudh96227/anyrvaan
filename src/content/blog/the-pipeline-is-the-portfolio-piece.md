@@ -28,7 +28,7 @@ One beautiful output proves you can make one beautiful thing. A pipeline that re
 
 Here's the tell that a pipeline is real: the outputs are consistent with each other. When eight pieces share a coherent world, a coherent palette, a coherent logic, that consistency is itself evidence of a system underneath — you're not looking at eight lucky results, you're looking at one repeatable process viewed eight times. The consistency *is* the portfolio piece; the individual outputs are just how you view it.
 
-This site is built to make that visible on purpose. Each case study is the same underlying structure — a piece of writing plus a small set of shared rules — so that adding the tenth project is a matter of content, not construction. That structure is itself written up as a [case study of the site](/work/anyrvaan-site/), because the system was more of the work than any single page. (The mindset behind it is in [The Thing That Makes the Thing](/blog/the-thing-that-makes-the-thing/).)
+This site is built to make that visible on purpose. Each case study is the same underlying structure — a piece of writing plus a small set of shared rules — so that adding the tenth project is a matter of content, not construction; the system was more of the work than any single page. (The mindset behind it is in [The Thing That Makes the Thing](/blog/the-thing-that-makes-the-thing/).)
 
 ## How to show something invisible
 

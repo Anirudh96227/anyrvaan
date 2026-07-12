@@ -12,6 +12,9 @@ const blog = defineCollection({
 		// to a generative canvas renderer (see initPostHero in Layout.astro),
 		// picked to fit the post's theme. Omit for no hero visual.
 		heroMotif: z.enum(['funnel', 'ripple', 'graph']).optional(),
+		// An interactive code-generated demo rendered above the article, in
+		// place of a hero motif, for posts that embed a live component.
+		demo: z.enum(['sheet-to-dashboard']).optional(),
 		draft: z.boolean().default(false),
 	}),
 });
@@ -29,12 +32,27 @@ const work = defineCollection({
 		tags: z.array(z.string()).default([]),
 		video: z.string().optional(),
 		poster: z.string().optional(),
+		// The single line naming the connecting idea across the piece — shown as
+		// a large pull-quote right under the header, swept in the site's heading
+		// light-sweep treatment. What used to live buried in the closing
+		// paragraph of the body now leads the page.
+		thesis: z.string().optional(),
+		// Overrides for the multi-video "studies" grid section — different
+		// projects hold different kinds of pieces, so the section copy
+		// shouldn't be hardcoded to any one project's theme.
+		studiesEyebrow: z.string().optional(),
+		studiesHeading: z.string().optional(),
+		studiesIntro: z.string().optional(),
 		gallery: z
 			.array(
 				z.object({
 					src: z.string(),
 					alt: z.string(),
 					caption: z.string().optional(),
+					// Reader-facing prose for this plate, shown beside it in the
+					// alternating layout — distinct from `alt`, which stays a plain
+					// accessibility description of the image itself.
+					note: z.string().optional(),
 				})
 			)
 			.optional(),
@@ -50,6 +68,11 @@ const studies = defineCollection({
 		project: z.string(),
 		number: z.number(),
 		title: z.string(),
+		creator: z.string().optional(),
+		// A short (few-word) phrase naming this study's own angle on the
+		// project's connecting thread — shown on the grid tile beneath the
+		// title, so the grid reads as chapters of one idea, not a video wall.
+		thread: z.string().optional(),
 		video: z.string(),
 		poster: z.string().optional(),
 		draft: z.boolean().default(false),

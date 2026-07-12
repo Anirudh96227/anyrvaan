@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
+import SheetToDashboard from '../../components/SheetToDashboard.tsx';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -62,6 +63,15 @@ const heroCaption = post.data.heroMotif ? heroCaptions[post.data.heroMotif] : nu
 					)
 				}
 			</header>
+			{
+				post.data.demo === 'sheet-to-dashboard' && (
+					<div class="mx-auto max-w-5xl px-6 pb-16">
+						<div class="reveal aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
+							<SheetToDashboard client:visible />
+						</div>
+					</div>
+				)
+			}
 			<article class="mx-auto max-w-3xl border-t border-white/5 px-6 py-16">
 				<div class="prose">
 					<Content />

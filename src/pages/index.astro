@@ -11,9 +11,7 @@ const latestPosts = (await getCollection('blog', ({ data }) => !data.draft))
 const formatDate = (d: Date) =>
 	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 
-// Excludes the studio's own site from this teaser — it stays listed on
-// /work itself, just not alongside the client-facing case studies here.
-const featuredWork = (await getCollection('work', ({ id, data }) => !data.draft && id !== 'anyrvaan-site'))
+const featuredWork = (await getCollection('work', ({ data }) => !data.draft))
 	.sort((a, b) => Number(b.data.year) - Number(a.data.year))
 	.slice(0, 3);
 ---

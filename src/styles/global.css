@@ -236,6 +236,221 @@ body {
 		0 0 4px rgba(96, 165, 250, 1);
 }
 
+/* Sheet → Dashboard demo (React island). Two equal, 3D-tilted panels facing
+   each other across a gap on a deep indigo backdrop: a LIGHT spreadsheet
+   (source) on the left, a DARK dashboard (result) on the right — matching the
+   reference pairing. A canvas overlay (.stod-canvas) carries the square blue
+   data packets flowing left to right. */
+.stod {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	perspective: 1500px;
+	background:
+		radial-gradient(115% 90% at 50% -12%, rgba(99, 102, 241, 0.4), transparent 55%),
+		radial-gradient(90% 80% at 15% 120%, rgba(56, 189, 248, 0.2), transparent 55%),
+		linear-gradient(165deg, #1b1d3e 0%, #131427 55%, #0c0d1a 100%);
+	font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.stod-panel {
+	position: absolute;
+	top: 50%;
+	width: 39%;
+	height: 84%;
+	padding: clamp(10px, 1.4vw, 20px);
+	border-radius: 16px;
+	transform-style: preserve-3d;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+/* spreadsheet — left, light, the source */
+.stod-sheet {
+	left: 4%;
+	transform: translateY(-50%) rotateX(6deg) rotateY(12deg);
+	border: 1px solid rgba(255, 255, 255, 0.7);
+	background: linear-gradient(165deg, #ffffff 0%, #f3f6fd 100%);
+	box-shadow:
+		0 40px 70px -28px rgba(10, 12, 40, 0.75),
+		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+	color: #1e293b;
+}
+/* dashboard — right, dark, the result */
+.stod-dash {
+	right: 4%;
+	transform: translateY(-50%) rotateX(6deg) rotateY(-12deg);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: linear-gradient(165deg, #1c2033 0%, #12141f 100%);
+	box-shadow:
+		0 40px 70px -28px rgba(0, 0, 0, 0.85),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	color: #e2e8f0;
+}
+.stod-ptitle,
+.stod-sheet__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: clamp(12px, 1.15vw, 16px);
+	font-weight: 600;
+	margin-bottom: clamp(6px, 1vw, 12px);
+}
+.stod-ptitle {
+	color: #f1f5f9;
+}
+.stod-sheet__head {
+	color: #1e293b;
+}
+.stod-menu {
+	color: #64748b;
+	letter-spacing: 1px;
+}
+.stod-file {
+	font-family: ui-monospace, monospace;
+	color: #2563eb;
+	font-weight: 600;
+}
+.stod-note {
+	font-size: 0.68em;
+	font-weight: 400;
+	color: #94a3b8;
+	font-style: italic;
+}
+/* dashboard bars */
+.stod-bars {
+	flex: 1;
+	display: flex;
+	align-items: stretch;
+	gap: clamp(4px, 0.9vw, 12px);
+	min-height: 0;
+}
+.stod-bar {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 0;
+}
+.stod-bar__tip {
+	font-size: clamp(7px, 0.6vw, 9px);
+	font-weight: 600;
+	line-height: 1.6;
+	color: #4ade80;
+	white-space: nowrap;
+}
+.stod-bar__val {
+	font-size: clamp(10px, 1.05vw, 15px);
+	font-weight: 700;
+	color: #cbd5e1;
+	margin-bottom: 4px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.stod-bar--active .stod-bar__val {
+	color: #93c5fd;
+}
+.stod-bar__track {
+	position: relative;
+	flex: 1;
+	width: 66%;
+	min-height: 0;
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 5px 5px 0 0;
+}
+.stod-bar__fill {
+	position: absolute;
+	inset: auto 0 0 0;
+	height: 2%;
+	border-radius: 5px 5px 0 0;
+	background:
+		repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.28) 0 2px, transparent 2px 7px),
+		linear-gradient(180deg, #60a5fa, #3b82f6);
+	transition: height 0.12s linear;
+}
+.stod-bar--active .stod-bar__fill {
+	background:
+		repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.4) 0 2px, transparent 2px 7px),
+		linear-gradient(180deg, #93c5fd, #2563eb);
+	box-shadow: 0 0 22px rgba(96, 165, 250, 0.65);
+}
+.stod-bar__label {
+	font-size: clamp(8px, 0.82vw, 12px);
+	color: #64748b;
+	margin-top: 6px;
+}
+/* dashboard chat hint (reference cue) */
+.stod-chat {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin-top: clamp(8px, 1vw, 12px);
+	padding: clamp(6px, 0.75vw, 9px) clamp(8px, 1vw, 12px);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.03);
+	font-size: clamp(8px, 0.85vw, 12px);
+	color: #64748b;
+}
+.stod-chat__spark {
+	color: #818cf8;
+}
+.stod-chat__chip {
+	margin-left: auto;
+	color: #fdba74;
+	background: rgba(251, 146, 60, 0.14);
+	border-radius: 5px;
+	padding: 1px 6px;
+	font-family: ui-monospace, monospace;
+}
+/* spreadsheet table */
+.stod-table {
+	width: 100%;
+	height: 100%;
+	border-collapse: collapse;
+	font-size: clamp(9px, 0.98vw, 14px);
+}
+.stod-table th {
+	text-align: left;
+	font-weight: 500;
+	font-size: 0.8em;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	color: #94a3b8;
+	padding: 8px 8px;
+	border-bottom: 1px solid #e2e8f0;
+}
+.stod-table td {
+	padding: 8px 8px;
+	border-bottom: 1px solid #eef1f7;
+	font-variant-numeric: tabular-nums;
+	color: #334155;
+}
+.stod-day {
+	color: #64748b;
+	font-weight: 500;
+}
+.stod-hours {
+	color: #64748b;
+}
+.stod-src {
+	color: #2563eb;
+	font-weight: 600;
+}
+.stod-canvas {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.stod-bar__fill {
+		transition: none;
+	}
+}
+
 /* Ambient card background: a faint grid + a glowing neon line that traces and
    fades through the card's negative space, each card running its own pattern
    (see initCardFx). Sits behind the card content (which is .relative z-10). */
@@ -578,6 +793,97 @@ body {
 	}
 	100% {
 		filter: drop-shadow(0 0 0 rgba(96, 165, 250, 0));
+	}
+}
+
+/* Case-study thesis pull-quote: the single line naming a project's connecting
+   idea, set large right under the header. Reuses the sweep look from prose
+   subheadings, but triggers off the shared .reveal/.is-visible mechanism
+   (see initReveal in Layout.astro) instead of its own IntersectionObserver —
+   one fewer moving part for a one-off element. */
+.thesis-sweep {
+	background-image: linear-gradient(
+		100deg,
+		#fafafa 0%,
+		#fafafa 36%,
+		#60a5fa 46%,
+		#dbeafe 50%,
+		#60a5fa 54%,
+		#fafafa 64%,
+		#fafafa 100%
+	);
+	background-size: 200% auto;
+	background-position: 200% center;
+	-webkit-background-clip: text;
+	background-clip: text;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.reveal-init .thesis-sweep.is-visible {
+		color: transparent;
+		-webkit-text-fill-color: transparent;
+		animation:
+			heading-sweep 3.4s cubic-bezier(0.45, 0, 0.2, 1) 0.3s forwards,
+			heading-glow 3.4s ease-in-out 0.3s forwards;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.thesis-sweep {
+		background: none;
+		-webkit-text-fill-color: currentColor;
+		color: var(--color-neutral-50);
+	}
+}
+
+/* Glow-edge frame: a single comet of light chasing around the border line —
+   gallery plates, study reels, hero video, gallery finale. Uses the
+   background-clip border trick: a wrapper (.glow-frame) with solid padding
+   equal to the ring width and a conic-gradient background, holding an inner
+   element (.glow-frame__inner) that's fully opaque and covers everything
+   except that padding — so only the padding ring ever shows gradient color,
+   and it always follows the wrapper's own border-radius exactly, corners
+   included. The gradient's rotation is animated via the `angle` custom
+   property (registered with @property so it interpolates smoothly), not via
+   `transform` on the wrapper — that way only the light spins; the image/
+   video inside .glow-frame__inner never moves or rotates. */
+@property --glow-angle {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 0deg;
+}
+.glow-frame {
+	position: relative;
+	padding: 2px;
+	border-radius: inherit;
+	background: conic-gradient(
+		from var(--glow-angle),
+		rgba(96, 165, 250, 0) 0%,
+		rgba(96, 165, 250, 0) 88%,
+		rgba(96, 165, 250, 1) 94%,
+		rgba(219, 234, 254, 1) 97%,
+		rgba(96, 165, 250, 1) 100%
+	);
+	filter: drop-shadow(0 0 4px rgba(96, 165, 250, 0.85));
+}
+.glow-frame__inner {
+	display: block;
+	border-radius: inherit;
+	overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.glow-frame {
+		animation: glow-frame-spin 6s linear infinite;
+	}
+}
+@keyframes glow-frame-spin {
+	to {
+		--glow-angle: 360deg;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.glow-frame {
+		animation: none;
+		background: rgba(96, 165, 250, 0.5);
+		filter: none;
 	}
 }
 
