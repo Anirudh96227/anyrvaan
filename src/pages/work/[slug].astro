@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
@@ -75,14 +76,14 @@ const platesWithCaption = galleryPlates.map((img) => {
 		<Nav />
 		<main>
 			<header class="mx-auto max-w-4xl px-6 pt-40 pb-16">
-				<p class="reveal text-eyebrow uppercase text-neutral-500">Case Study — {project.data.year}</p>
+				<p class="reveal text-eyebrow uppercase text-neutral-400">Case Study — {project.data.year}</p>
 				<h1 class="post-title reveal mt-6 text-h1 text-neutral-50">{project.data.title}</h1>
 				<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">{project.data.summary}</p>
 				{
 					project.data.tags.length > 0 && (
 						<ul class="reveal mt-8 flex flex-wrap gap-x-4 gap-y-1">
 							{project.data.tags.map((t) => (
-								<li class="text-small text-neutral-500">{t}</li>
+								<li class="text-small text-neutral-400">{t}</li>
 							))}
 						</ul>
 					)
@@ -147,13 +148,13 @@ const platesWithCaption = galleryPlates.map((img) => {
 												<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
 													{String(i + 1).padStart(2, '0')}
 												</span>
-												<img src={img.src} alt={img.alt} loading="lazy" class="h-full w-full object-cover" />
+												<Image src={img.src} alt={img.alt} loading="lazy" class="h-full w-full object-cover" />
 											</div>
 										</figure>
 									</div>
 									<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && 'sm:order-1']}>
-										{eyebrow && <p class="text-eyebrow uppercase text-neutral-500">{eyebrow}</p>}
-										<h3 class="mt-4 text-h3 text-neutral-50">{name}</h3>
+										{eyebrow && <p class="text-eyebrow uppercase text-neutral-400">{eyebrow}</p>}
+										<h2 class="mt-4 text-h3 text-neutral-50">{name}</h2>
 										{img.note && <p class="mt-6 text-body text-neutral-400">{img.note}</p>}
 									</div>
 								</article>
@@ -162,9 +163,9 @@ const platesWithCaption = galleryPlates.map((img) => {
 						{galleryFinale && (
 							<figure class="glow-frame reveal mt-20 rounded-2xl sm:mt-28">
 								<div class="glow-frame__inner border border-white/10 bg-black">
-									<img src={galleryFinale.src} alt={galleryFinale.alt} loading="lazy" class="w-full object-cover" />
+									<Image src={galleryFinale.src} alt={galleryFinale.alt} loading="lazy" class="w-full object-cover" />
 									{galleryFinale.caption && (
-										<figcaption class="px-4 py-3 text-small text-neutral-500">{galleryFinale.caption}</figcaption>
+										<figcaption class="px-4 py-3 text-small text-neutral-400">{galleryFinale.caption}</figcaption>
 									)}
 								</div>
 							</figure>
@@ -177,13 +178,13 @@ const platesWithCaption = galleryPlates.map((img) => {
 				rawStudies.length > 0 && (
 					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
 						<div class="mx-auto max-w-5xl">
-							<p class="reveal text-eyebrow uppercase text-neutral-500">
+							<p class="reveal text-eyebrow uppercase text-neutral-400">
 								{project.data.studiesEyebrow ?? 'The Studies'}
 							</p>
 							<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
 								{project.data.studiesHeading ?? 'Eight short studies, one rhythm.'}
 							</h2>
-							<p class="reveal mt-6 max-w-2xl text-body text-neutral-500">
+							<p class="reveal mt-6 max-w-2xl text-body text-neutral-400">
 								{project.data.studiesIntro ??
 									"Each clip plays while it's on screen and rests the moment it isn't. Open one for the full concept behind it."}
 							</p>
@@ -201,44 +202,94 @@ const platesWithCaption = galleryPlates.map((img) => {
 											]}
 										>
 											<div class="glow-frame rounded-2xl">
-												<div class="study-reel glow-frame__inner relative aspect-9/16 border border-white/10 bg-black">
+												<div
+													class:list={[
+														'study-reel glow-frame__inner relative aspect-9/16 border border-white/10 bg-black',
+														study.data.companion && 'flip-card',
+													]}
+												>
 													<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
 														{String(i + 1).padStart(2, '0')}
 													</span>
-													{studyYoutubeId ? (
-														<iframe
-															class="h-full w-full"
-															src=""
-															data-lazy-src={`https://www.youtube-nocookie.com/embed/${studyYoutubeId}?rel=0&modestbranding=1&playsinline=1`}
-															title={study.data.title}
-															loading="lazy"
-															allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-															allowfullscreen
-														/>
-													) : (
-														<video
-															class="h-full w-full object-cover"
-															src={study.data.video}
-															poster={study.data.poster}
-															controls
-															playsinline
-															preload="none"
-														/>
+													<div class:list={[study.data.companion && 'flip-card__face flip-card__face--front']}>
+														{studyYoutubeId ? (
+															<iframe
+																class="h-full w-full"
+																src=""
+																data-lazy-src={`https://www.youtube-nocookie.com/embed/${studyYoutubeId}?rel=0&modestbranding=1&playsinline=1`}
+																title={study.data.title}
+																loading="lazy"
+																allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+																allowfullscreen
+															/>
+														) : (
+															<video
+																class="h-full w-full object-cover"
+																src={study.data.video}
+																poster={study.data.poster}
+																controls
+																playsinline
+																preload="none"
+															/>
+														)}
+													</div>
+													{study.data.companion && (
+														<div class="flip-card__face flip-card__face--back">
+															<Image
+																src={study.data.companion}
+																alt={study.data.companionLabel ?? 'A companion illustration of the same scene'}
+																loading="lazy"
+																class="h-full w-full object-cover"
+															/>
+															<span class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 pt-10">
+																<span class="block text-small text-neutral-200">
+																	{study.data.companionLabel ?? 'A companion illustration of the same scene'}
+																</span>
+															</span>
+														</div>
 													)}
 												</div>
 											</div>
+											{study.data.companion && (
+												<button
+													type="button"
+													class="flip-card__toggle mt-3 inline-flex items-center rounded-full border border-white/15 px-4 py-1.5 text-small text-neutral-400 transition-colors hover:border-white/40 hover:text-neutral-100"
+													aria-label={`Flip to see the companion illustration for ${study.data.title}`}
+												>
+													Flip the frame
+												</button>
+											)}
 										</div>
 										<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && 'sm:order-1']}>
-											<p class="text-eyebrow uppercase text-neutral-500">
+											<p class="text-eyebrow uppercase text-neutral-400">
 												{study.data.creator ?? project.data.title}
 											</p>
 											<h3 class="mt-4 text-h3 text-neutral-50">{study.data.title}</h3>
 											{study.data.thread && (
-												<p class="mt-2 text-small text-neutral-500">{study.data.thread}</p>
+												<p class="mt-2 text-small text-neutral-400">{study.data.thread}</p>
 											)}
 											<div class="prose prose--study mt-6">
 												<StudyContent />
 											</div>
+											{study.data.toolChain && study.data.toolChain.length > 0 && (
+												<div class="tool-chain mt-8">
+													<p class="text-eyebrow uppercase text-neutral-400">How It Was Made</p>
+													<ol class="tool-chain__list mt-4">
+														{study.data.toolChain.map((entry, stepIndex) => (
+															<li class="tool-chain__item">
+																<button type="button" class="tool-chain__trigger" aria-expanded="false">
+																	<span class="tool-chain__index">{String(stepIndex + 1).padStart(2, '0')}</span>
+																	<span class="tool-chain__step">{entry.step}</span>
+																	<span class="tool-chain__chevron" aria-hidden="true">⌄</span>
+																</button>
+																<div class="tool-chain__detail">
+																	<p>{entry.detail}</p>
+																</div>
+															</li>
+														))}
+													</ol>
+												</div>
+											)}
 										</div>
 									</article>
 								))}
@@ -328,4 +379,48 @@ const platesWithCaption = galleryPlates.map((img) => {
 	}
 	document.addEventListener('astro:page-load', initStudyReels);
 	initStudyReels();
+
+	// Flip cards: "Flip the frame" (or the card itself) toggles .is-flipped,
+	// which the CSS 3D transform in global.css turns into a Y-axis rotation
+	// between the video and its companion illustration. Pausing the video's
+	// iframe when flipped away isn't necessary — YouTube keeps playing behind
+	// the rotated face, same as it would off-screen.
+	function initFlipCards() {
+		const toggles = document.querySelectorAll<HTMLButtonElement>(
+			'.flip-card__toggle:not([data-flip-init])'
+		);
+		toggles.forEach((toggle) => {
+			toggle.dataset.flipInit = 'true';
+			const card = toggle.closest('div')?.querySelector<HTMLElement>('.flip-card');
+			if (!card) return;
+			toggle.setAttribute('aria-pressed', 'false');
+			toggle.addEventListener('click', () => {
+				const flipped = card.classList.toggle('is-flipped');
+				toggle.setAttribute('aria-pressed', String(flipped));
+			});
+		});
+	}
+	document.addEventListener('astro:page-load', initFlipCards);
+	initFlipCards();
+
+	// Tool-chain accordion: one step's detail open at a time per study, so a
+	// visitor scans steps rather than reading four paragraphs at once.
+	function initToolChain() {
+		const lists = document.querySelectorAll<HTMLElement>(
+			'.tool-chain__list:not([data-chain-init])'
+		);
+		lists.forEach((list) => {
+			list.dataset.chainInit = 'true';
+			const triggers = list.querySelectorAll<HTMLButtonElement>('.tool-chain__trigger');
+			triggers.forEach((trigger) => {
+				trigger.addEventListener('click', () => {
+					const expanded = trigger.getAttribute('aria-expanded') === 'true';
+					triggers.forEach((t) => t.setAttribute('aria-expanded', 'false'));
+					trigger.setAttribute('aria-expanded', String(!expanded));
+				});
+			});
+		});
+	}
+	document.addEventListener('astro:page-load', initToolChain);
+	initToolChain();
 </script>

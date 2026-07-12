@@ -6,6 +6,17 @@ title: "Weather With a Career Plan"
 creator: "Anyrvaan"
 thread: "Lightning that hasn't clocked in yet"
 video: "https://youtube.com/shorts/XOCLsF6YJ1M"
+companion: "./_companions/06-thunder-sword-companion.jpeg"
+companionLabel: "A graphite-style companion rendering of the same scene"
+toolChain:
+  - step: "Direction"
+    detail: "A brief describing the catch and the start of the forge, with an explicit instruction to cut before the sword fully forms."
+  - step: "Generation"
+    detail: "AI video generation, several passes run to get the lightning's transformation reading as motion rather than a static effect."
+  - step: "Selection"
+    detail: "One take chosen for how clearly it stopped short of the finished weapon."
+  - step: "Finishing"
+    detail: "Timing trimmed to land the cut at the right moment; no added effects beyond what the generation produced."
 ---
 
 ## Core Question

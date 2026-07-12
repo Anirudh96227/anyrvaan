@@ -6,6 +6,17 @@ title: "A Merge in Progress"
 creator: "Kshyv"
 thread: "Two identities, neither finished"
 video: "https://youtu.be/mUcfRkpGF48"
+companion: "./_companions/04-ardhnarishwar-companion.jpeg"
+companionLabel: "A graphite-style companion rendering of the same scene"
+toolChain:
+  - step: "Direction"
+    detail: "A brief describing the dissolve itself as the subject — both forms visible together, no completed 'after' state."
+  - step: "Generation"
+    detail: "AI video generation, several passes run to hold the crossfade at its midpoint rather than resolving cleanly into either form."
+  - step: "Selection"
+    detail: "One take chosen for how legible both identities stayed at once."
+  - step: "Finishing"
+    detail: "Light color and timing adjustments; no added effects beyond what the generation produced."
 ---
 
 ## Core Question

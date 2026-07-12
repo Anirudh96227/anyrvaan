@@ -23,60 +23,81 @@ const blog = defineCollection({
 // `video`/`poster` are for a single-video case study — shown as a hero
 // player right under the header when present. `gallery` is for an
 // image-plate case study — shown as a grid, last item as a wide finale.
+// Gallery images are colocated under each project's folder (not public/) so
+// the `image()` helper can run them through Astro's build-time pipeline
+// (WebP output, responsive srcset, intrinsic width/height for CLS).
 const work = defineCollection({
 	loader: glob({ pattern: '**/*.md', base: './src/content/work' }),
-	schema: z.object({
-		title: z.string(),
-		summary: z.string(),
-		year: z.string(),
-		tags: z.array(z.string()).default([]),
-		video: z.string().optional(),
-		poster: z.string().optional(),
-		// The single line naming the connecting idea across the piece — shown as
-		// a large pull-quote right under the header, swept in the site's heading
-		// light-sweep treatment. What used to live buried in the closing
-		// paragraph of the body now leads the page.
-		thesis: z.string().optional(),
-		// Overrides for the multi-video "studies" grid section — different
-		// projects hold different kinds of pieces, so the section copy
-		// shouldn't be hardcoded to any one project's theme.
-		studiesEyebrow: z.string().optional(),
-		studiesHeading: z.string().optional(),
-		studiesIntro: z.string().optional(),
-		gallery: z
-			.array(
-				z.object({
-					src: z.string(),
-					alt: z.string(),
-					caption: z.string().optional(),
-					// Reader-facing prose for this plate, shown beside it in the
-					// alternating layout — distinct from `alt`, which stays a plain
-					// accessibility description of the image itself.
-					note: z.string().optional(),
-				})
-			)
-			.optional(),
-		draft: z.boolean().default(false),
-	}),
+	schema: ({ image }) =>
+		z.object({
+			title: z.string(),
+			summary: z.string(),
+			year: z.string(),
+			tags: z.array(z.string()).default([]),
+			video: z.string().optional(),
+			poster: z.string().optional(),
+			// The single line naming the connecting idea across the piece — shown as
+			// a large pull-quote right under the header, swept in the site's heading
+			// light-sweep treatment. What used to live buried in the closing
+			// paragraph of the body now leads the page.
+			thesis: z.string().optional(),
+			// Overrides for the multi-video "studies" grid section — different
+			// projects hold different kinds of pieces, so the section copy
+			// shouldn't be hardcoded to any one project's theme.
+			studiesEyebrow: z.string().optional(),
+			studiesHeading: z.string().optional(),
+			studiesIntro: z.string().optional(),
+			gallery: z
+				.array(
+					z.object({
+						src: image(),
+						alt: z.string(),
+						caption: z.string().optional(),
+						// Reader-facing prose for this plate, shown beside it in the
+						// alternating layout — distinct from `alt`, which stays a plain
+						// accessibility description of the image itself.
+						note: z.string().optional(),
+					})
+				)
+				.optional(),
+			draft: z.boolean().default(false),
+		}),
 });
 
 // One video-driven "study" belonging to a work entry (`project` matches that
 // entry's id). Body is the study's own long-form brief.
 const studies = defineCollection({
 	loader: glob({ pattern: '**/*.md', base: './src/content/studies' }),
-	schema: z.object({
-		project: z.string(),
-		number: z.number(),
-		title: z.string(),
-		creator: z.string().optional(),
-		// A short (few-word) phrase naming this study's own angle on the
-		// project's connecting thread — shown on the grid tile beneath the
-		// title, so the grid reads as chapters of one idea, not a video wall.
-		thread: z.string().optional(),
-		video: z.string(),
-		poster: z.string().optional(),
-		draft: z.boolean().default(false),
-	}),
+	schema: ({ image }) =>
+		z.object({
+			project: z.string(),
+			number: z.number(),
+			title: z.string(),
+			creator: z.string().optional(),
+			// A short (few-word) phrase naming this study's own angle on the
+			// project's connecting thread — shown on the grid tile beneath the
+			// title, so the grid reads as chapters of one idea, not a video wall.
+			thread: z.string().optional(),
+			video: z.string(),
+			poster: z.string().optional(),
+			// A second, graphite-style AI-generated illustration of the same
+			// subject — an alternate rendering shown alongside the video, not
+			// concept art and not claimed to precede it (see companionLabel).
+			companion: image().optional(),
+			companionLabel: z.string().optional(),
+			// The generation workflow for this piece: an ordered list of steps,
+			// each a short label + one line of detail. Rendered as an interactive,
+			// step-by-step disclosure rather than a wall of prose.
+			toolChain: z
+				.array(
+					z.object({
+						step: z.string(),
+						detail: z.string(),
+					})
+				)
+				.optional(),
+			draft: z.boolean().default(false),
+		}),
 });
 
 export const collections = { blog, work, studies };

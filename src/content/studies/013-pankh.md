@@ -6,6 +6,17 @@ title: "Three Minutes of Not Getting There"
 creator: "Kshyv"
 thread: "The bit, stress-tested at length"
 video: "https://youtu.be/F3oGlG17G7k"
+companion: "./_companions/05-pankh-companion.jpeg"
+companionLabel: "A graphite-style companion rendering of the same scene"
+toolChain:
+  - step: "Direction"
+    detail: "A brief built around the feather and flute as recurring images, with no depicted miracle or narrative climax."
+  - step: "Generation"
+    detail: "AI video generation across the full song length, run in passes to keep the visual language consistent over three-plus minutes."
+  - step: "Selection"
+    detail: "A sequence assembled from the strongest passes, chosen for tonal consistency rather than a single best take."
+  - step: "Finishing"
+    detail: "The song synced to the final cut; light color and pacing adjustments only."
 ---
 
 ## Core Question

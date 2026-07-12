@@ -6,6 +6,17 @@ title: "Good Mood, Bad Mood, Same Frame"
 creator: "Anyrvaan"
 thread: "The last cut, still catching"
 video: "https://youtube.com/shorts/aCMun8Mvt9U"
+companion: "./_companions/08-burning-up-companion.jpeg"
+companionLabel: "A graphite-style companion rendering of the same scene"
+toolChain:
+  - step: "Direction"
+    detail: "A brief describing the bleed between two states — blue spirit and fire-lit heat visible together, not a hard cut between them."
+  - step: "Generation"
+    detail: "AI video generation, several passes run to keep both colors legible on screen at once rather than one replacing the other."
+  - step: "Selection"
+    detail: "One take chosen for how gradual and visible the turn between states stayed."
+  - step: "Finishing"
+    detail: "Light color and timing adjustments only."
 ---
 
 ## Core Question

@@ -887,6 +887,143 @@ body {
 	}
 }
 
+/* Flip card: a study's video and its graphite-style companion illustration
+   share one frame, back to back — clicking "Flip the frame" (or the card
+   itself) rotates the whole thing on its Y axis to reveal the other side,
+   like turning a physical print over. Pure CSS 3D transform, toggled by a
+   single class (see initFlipCards); no JS animation loop. */
+.flip-card {
+	perspective: 1200px;
+}
+.flip-card__face {
+	position: relative;
+	height: 100%;
+	backface-visibility: hidden;
+	transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+	transform-style: preserve-3d;
+}
+.flip-card__face--front {
+	transform: rotateY(0deg);
+}
+.flip-card__face--back {
+	position: absolute;
+	inset: 0;
+	transform: rotateY(180deg);
+	overflow: hidden;
+}
+.flip-card.is-flipped .flip-card__face--front {
+	transform: rotateY(180deg);
+}
+.flip-card.is-flipped .flip-card__face--back {
+	transform: rotateY(360deg);
+}
+@media (prefers-reduced-motion: reduce) {
+	.flip-card__face {
+		transition: none;
+	}
+}
+.flip-card__toggle {
+	cursor: pointer;
+}
+/* Ambient breathing glow: a slow, continuous in-and-out pulse on the pill's
+   border and a soft halo behind it, so the invitation to flip reads as alive
+   without ever flashing or strobing — same "motion born from stillness"
+   register as the hero wordmark's breathing weight. Stops once a visitor
+   actually flips the card (aria-pressed becomes true), since its job —
+   inviting the first interaction — is done. */
+@media (prefers-reduced-motion: no-preference) {
+	.flip-card__toggle:not([aria-pressed='true']) {
+		animation: flip-toggle-glow 3.2s ease-in-out infinite;
+	}
+}
+@keyframes flip-toggle-glow {
+	0%,
+	100% {
+		border-color: rgba(255, 255, 255, 0.15);
+		color: var(--color-neutral-400);
+		box-shadow: 0 0 0 rgba(96, 165, 250, 0);
+	}
+	50% {
+		border-color: rgba(96, 165, 250, 0.7);
+		color: rgb(191, 214, 253);
+		box-shadow: 0 0 14px rgba(96, 165, 250, 0.4);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.flip-card__toggle {
+		animation: none;
+	}
+}
+
+/* Tool-chain: an interactive, step-by-step disclosure of a study's actual
+   generation workflow — collapsed by default, one step opens at a time so
+   the list stays scannable instead of dumping four paragraphs at once. */
+.tool-chain__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tool-chain__item {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tool-chain__trigger {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.85rem 0.1rem;
+	background: none;
+	border: none;
+	font: inherit;
+	text-align: left;
+	color: var(--color-neutral-300);
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+.tool-chain__trigger:hover {
+	color: var(--color-neutral-50);
+}
+.tool-chain__index {
+	font-size: var(--text-eyebrow);
+	color: var(--color-neutral-600);
+	font-variant-numeric: tabular-nums;
+}
+.tool-chain__step {
+	flex: 1;
+	font-size: 0.95em;
+}
+.tool-chain__chevron {
+	color: var(--color-neutral-600);
+	transition: transform 0.3s ease;
+}
+.tool-chain__trigger[aria-expanded='true'] .tool-chain__chevron {
+	transform: rotate(180deg);
+}
+.tool-chain__detail {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows 0.35s ease;
+}
+.tool-chain__detail > p {
+	overflow: hidden;
+	margin: 0;
+	padding: 0 0.1rem 0;
+	font-size: 0.9em;
+	color: var(--color-neutral-500);
+}
+.tool-chain__item:has(.tool-chain__trigger[aria-expanded='true']) .tool-chain__detail {
+	grid-template-rows: 1fr;
+}
+.tool-chain__item:has(.tool-chain__trigger[aria-expanded='true']) .tool-chain__detail > p {
+	padding-bottom: 0.9rem;
+}
+@media (prefers-reduced-motion: reduce) {
+	.tool-chain__detail {
+		transition: none;
+	}
+}
+
 /* Give headings clear breathing room below them — more than the 1.5em default
    sibling gap, so a subhead isn't crammed against the text under it. */
 .prose h2 + * {

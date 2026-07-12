@@ -6,6 +6,17 @@ title: "Enlightenment, Rough Cut"
 creator: "Kshyv"
 thread: "The take before the caption"
 video: "https://youtube.com/shorts/EulZoT1qjwo"
+companion: "./_companions/01-innerbloom-companion.jpeg"
+companionLabel: "A graphite-style companion rendering of the same scene"
+toolChain:
+  - step: "Direction"
+    detail: "A written brief describing the sage, the mid-bloom lotus, and the rule the whole reel follows: hold before the arrival, never show it finished."
+  - step: "Generation"
+    detail: "AI video generation from that brief, run across several passes to land the right balance of stillness and glow."
+  - step: "Selection"
+    detail: "One take chosen from the generated passes for pacing and how convincingly it stayed unresolved."
+  - step: "Finishing"
+    detail: "Light color and timing adjustments; no added effects beyond what the generation produced."
 ---
 
 ## Core Question

@@ -6,15 +6,21 @@ interface Props {
 	description?: string;
 	// 'article' for blog posts and case studies, 'website' for everything else.
 	type?: 'website' | 'article';
+	// Absolute or root-relative URL to a 1200×630 share image. Falls back to
+	// the site-wide default so every page gets a real OG/Twitter preview
+	// even before a case study has its own hero image wired up.
+	image?: string;
 }
 
 const {
 	title,
 	description = 'Anyrvaan — Design × Technology × Experiences',
 	type = 'website',
+	image = '/images/og-default.png',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(image, Astro.site);
 ---
 
 <html lang="en">
@@ -40,16 +46,17 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 		/>
 		<title>{title}</title>
 
-		<!-- Open Graph / Twitter — no dedicated share image yet, so previews
-		     render as a clean title + description card until one exists. -->
+		<!-- Open Graph / Twitter -->
 		<meta property="og:type" content={type} />
 		<meta property="og:site_name" content="Anyrvaan" />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:url" content={canonicalURL} />
-		<meta name="twitter:card" content="summary" />
+		<meta property="og:image" content={ogImageURL} />
+		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageURL} />
 	</head>
 	<body>
 		<slot />

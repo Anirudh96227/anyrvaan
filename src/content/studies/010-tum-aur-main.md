@@ -2,24 +2,35 @@
 project: "rough-cut-divinity"
 draft: false
 number: 2
-title: "A Love Story With the Names Removed"
+title: "Tenderness, Before You Check What's Under the Fur"
 creator: "Kshyv"
-thread: "Warmth, not yet assigned to anyone"
+thread: "The softest cut, with the sharpest turn"
 video: "https://youtube.com/shorts/WZy2bNJfjN8"
+companion: "./_companions/02-tum-aur-main-companion.jpeg"
+companionLabel: "A graphite-style companion rendering of the same scene"
+toolChain:
+  - step: "Direction"
+    detail: "A brief describing a sunset meadow, two round, faceless-looking creatures, and a late turn that reframes what's actually being watched."
+  - step: "Generation"
+    detail: "AI video generation from that brief, several passes run to time the head-turn reveal so it lands rather than reads as a glitch."
+  - step: "Selection"
+    detail: "One take chosen for how convincingly the creatures played soft before the reveal — the twist only works if the setup is fully sold first."
+  - step: "Finishing"
+    detail: "The melody synced to the final cut; timing tightened around the turn so it lands on the beat."
 ---
 
 ## Core Question
 
-Can you feel a love story before it's been given two people to happen to?
+How much of "tenderness" is really just not having looked closely yet?
 
 ## Concept
 
-Twenty-three seconds of a romantic Hindi melody carried entirely by artwork — soft, anonymous creatures in a sunset meadow. No lead couple. No plot beat. No one to root for. Just the emotional temperature a love story runs at, playing in a room nobody's been cast into yet.
+Twenty-three seconds of a romantic Hindi melody carried by two soft, round, faceless-looking creatures in a sunset meadow — until they turn their heads near the end and the fur reads as pelt, not plush. They're wolves. The whole clip has been staging a predator as a plush toy, and only admits it in the last beat.
 
-## Why Nobody Gets a Face
+## Why the Reveal Waits
 
-The second a human couple shows up on screen, the brain does its job and starts building a relationship out of them — who's who, what happened before, what happens after. Swapping in round, faceless creatures breaks that reflex. The tenderness stays in the air instead of getting assigned to a "them."
+Spend the first eighteen seconds on anything sharp-toothed and the song never gets to be tender — the brain flags "wolf" and stops listening for "love song." Held soft and round for as long as possible, the melody gets to land uncontested. The turn doesn't cancel the tenderness retroactively; it just proves the tenderness was never really about safety to begin with.
 
 ## Connection to the Cuts
 
-Where Enlightenment, Rough Cut holds a figure mid-arrival, this one holds a feeling mid-arrival — proof the reel's whole bit isn't limited to gods and lightning. It's the softest cut in the set, and the only one where what's unfinished is an emotion rather than a body.
+Every other piece in this reel withholds an *arrival* — the sword not yet forged, the merge not yet finished. This one withholds an *identity*, and reveals it instead of dissolving it. It's the reel's one outright twist, and the softest-looking cut in the set turns out to have the sharpest turn hiding in it.
