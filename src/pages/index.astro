@@ -376,13 +376,19 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 </style>
 
 <script>
+	import { onQuiet, onActivity, scaleTime, breatheEase } from '../scripts/stillness';
+
 	// Cursor-reactive particle field for the hero.
 	// Design principle: at rest, ZERO frames render (0% CPU). Motion is born
 	// only from the cursor — nearby particles are drawn toward it, then ease home.
 	// Honors prefers-reduced-motion and treats touch as a static field.
+	//
+	// It holds one secret: sit truly still for sixty seconds and the scattered
+	// stars drift into a faint mandala, hold for a few breaths, and let go.
+	// There is no way to trigger it by doing — only by stopping.
 	function initParticleField(canvas: HTMLCanvasElement) {
 		const ctx = canvas.getContext('2d', { alpha: true });
-		if (!ctx) return { destroy() {}, emitRipple() {} };
+		if (!ctx) return { destroy() {}, emitRipple() {}, formMandala() {}, releaseMandala() {} };
 		const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
 		const coarseMQ = matchMedia('(pointer: coarse)');
 		const lowTier = coarseMQ.matches || (navigator.hardwareConcurrency || 8) <= 4;
@@ -430,8 +436,24 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 			py: Float32Array,
 			hx: Float32Array,
 			hy: Float32Array,
+			ox: Float32Array, // original (scattered) homes — what the field returns to
+			oy: Float32Array,
 			rad: Float32Array,
 			alpha: Float32Array;
+
+		// The mandala: target positions the homes drift toward when the visitor
+		// has been perfectly still. `p` runs 0..1 (scattered..formed) at breath
+		// speed; while formed, the pattern trembles very slightly — a hand
+		// holding a bowl, not a compass. Imperfection is deliberate.
+		const MANDALA_MS = 11000; // one breath to form, one to let go
+		const mnd = {
+			on: false,
+			target: 0 as 0 | 1,
+			p: 0,
+			tPrev: 0,
+			mx: new Float32Array(0),
+			my: new Float32Array(0),
+		};
 		let vw = 0,
 			vh = 0,
 			dpr = 1,
@@ -491,6 +513,42 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 				}
 			}
 			n = i;
+			// Remember the scattered arrangement, and drop any mandala mid-flight —
+			// a resize reshuffles the sky, so the pattern starts from scratch.
+			ox = hx.slice();
+			oy = hy.slice();
+			mnd.on = false;
+			mnd.p = 0;
+			mnd.target = 0;
+		}
+
+		// Lay the current particle population out as concentric petal rings —
+		// a center point, then rings of 8, 14, 20… with a slight sinusoidal
+		// petal swell, alternating rotation offsets so the rings interlock.
+		function computeMandalaTargets() {
+			mnd.mx = new Float32Array(n);
+			mnd.my = new Float32Array(n);
+			const cx = vw / 2;
+			const cy = vh * 0.44; // sits where the hero holds its breath
+			const minDim = Math.min(vw, vh);
+			let i = 0;
+			let ring = 0;
+			mnd.mx[0] = cx;
+			mnd.my[0] = cy;
+			i = 1;
+			ring = 1;
+			while (i < n) {
+				const count = Math.min(n - i, 6 * ring + 2);
+				const base = ring * minDim * 0.052;
+				const rot = ring % 2 ? 0 : Math.PI / count;
+				for (let k = 0; k < count && i < n; k++, i++) {
+					const th = (k / count) * TAU + rot;
+					const rr = base * (1 + 0.07 * Math.sin(8 * th + ring * 0.9));
+					mnd.mx[i] = cx + Math.cos(th) * rr;
+					mnd.my[i] = cy + Math.sin(th) * rr;
+				}
+				ring++;
+			}
 		}
 
 		function drawStatic() {
@@ -516,6 +574,30 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 				if (now - ripples[r].start > ripples[r].life) ripples.splice(r, 1);
 			}
 			const hasRipples = ripples.length > 0;
+			// The mandala moves the homes themselves, at breath speed. While it's
+			// formed, the pattern trembles almost imperceptibly.
+			if (mnd.on) {
+				const step = (now - mnd.tPrev) / MANDALA_MS;
+				mnd.tPrev = now;
+				mnd.p += mnd.target === 1 ? step : -step;
+				if (mnd.p >= 1) mnd.p = 1;
+				if (mnd.p <= 0) {
+					mnd.p = 0;
+					if (mnd.target === 0) mnd.on = false; // fully scattered again
+				}
+				const e = breatheEase(mnd.p);
+				const formed = mnd.p >= 1;
+				for (let i = 0; i < n; i++) {
+					let tx2 = ox[i] + (mnd.mx[i] - ox[i]) * e;
+					let ty2 = oy[i] + (mnd.my[i] - oy[i]) * e;
+					if (formed) {
+						tx2 += Math.sin(now * 0.0011 + i * 2.399) * 0.7;
+						ty2 += Math.cos(now * 0.0009 + i * 1.741) * 0.7;
+					}
+					hx[i] = tx2;
+					hy[i] = ty2;
+				}
+			}
 			let moving = false;
 			ctx!.clearRect(0, 0, vw, vh);
 			for (let i = 0; i < n; i++) {
@@ -589,8 +671,9 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 			}
 			ctx!.globalAlpha = 1;
 			// Keep running while the cursor is active, particles are still easing,
-			// or any ripple is alive — otherwise STOP the loop (0 CPU at rest).
-			if (active || moving || hasRipples) rafId = requestAnimationFrame(frame);
+			// any ripple is alive, or the mandala is forming/held/releasing —
+			// otherwise STOP the loop (0 CPU at rest).
+			if (active || moving || hasRipples || mnd.on) rafId = requestAnimationFrame(frame);
 		}
 
 		function wake() {
@@ -688,6 +771,25 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 				rect = canvas.getBoundingClientRect();
 				emit(clientX - rect.left, clientY - rect.top, RIPPLE_LIFE, 0);
 			},
+			// The sixty-second gift. Homes drift into the mandala over one
+			// breath. No-op under reduced motion — for those visitors the sky
+			// simply stays still, which is also true to the idea.
+			formMandala() {
+				if (!canRun() || (mnd.on && mnd.target === 1)) return;
+				computeMandalaTargets();
+				mnd.on = true;
+				mnd.target = 1;
+				mnd.tPrev = performance.now();
+				wake();
+			},
+			// Let go — the pattern releases back to scattered stars over a
+			// breath, from wherever it had gotten to.
+			releaseMandala() {
+				if (!mnd.on || mnd.target === 0) return;
+				mnd.target = 0;
+				mnd.tPrev = performance.now();
+				wake();
+			},
 			destroy() {
 				if (rafId) cancelAnimationFrame(rafId);
 				clearTimeout(resizeTimer);
@@ -737,13 +839,45 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 
 	// Astro lifecycle: works with and without View Transitions. boot() is
 	// idempotent (destroys any prior instance), so it's safe to call twice.
-	let field: { destroy(): void; emitRipple(x: number, y: number): void } | null = null;
+	let field: {
+		destroy(): void;
+		emitRipple(x: number, y: number): void;
+		formMandala(): void;
+		releaseMandala(): void;
+	} | null = null;
+	let offQuiet: (() => void) | null = null;
+	let offActivity: (() => void) | null = null;
+	let mandalaHold = 0;
+
 	function boot() {
 		const el = document.getElementById('hero-particles') as HTMLCanvasElement | null;
 		if (el) {
 			if (field) field.destroy();
 			field = initParticleField(el);
 			initHeroPulse(field);
+
+			// The gift for the still: sixty true seconds of nothing — no scroll,
+			// no cursor, tab visible, still up at the hero — and the stars agree
+			// to a mandala. It holds for about three breaths, then lets go on its
+			// own. Any input releases it immediately (gently, over a breath).
+			offQuiet?.();
+			offActivity?.();
+			offQuiet = onQuiet(scaleTime(60000), () => {
+				if (!field || document.hidden) return;
+				if (window.scrollY > window.innerHeight * 0.6) return;
+				field.formMandala();
+				clearTimeout(mandalaHold);
+				// One breath to form (11s), then hold for ~three breaths before
+				// letting go on its own.
+				mandalaHold = window.setTimeout(
+					() => field?.releaseMandala(),
+					11000 + Math.max(9000, scaleTime(33000))
+				);
+			});
+			offActivity = onActivity(() => {
+				clearTimeout(mandalaHold);
+				field?.releaseMandala();
+			});
 		}
 		initScrollCue();
 	}
@@ -752,6 +886,11 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 			field.destroy();
 			field = null;
 		}
+		offQuiet?.();
+		offActivity?.();
+		offQuiet = null;
+		offActivity = null;
+		clearTimeout(mandalaHold);
 	});
 	document.addEventListener('astro:page-load', boot);
 	boot();

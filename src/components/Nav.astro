@@ -41,39 +41,46 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 				</a>
 			)
 		}
-		<ul class="hidden items-center gap-6 sm:flex sm:gap-8">
-			{
-				links.map((link) => (
-					<li>
-						<a
-							href={link.href}
-							aria-current={isActive(link.href) ? 'page' : undefined}
-							class:list={[
-								'text-small tracking-wide transition-colors',
-								isActive(link.href)
-									? 'text-neutral-50'
-									: 'text-neutral-400 hover:text-neutral-200',
-							]}
-						>
-							{link.label}
-						</a>
-					</li>
-				))
-			}
-		</ul>
+		<div class="flex items-center gap-5 sm:gap-8">
+			<ul class="hidden items-center gap-6 sm:flex sm:gap-8">
+				{
+					links.map((link) => (
+						<li>
+							<a
+								href={link.href}
+								aria-current={isActive(link.href) ? 'page' : undefined}
+								class:list={[
+									'text-small tracking-wide transition-colors',
+									isActive(link.href)
+										? 'text-neutral-50'
+										: 'text-neutral-400 hover:text-neutral-200',
+								]}
+							>
+								{link.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
 
-		<!-- Mobile: the link row collapses into this toggle below sm, so the
-		     brand and nav items never fight for space in one unwrapped row. -->
-		<button
-			type="button"
-			class="nav-toggle relative z-50 flex h-10 w-10 shrink-0 items-center justify-center sm:hidden"
-			aria-expanded="false"
-			aria-controls="mobile-nav-panel"
-			aria-label="Open menu"
-		>
-			<span class="nav-toggle__bar" aria-hidden="true" />
-			<span class="nav-toggle__bar" aria-hidden="true" />
-		</button>
+			<!-- The ensō: a small circle that draws itself, brush-like, whenever
+			     the visitor is still — and breaks open the moment they move.
+			     Purely decorative; the page's quietest way of saying it noticed. -->
+			<canvas class="enso" width="56" height="56" aria-hidden="true"></canvas>
+
+			<!-- Mobile: the link row collapses into this toggle below sm, so the
+			     brand and nav items never fight for space in one unwrapped row. -->
+			<button
+				type="button"
+				class="nav-toggle relative z-50 flex h-10 w-10 shrink-0 items-center justify-center sm:hidden"
+				aria-expanded="false"
+				aria-controls="mobile-nav-panel"
+				aria-label="Open menu"
+			>
+				<span class="nav-toggle__bar" aria-hidden="true" />
+				<span class="nav-toggle__bar" aria-hidden="true" />
+			</button>
+		</div>
 	</nav>
 
 	<div id="mobile-nav-panel" class="mobile-nav-panel sm:hidden" hidden>
@@ -101,6 +108,13 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 </header>
 
 <style>
+	.enso {
+		width: 28px;
+		height: 28px;
+		display: block;
+		flex-shrink: 0;
+	}
+
 	.nav-toggle__bar {
 		position: absolute;
 		width: 20px;
@@ -168,4 +182,147 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 	}
 	document.addEventListener('astro:page-load', initMobileNav);
 	initMobileNav();
+</script>
+
+<script>
+	import { onActivity, onQuiet, breatheEase, HEARTBEAT_MS } from '../scripts/stillness';
+
+	// The ensō — the site's presence mark. Behavior:
+	//   • After ~3s of true stillness, a circle draws itself over ~8 seconds,
+	//     brush-like: uneven width, a slight tremble, and the traditional
+	//     opening left unclosed. It begins in the site's cobalt (motion's
+	//     color) and settles to quiet gray as it completes.
+	//   • Any input breaks it open — a heartbeat-long fade, never a snap.
+	//   • Fully drawn or fully absent, no animation frames run at all.
+	//   • Reduced motion: one complete, static ensō. It never animates.
+	// Each page view gets its own seed, so no two circles are quite the same —
+	// a hand holding a bowl, not a compass.
+	function initEnso() {
+		const canvas = document.querySelector<HTMLCanvasElement>('canvas.enso:not([data-enso-init])');
+		if (!canvas) return;
+		canvas.dataset.ensoInit = 'true';
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+
+		const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+		const DPR = Math.min(devicePixelRatio || 1, 2);
+		const SIZE = 28;
+		canvas.width = SIZE * DPR;
+		canvas.height = SIZE * DPR;
+		ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+		const QUIET_BEFORE_DRAW = 3000;
+		const DRAW_MS = 8000; // most of a breath
+		const SWEEP = Math.PI * 1.82; // leave the traditional opening
+		const START = -Math.PI / 2 - 0.2;
+		const seed = Math.random() * 1000;
+
+		// Brush parameters: width swells and thins along the stroke, radius
+		// wavers slightly. Deterministic per seed so redraw frames agree.
+		const R = 10;
+		const CX = SIZE / 2;
+		const CY = SIZE / 2;
+		const wob = (a: number, f: number, s: number) => Math.sin(a * f + seed + s);
+
+		function paint(progress: number, colorMix: number, alpha: number) {
+			ctx!.clearRect(0, 0, SIZE, SIZE);
+			if (progress <= 0 || alpha <= 0) return;
+			const steps = 96;
+			const drawn = Math.floor(steps * progress);
+			// cobalt → quiet gray as the stroke completes
+			const r = Math.round(96 + (163 - 96) * colorMix);
+			const g = Math.round(165 + (163 - 165) * colorMix);
+			const b = Math.round(250 + (163 - 250) * colorMix);
+			ctx!.lineCap = 'round';
+			for (let i = 0; i < drawn; i++) {
+				const t0 = i / steps;
+				const t1 = (i + 1) / steps;
+				const a0 = START + SWEEP * t0;
+				const a1 = START + SWEEP * t1;
+				const rr0 = R + 0.55 * wob(a0, 5, 0);
+				const rr1 = R + 0.55 * wob(a1, 5, 0);
+				// taper in at the start, out toward the opening; swell mid-stroke
+				const body = Math.sin(Math.PI * t0) ** 0.35;
+				const width = (0.9 + 0.9 * (0.5 + 0.5 * wob(a0, 3, 40))) * body + 0.3;
+				ctx!.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(0.9 * alpha).toFixed(3)})`;
+				ctx!.lineWidth = width;
+				ctx!.beginPath();
+				ctx!.moveTo(CX + Math.cos(a0) * rr0, CY + Math.sin(a0) * rr0);
+				ctx!.lineTo(CX + Math.cos(a1) * rr1, CY + Math.sin(a1) * rr1);
+				ctx!.stroke();
+			}
+		}
+
+		if (reduceMQ.matches) {
+			paint(1, 1, 0.9);
+			return;
+		}
+
+		// draw / settle / break — one rAF loop that exists only mid-transition.
+		let raf = 0;
+		let state: 'empty' | 'drawing' | 'settling' | 'drawn' | 'breaking' = 'empty';
+		let t0 = 0;
+		// What's currently on the canvas, so a break fades exactly the stroke
+		// that exists — a half-drawn circle fades as a half-drawn circle.
+		let curP = 0;
+		let curMix = 0;
+
+		const stop = () => {
+			if (raf) cancelAnimationFrame(raf);
+			raf = 0;
+		};
+
+		function frame(now: number) {
+			raf = 0;
+			if (state === 'drawing') {
+				const p = Math.min(1, (now - t0) / DRAW_MS);
+				curP = breatheEase(p);
+				curMix = 0;
+				paint(curP, curMix, 1);
+				if (p >= 1) {
+					state = 'settling';
+					t0 = now;
+				}
+				raf = requestAnimationFrame(frame);
+			} else if (state === 'settling') {
+				// the stroke cools from cobalt to gray, then rests
+				const p = Math.min(1, (now - t0) / 1400);
+				curP = 1;
+				curMix = breatheEase(p);
+				paint(curP, curMix, 1);
+				if (p >= 1) {
+					state = 'drawn';
+					return; // fully drawn: zero frames
+				}
+				raf = requestAnimationFrame(frame);
+			} else if (state === 'breaking') {
+				const p = Math.min(1, (now - t0) / HEARTBEAT_MS);
+				paint(curP, curMix, 1 - breatheEase(p));
+				if (p >= 1) {
+					state = 'empty';
+					curP = 0;
+					return; // fully absent: zero frames
+				}
+				raf = requestAnimationFrame(frame);
+			}
+		}
+
+		onQuiet(QUIET_BEFORE_DRAW, () => {
+			if (document.hidden || state === 'drawing' || state === 'drawn' || state === 'settling') return;
+			state = 'drawing';
+			t0 = performance.now();
+			stop();
+			raf = requestAnimationFrame(frame);
+		});
+
+		onActivity(() => {
+			if (state === 'empty' || state === 'breaking') return;
+			state = 'breaking';
+			t0 = performance.now();
+			stop();
+			raf = requestAnimationFrame(frame);
+		});
+	}
+	document.addEventListener('astro:page-load', initEnso);
+	initEnso();
 </script>

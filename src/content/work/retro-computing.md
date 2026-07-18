@@ -7,6 +7,8 @@ tags: ["Animation", "Made with Code", "Computer History"]
 cover: "../../assets/work/retro-computing.jpg"
 coverAlt: "Minesweeper open on a teal Windows 95 desktop, taskbar and all, redrawn from scratch"
 thesis: "You think you remember what old computers looked like. You mostly don't — and that gap is the whole thing."
+video: "/videos/retro-windows95.mp4"
+poster: "/images/retro-computing-poster.jpg"
 studiesEyebrow: "The Eras"
 studiesHeading: "Ten machines, rebuilt from scratch."
 studiesIntro: "From the Commodore 64 in 1982 to the first iPhone in 2007 — each machine gets its own short film, screen colors, fonts, and all the little quirks you'd only remember if you were there. Each one hands off to the next."

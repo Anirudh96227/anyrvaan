@@ -7,6 +7,8 @@ tags: ["Animation", "Made with Code", "Interfaces"]
 cover: "../../assets/work/ui-replicas.jpg"
 coverAlt: "A faithful rebuild of Slack: purple sidebar, channel list, a message being typed"
 thesis: "I built these the slowest, most tedious way possible. That's the only reason they look real."
+video: "/videos/ui-replica-slack.mp4"
+poster: "/images/ui-replicas-poster.jpg"
 studiesEyebrow: "The Ten"
 studiesHeading: "Ten apps, faked to the pixel."
 studiesIntro: "QuickBooks, Excel, Slack, Gmail, Stripe, Xero, Notion, Google Calendar, VS Code, Trello — each rebuilt from nothing, with a fake mouse that clicks, types and drags while the app reacts just like the real one."
