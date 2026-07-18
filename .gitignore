@@ -25,7 +25,15 @@ pnpm-debug.log*
 
 # Local working assets — source files kept beside the project, not part of the
 # deployed site. Videos are hosted externally (YouTube), so no .mp4 in the repo.
+# (Exception: public/videos/dashboard-cinema.mp4 is force-added — it's the
+# Dashboard Cinema case study's hero until its YouTube upload exists.)
 /Work1/
 /Project 2/
 /Downloads/
 *.mp4
+
+# Downloaded render bundles and loose desk files — not site source.
+/2026-*_ANYRVAAN-*/
+/logo.png
+/black_logo.png
+/plain-real-explanation*.md

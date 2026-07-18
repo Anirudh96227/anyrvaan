@@ -204,31 +204,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 05 Mesh — letters behave like points on stretched fabric: they're pulled
-	// toward the cursor (or a roaming point) with distance falloff, tilting as
-	// the fabric shears.
-	mesh: {
-		draw(ctx, env, e, _s, ptr) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			const px = ptr.x ?? g.left + ((Math.sin(e / 1300) + 1) / 2) * g.totalW;
-			const py = ptr.y ?? g.baselineY - g.ascent * 0.5;
-			glyphs(ctx, g, (i) => {
-				const gy = g.baselineY - g.ascent * 0.35;
-				const dx0 = px - g.cxs[i],
-					dy0 = py - gy;
-				const d = Math.hypot(dx0, dy0) + 0.001;
-				const pull = Math.max(0, 1 - d / (g.fontSize * 4.5)) * g.fontSize * 0.42;
-				return {
-					dx: (dx0 / d) * pull,
-					dy: (dy0 / d) * pull,
-					rot: (dx0 / d) * pull * 0.018,
-				};
-			});
-		},
-	},
-
-	// 06 Lumen — a small light travels along the word: letters near it flare
+	// 05 Lumen — a small light travels along the word: letters near it flare
 	// bright with a glow, and each casts a faint blue shadow away from it.
 	lumen: {
 		draw(ctx, env, e, _s, ptr) {
@@ -259,21 +235,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 07 Lag — the word sways, and two delayed copies of it run the same
-	// motion 160ms and 320ms behind: visible parallel timelines trailing it.
-	lag: {
-		draw(ctx, env, e) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			for (let k = 2; k >= 0; k--) {
-				const dx = Math.sin((e - k * 160) / 800) * g.fontSize * 0.65;
-				if (k === 0) word(ctx, g, dx, 0, 1);
-				else word(ctx, g, dx, 0, 0.4 - k * 0.12, BLUE(0.9));
-			}
-		},
-	},
-
-	// 08 Swarm — the letters scatter to random positions, tumbling, then fly
+	// 06 Swarm — the letters scatter to random positions, tumbling, then fly
 	// back and lock into the word, hold formation with a tiny hum, and scatter
 	// again: particles forming language.
 	swarm: {
@@ -305,41 +267,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 09 Drift — each letter slowly floats off its slot and back on long,
-	// uncorrelated cycles: the word never quite holds still, dream-like.
-	drift: {
-		draw(ctx, env, e) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			glyphs(ctx, g, (i) => ({
-				dx: Math.sin(e / (2600 + i * 300) + i * 2.4) * g.fontSize * 0.16,
-				dy: Math.cos(e / (3100 + i * 260) + i * 1.7) * g.fontSize * 0.14,
-				rot: Math.sin(e / (3600 + i * 200) + i) * 0.05,
-			}));
-		},
-	},
-
-	// 10 Mass — a heavy point (the cursor, or a roaming weight) drags nearby
-	// letters downward; they sag under it with smoothed inertia and tilt along
-	// the sag gradient, springing back up as it moves on.
-	mass: {
-		init: (env) => ({ sag: env.g.chars.map(() => 0) }),
-		draw(ctx, env, e, s, ptr) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			const px = ptr.x ?? g.left + ((Math.sin(e / 1500) + 1) / 2) * g.totalW;
-			glyphs(ctx, g, (i) => {
-				const d = Math.abs(g.cxs[i] - px);
-				const target = Math.max(0, 1 - d / (g.fontSize * 3)) * g.fontSize * 0.6;
-				s.sag[i] += (target - s.sag[i]) * 0.1;
-				const l = s.sag[i - 1] ?? s.sag[i],
-					r = s.sag[i + 1] ?? s.sag[i];
-				return { dy: s.sag[i], rot: (r - l) * 0.015 };
-			});
-		},
-	},
-
-	// 11 Field — every letter is a compass needle: it tilts to point toward
+	// 07 Field — every letter is a compass needle: it tilts to point toward
 	// the cursor (or a circling pole), the whole word reorienting like iron
 	// filings as the pole moves.
 	field: {
@@ -361,7 +289,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 12 Residue — letters the cursor (or a slow ambient sweep) passes over
+	// 08 Residue — letters the cursor (or a slow ambient sweep) passes over
 	// ignite blue and then cool very slowly, so the word visibly remembers
 	// where it's been touched.
 	residue: {
@@ -390,7 +318,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 13 Paradox — the word has a mirrored reflection below it, but the
+	// 09 Paradox — the word has a mirrored reflection below it, but the
 	// reflection moves by *predicted* motion (velocity extrapolated), sliding
 	// ahead of the original instead of mirroring its present.
 	paradox: {
@@ -417,30 +345,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 14 Drag — every letter spring-chases the same target with a different
-	// stiffness, so the word elastically stretches apart, overshoots, and
-	// snaps back together: friction and inertia made visible.
-	drag: {
-		init: (env) => ({
-			x: env.g.chars.map(() => 0),
-			v: env.g.chars.map(() => 0),
-		}),
-		draw(ctx, env, e, s, ptr) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			const center = g.left + g.totalW / 2;
-			const target =
-				ptr.x != null ? (ptr.x - center) * 0.4 : Math.sin(e / 900) * g.fontSize * 0.7;
-			glyphs(ctx, g, (i) => {
-				const k = 0.045 + (i / Math.max(1, g.chars.length - 1)) * 0.1;
-				s.v[i] = (s.v[i] + (target - s.x[i]) * k) * 0.88;
-				s.x[i] += s.v[i];
-				return { dx: s.x[i], rot: s.v[i] * 0.01 };
-			});
-		},
-	},
-
-	// 15 Spectrum — the word's red, green, and blue channels separate and
+	// 10 Spectrum — the word's red, green, and blue channels separate and
 	// oscillate independently, screen-blended so they fuse to white where
 	// they overlap: literal chromatic aberration of the type.
 	spectrum: {
@@ -466,7 +371,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 16 Membrane — the word is a surface: waves spawned at the cursor (or
+	// 11 Membrane — the word is a surface: waves spawned at the cursor (or
 	// ambient touches) travel outward, and each letter lifts and glows as the
 	// wavefront passes through it.
 	membrane: {
@@ -513,23 +418,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 17 Twin — a second, blue copy of the word shadows the first, always
-	// moving opposite to you (mirror-personality), blinking in and out like
-	// something not quite stable.
-	twin: {
-		draw(ctx, env, e, _s, ptr) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			const center = g.left + g.totalW / 2;
-			const off =
-				ptr.x != null ? clamp((center - ptr.x) * 0.3, -g.fontSize * 1.6, g.fontSize * 1.6) : Math.sin(e / 1000) * g.fontSize * 0.6;
-			const blink = Math.sin(e / 130) > -0.85 ? 1 : 0.15;
-			word(ctx, g, off, -g.fontSize * 0.2, 0.4 * blink, BLUE(0.95));
-			word(ctx, g, 0, 0, 1);
-		},
-	},
-
-	// 18 Mirage — heat-haze: the word is drawn in thin horizontal slices, each
+	// 12 Mirage — heat-haze: the word is drawn in thin horizontal slices, each
 	// displaced by its own travelling sine, so the type shimmers like air over
 	// hot ground while never actually moving.
 	mirage: {
@@ -552,40 +441,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 19 Morph — each letter squishes and stretches like soft clay, width and
-	// height flowing on separate organic cycles while the word holds its line.
-	morph: {
-		draw(ctx, env, e) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			glyphs(ctx, g, (i) => ({
-				sx: 1 + Math.sin(e / 620 + i * 1.9) * 0.18,
-				sy: 1 + Math.cos(e / 540 + i * 1.3) * 0.18,
-				dy: Math.sin(e / 800 + i) * g.fontSize * 0.05,
-			}));
-		},
-	},
-
-	// 20 Chrono — time runs at a different rate for each letter: the leftmost
-	// bobs frantically, the rightmost in extreme slow motion — one word,
-	// several clocks.
-	chrono: {
-		draw(ctx, env, e) {
-			const { g, w, h } = env;
-			ctx.clearRect(0, 0, w, h);
-			const n = Math.max(1, g.chars.length - 1);
-			glyphs(ctx, g, (i) => {
-				const speed = 0.15 + Math.pow(1 - i / n, 2) * 4;
-				const t = e * speed;
-				return {
-					dy: Math.sin(t / 300) * g.fontSize * 0.14,
-					alpha: 0.6 + (Math.sin(t / 300) * 0.5 + 0.5) * 0.4,
-				};
-			});
-		},
-	},
-
-	// 21 Growth — the word grows: each letter sprouts up from the baseline in
+	// 13 Growth — the word grows: each letter sprouts up from the baseline in
 	// sequence (a small blue stem rising first), overshoots, settles — then
 	// the whole word dissolves and grows again.
 	growth: {
@@ -619,7 +475,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 22 Cadence — a beat travels through the word: each letter lifts, swells,
+	// 14 Cadence — a beat travels through the word: each letter lifts, swells,
 	// brightens and glows as the pulse reaches it, like an equalizer with no
 	// sound.
 	cadence: {
@@ -638,7 +494,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 23 Collapse — each letter flickers between two superposed positions (a
+	// 15 Collapse — each letter flickers between two superposed positions (a
 	// white state and a blue state), then settles left-to-right into a single
 	// crisp outcome; hold; repeat.
 	collapse: {
@@ -662,7 +518,7 @@ export const RENDERERS: Record<string, Renderer> = {
 		},
 	},
 
-	// 24 Infinite — copies of the word recede toward a vanishing point above,
+	// 16 Infinite — copies of the word recede toward a vanishing point above,
 	// each smaller and fainter (depth fog), parallaxing sideways as you move:
 	// the same text stretching into distance.
 	infinite: {
@@ -682,6 +538,294 @@ export const RENDERERS: Record<string, Renderer> = {
 				ctx.restore();
 			}
 			word(ctx, g, 0, 0, 1);
+		},
+	},
+
+	// ── Atlas experiments (17–24): hover teasers for the case-study playgrounds.
+	// These don't all transform the codename glyphs; some draw a small widget in
+	// the box, since the effect (a gauge, a knob, a burst) isn't typographic.
+
+	// 17 Split-Flap — the codename riffles through the alphabet into place.
+	'split-flap': {
+		init: (env) => ({
+			idx: env.g.chars.map(() => (Math.random() * 27) | 0),
+			done: env.g.chars.map(() => false),
+			acc: 0,
+		}),
+		draw(ctx, env, e, s) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const ALPHA = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+			ctx.font = g.font;
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'alphabetic';
+			s.acc += 16;
+			const advance = s.acc > 45;
+			if (advance) s.acc = 0;
+			for (let i = 0; i < g.chars.length; i++) {
+				const target = g.chars[i].toUpperCase();
+				const ti = Math.max(0, ALPHA.indexOf(target));
+				if (advance && !s.done[i] && e > i * 120) {
+					s.idx[i] = (s.idx[i] + 1) % ALPHA.length;
+					if (s.idx[i] === ti) s.done[i] = true;
+				}
+				ctx.fillStyle = s.done[i] ? g.fill : BLUE(0.85);
+				ctx.fillText(s.done[i] ? target : ALPHA[s.idx[i]], g.cxs[i], g.baselineY);
+			}
+		},
+	},
+
+	// 18 Heart Burst — a small heart pops and a ring bursts on a loop.
+	'heart-burst': {
+		init: () => ({ bursts: [] as any[], amb: 0, liked: false, pop: 0 }),
+		draw(ctx, env, e, s) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const cx = g.left + g.totalW / 2,
+				cy = g.baselineY - g.ascent * 0.32;
+			s.amb += 16;
+			if (s.amb > 900) {
+				s.amb = 0;
+				s.bursts.push({ t: 0 });
+				s.liked = !s.liked;
+				s.pop = 1;
+			}
+			s.pop += (0 - s.pop) * 0.1;
+			const hs = g.fontSize * 0.5 * (1 + s.pop * 0.4);
+			ctx.beginPath();
+			ctx.moveTo(cx, cy + hs * 0.35);
+			ctx.bezierCurveTo(cx + hs, cy - hs * 0.25, cx + hs * 0.55, cy - hs * 0.95, cx, cy - hs * 0.35);
+			ctx.bezierCurveTo(cx - hs * 0.55, cy - hs * 0.95, cx - hs, cy - hs * 0.25, cx, cy + hs * 0.35);
+			ctx.closePath();
+			if (s.liked) {
+				ctx.fillStyle = 'rgba(239,68,68,0.95)';
+				ctx.fill();
+			} else {
+				ctx.strokeStyle = g.fill;
+				ctx.lineWidth = 2;
+				ctx.stroke();
+			}
+			for (let i = s.bursts.length - 1; i >= 0; i--) {
+				const b = s.bursts[i];
+				b.t += 16;
+				const pr = b.t / 600;
+				if (pr >= 1) {
+					s.bursts.splice(i, 1);
+					continue;
+				}
+				ctx.save();
+				ctx.globalCompositeOperation = 'lighter';
+				ctx.strokeStyle = `rgba(239,68,68,${(1 - pr) * 0.7})`;
+				ctx.lineWidth = 2 * (1 - pr);
+				ctx.beginPath();
+				ctx.arc(cx, cy, g.fontSize * (0.3 + pr * 0.9), 0, Math.PI * 2);
+				ctx.stroke();
+				ctx.restore();
+			}
+		},
+	},
+
+	// 19 Odometer — a few number wheels rolling.
+	odometer: {
+		init: () => ({ disp: 0 }),
+		draw(ctx, env, e, s) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			s.disp += 0.02;
+			const n = Math.min(5, g.chars.length);
+			const cw = g.totalW / n;
+			const cy = g.baselineY - g.ascent * 0.35;
+			const ch = g.fontSize * 1.1;
+			ctx.font = g.font;
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			for (let i = 0; i < n; i++) {
+				const place = n - 1 - i;
+				const scaled = (s.disp * 40) / Math.pow(10, place);
+				const base = Math.floor(scaled);
+				const frac = scaled - base;
+				const rollFrac = place === 0 ? frac : clamp((frac - 0.85) / 0.15, 0, 1);
+				const digit = ((base % 10) + 10) % 10;
+				const cx = g.left + i * cw + cw / 2;
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(g.left + i * cw + 1, cy - ch / 2, cw - 2, ch);
+				ctx.clip();
+				const yOff = rollFrac * ch;
+				ctx.fillStyle = BLUE(0.9);
+				ctx.fillText(String(digit), cx, cy - yOff);
+				ctx.fillText(String((digit + 1) % 10), cx, cy + ch - yOff);
+				ctx.restore();
+			}
+		},
+	},
+
+	// 20 Gauge — a small dial with a needle sweeping and settling.
+	gauge: {
+		init: () => ({ ang: -0.6, vel: 0 }),
+		draw(ctx, env, e, s) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const cx = g.left + g.totalW / 2,
+				cy = g.baselineY - g.ascent * 0.15,
+				R = g.fontSize * 0.9;
+			const A0 = -Math.PI * 0.75,
+				A1 = Math.PI * 0.75;
+			const tgt = A0 + (Math.sin(e / 900) * 0.5 + 0.5) * (A1 - A0);
+			s.vel = (s.vel + (tgt - s.ang) * 0.014) * 0.86;
+			s.ang += s.vel;
+			ctx.strokeStyle = 'rgba(120,140,180,0.4)';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.arc(cx, cy, R, A0, A1);
+			ctx.stroke();
+			ctx.save();
+			ctx.translate(cx, cy);
+			ctx.rotate(s.ang);
+			ctx.strokeStyle = BLUE(0.95);
+			ctx.lineWidth = 2.5;
+			ctx.lineCap = 'round';
+			ctx.beginPath();
+			ctx.moveTo(-R * 0.1, 0);
+			ctx.lineTo(R * 0.9, 0);
+			ctx.stroke();
+			ctx.restore();
+			ctx.fillStyle = g.fill;
+			ctx.beginPath();
+			ctx.arc(cx, cy, R * 0.08, 0, Math.PI * 2);
+			ctx.fill();
+		},
+	},
+
+	// 21 Phosphor — the codename types on in green with a block cursor.
+	phosphor: {
+		init: () => ({ shown: 0 }),
+		draw(ctx, env, e, s) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const GREEN = '126,252,216';
+			const total = g.chars.length;
+			s.shown += 0.25;
+			if (s.shown > total) s.shown = total;
+			const n = Math.floor(s.shown);
+			ctx.font = g.font;
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'alphabetic';
+			for (let i = 0; i < n; i++) {
+				ctx.save();
+				ctx.shadowColor = `rgba(${GREEN},0.8)`;
+				ctx.shadowBlur = g.fontSize * 0.3;
+				ctx.fillStyle = `rgba(${GREEN},0.95)`;
+				ctx.fillText(g.chars[i], g.cxs[i], g.baselineY);
+				ctx.restore();
+			}
+			if (Math.floor(e / 260) % 2 === 0 || s.shown < total) {
+				const cursorX = n < total ? g.cxs[n] - g.widths[n] / 2 : g.left + g.totalW;
+				ctx.fillStyle = `rgba(${GREEN},0.9)`;
+				ctx.fillRect(cursorX + 2, g.baselineY - g.ascent * 0.8, g.fontSize * 0.4, g.ascent * 0.9);
+			}
+		},
+	},
+
+	// 22 Knob — a small detented knob turning.
+	knob: {
+		init: () => ({ ang: 0, disp: 0 }),
+		draw(ctx, env, e, s) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const cx = g.left + g.totalW / 2,
+				cy = g.baselineY - g.ascent * 0.3,
+				R = g.fontSize * 0.7,
+				D = 12,
+				step = (Math.PI * 2) / D;
+			s.ang += 0.02;
+			const snapped = Math.round(s.ang / step) * step;
+			s.disp += (snapped - s.disp) * 0.3;
+			ctx.fillStyle = 'rgba(40,40,48,0.9)';
+			ctx.beginPath();
+			ctx.arc(cx, cy, R, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.strokeStyle = 'rgba(200,210,230,0.15)';
+			ctx.lineWidth = 1;
+			ctx.stroke();
+			for (let i = 0; i < D; i++) {
+				const a = i * step - Math.PI / 2;
+				ctx.strokeStyle = BLUE(0.3);
+				ctx.lineWidth = 1;
+				ctx.beginPath();
+				ctx.moveTo(cx + Math.cos(a) * (R + 3), cy + Math.sin(a) * (R + 3));
+				ctx.lineTo(cx + Math.cos(a) * (R + 7), cy + Math.sin(a) * (R + 7));
+				ctx.stroke();
+			}
+			ctx.save();
+			ctx.translate(cx, cy);
+			ctx.rotate(s.disp - Math.PI / 2);
+			ctx.strokeStyle = BLUE(0.95);
+			ctx.lineWidth = 2.5;
+			ctx.lineCap = 'round';
+			ctx.beginPath();
+			ctx.moveTo(R * 0.3, 0);
+			ctx.lineTo(R * 0.75, 0);
+			ctx.stroke();
+			ctx.restore();
+		},
+	},
+
+	// 23 Stamp — the codename slams down like a rubber stamp on a loop.
+	stamp: {
+		draw(ctx, env, e) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const tt = e % 1600;
+			const pr = Math.min(1, tt / 260);
+			const sc = pr < 0.5 ? 1.5 - pr : 1;
+			const cx = g.left + g.totalW / 2,
+				cy = g.baselineY - g.ascent * 0.3;
+			ctx.save();
+			ctx.translate(cx, cy);
+			ctx.rotate(-0.05);
+			ctx.scale(sc, sc);
+			ctx.fillStyle = `rgba(239,90,80,${pr})`;
+			ctx.strokeStyle = `rgba(239,90,80,${pr})`;
+			ctx.lineWidth = 2;
+			ctx.font = g.font;
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			const wUpper = g.chars.join('').toUpperCase();
+			const tw = ctx.measureText(wUpper).width;
+			const pad = g.fontSize * 0.25;
+			ctx.strokeRect(-tw / 2 - pad, -g.fontSize * 0.5 - pad * 0.5, tw + pad * 2, g.fontSize + pad);
+			ctx.fillText(wUpper, 0, 0);
+			ctx.restore();
+		},
+	},
+
+	// 24 Pull to Refresh — a small list pulling down and rebounding, with spinner.
+	'pull-refresh': {
+		draw(ctx, env, e) {
+			const { g, w, h } = env;
+			ctx.clearRect(0, 0, w, h);
+			const pull = Math.max(0, Math.sin(e / 700)) * g.fontSize * 0.9;
+			const x0 = g.left,
+				colW = g.totalW,
+				rowH = g.fontSize * 0.7;
+			const top = g.baselineY - g.ascent + pull;
+			const arm = Math.min(1, pull / (g.fontSize * 0.6));
+			ctx.strokeStyle = BLUE(arm);
+			ctx.lineWidth = 2;
+			ctx.lineCap = 'round';
+			ctx.beginPath();
+			ctx.arc(g.left + colW / 2, g.baselineY - g.ascent + Math.min(pull, rowH) / 2, g.fontSize * 0.25, -Math.PI / 2, -Math.PI / 2 + arm * Math.PI * 2);
+			ctx.stroke();
+			for (let i = 0; i < 3; i++) {
+				const ry = top + i * rowH;
+				ctx.fillStyle = 'rgba(200,210,230,0.12)';
+				ctx.fillRect(x0, ry, colW, rowH - 4);
+				ctx.fillStyle = g.fill;
+				ctx.globalAlpha = 0.5;
+				ctx.fillRect(x0 + 4, ry + (rowH - 4) / 2 - 1.5, colW * 0.5, 3);
+				ctx.globalAlpha = 1;
+			}
 		},
 	},
 };

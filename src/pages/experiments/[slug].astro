@@ -1,10 +1,8 @@
 ---
-// Full experiment page. The typography is the experiment: the h1 codename is
-// replaced by a canvas replica running the exact same per-glyph sketch as the
-// card's hover preview (src/scripts/experiment-previews.ts) — here auto-run,
-// at display size, reacting to the pointer across the whole stage. The richer
-// dedicated playground (parameters, reset, deeper physics) is the deferred
-// "Complete Playground" phase — see the project memory.
+// Full experiment page — the real playground. The card's hover shows the idea
+// (the typographic sketch in experiment-previews.ts); here that unfolds into a
+// full-stage interactive system (src/scripts/experiment-playgrounds.ts) with
+// live parameters and a reset. One playground per slug, keyed off the data.
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
@@ -22,51 +20,69 @@ const { experiment } = Astro.props as { experiment: Experiment };
 
 <Layout
 	title={`${experiment.codename} — Anyrvaan Lab`}
-	description={experiment.fullDescription}
+	description={experiment.playground}
 	type="article"
 >
-	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+	<div class="flex min-h-screen flex-col bg-neutral-950 text-neutral-50">
 		<Nav />
-		<main>
+		<main class="flex flex-1 flex-col">
 			<section
-				class="experiment-stage relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-32"
+				class:list={['pg-stage', experiment.theme === 'light' && 'pg-stage--light']}
 				transition:name={`experiment-${experiment.slug}`}
 			>
-				<div class="relative z-10 mx-auto max-w-2xl text-center">
-					<p class="boot-in text-eyebrow uppercase text-neutral-400">{experiment.classification}</p>
-					<h1 class="boot-in mt-6 text-h1 text-neutral-50">
-						<span class="title-fx">
-							<span class="title-fx__text">{experiment.codename}</span>
-							<canvas
-								class="title-fx__canvas"
-								aria-hidden="true"
-								data-slug={experiment.slug}
-								data-codename={experiment.codename}></canvas>
-						</span>
-					</h1>
-					<p class="boot-in mt-8 text-body-lg text-neutral-300">{experiment.fullDescription}</p>
-					{
-						experiment.tags.length > 0 && (
-							<ul class="boot-in mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1">
-								{experiment.tags.map((t) => (
-									<li class="text-small text-neutral-500">{t}</li>
-								))}
-							</ul>
-						)
-					}
-					<p class="boot-in mt-10 text-small text-neutral-600">
-						Prototype {String(experiment.order).padStart(2, '0')} of {experiments.length} — the
-						title above is running the live sketch from its card, at full size. Move your cursor
-						around it. Parameters, reset, and deeper physics are still being built.
-					</p>
-					<a
-						href="/experiments"
-						class="boot-in group mt-12 inline-flex items-center gap-2 text-small text-neutral-400 transition-colors hover:text-neutral-50"
-					>
-						<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
-						Back to the Lab
+				{/* Top band — identity + copy. Sits above the effect, never over it. */}
+				<header class="pg-top">
+					<a href="/experiments" class="pg-back">
+						<span aria-hidden="true">&larr;</span> Back to the Lab
 					</a>
+					<div class="pg-top__main">
+						<div class="pg-top__id">
+							<p class="pg-eyebrow">{experiment.classification}</p>
+							<h1 class="pg-title">{experiment.codename}</h1>
+						</div>
+						<div class="pg-top__meta">
+							<p class="pg-desc">{experiment.playground}</p>
+							<div class="pg-metarow">
+								{
+									experiment.tags.length > 0 && (
+										<ul class="pg-tags">
+											{experiment.tags.map((t) => (
+												<li>{t}</li>
+											))}
+										</ul>
+									)
+								}
+								{
+									experiment.source && (
+										<p class="pg-source">
+											Rebuilt from the atlas &rarr;{' '}
+											<a href={experiment.source.href}>{experiment.source.label}</a>
+										</p>
+									)
+								}
+							</div>
+						</div>
+					</div>
+				</header>
+
+				{/* Middle band — the effect fills exactly this region (and no more). */}
+				<div class="pg-canvas-wrap">
+					<canvas
+						class="pg-canvas"
+						data-slug={experiment.slug}
+						data-codename={experiment.codename}
+						data-theme={experiment.theme ?? 'dark'}
+						aria-hidden="true"></canvas>
 				</div>
+
+				{/* Bottom band — the control console. */}
+				<footer class="pg-bottom">
+					<div class="pg-bottom__lead">
+						<p class="pg-panel__label">Prototype {String(experiment.order).padStart(2, '0')} · Playground</p>
+						<p class="pg-hint" data-pg-hint></p>
+					</div>
+					<div class="pg-controls" data-pg-controls></div>
+				</footer>
 			</section>
 		</main>
 		<Footer />
@@ -74,67 +90,370 @@ const { experiment } = Astro.props as { experiment: Experiment };
 </Layout>
 
 <style>
-	.experiment-stage {
+	/* Three stacked bands: identity (top) · effect (middle, flex-1) · console
+	   (bottom). The canvas lives only in the middle wrap, so an effect can never
+	   reach the text. */
+	.pg-stage {
+		display: flex;
+		flex-direction: column;
+		min-height: 84vh;
+		overflow: hidden;
 		isolation: isolate;
+		background:
+			radial-gradient(120% 90% at 50% 0%, rgba(37, 55, 90, 0.28), transparent 60%),
+			#09090b;
 	}
-	.title-fx {
-		position: relative;
-		display: inline-block;
-	}
-	.title-fx__canvas {
-		position: absolute;
-		pointer-events: none;
+	.pg-stage--light {
+		background:
+			radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 62%),
+			#f1ede2;
 	}
 
-	/* Boot sequence — each block of copy draws in with a short stagger, as if
-	   the stage were initializing. Baseline (below) is fully visible text. */
-	.boot-in {
-		opacity: 0;
+	/* ── Top band ── */
+	.pg-top {
+		flex: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		padding: clamp(1rem, 3vw, 1.9rem) clamp(1.25rem, 4vw, 2.75rem);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	}
-	@media (prefers-reduced-motion: no-preference) {
-		@keyframes boot-in {
-			from {
-				opacity: 0;
-				transform: translateY(10px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-		.boot-in {
-			animation: boot-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-		}
-		.boot-in:nth-of-type(1) { animation-delay: 0.1s; }
-		.boot-in:nth-of-type(2) { animation-delay: 0.2s; }
-		.boot-in:nth-of-type(3) { animation-delay: 0.32s; }
-		.boot-in:nth-of-type(4) { animation-delay: 0.44s; }
-		.boot-in:nth-of-type(5) { animation-delay: 0.56s; }
-		.boot-in:nth-of-type(6) { animation-delay: 0.68s; }
+	.pg-stage--light .pg-top {
+		border-bottom-color: rgba(0, 0, 0, 0.08);
 	}
+	.pg-back {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		color: rgb(163 163 163);
+		transition: color 0.2s;
+	}
+	.pg-back:hover {
+		color: rgb(245 245 245);
+	}
+	.pg-back span {
+		display: inline-block;
+		transition: transform 0.2s;
+	}
+	.pg-back:hover span {
+		transform: translateX(-3px);
+	}
+	.pg-top__main {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 0.8rem 2.5rem;
+	}
+	.pg-eyebrow {
+		font-size: 0.72rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: rgb(148 163 184);
+	}
+	.pg-title {
+		margin-top: 0.3rem;
+		font-size: clamp(1.9rem, 4.6vw, 3rem);
+		font-weight: 600;
+		line-height: 1;
+	}
+	.pg-top__meta {
+		flex: 1 1 22rem;
+		min-width: 0;
+		max-width: 36rem;
+	}
+	.pg-desc {
+		font-size: 0.9rem;
+		line-height: 1.55;
+		color: rgb(212 212 216);
+	}
+	.pg-metarow {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.3rem 1.4rem;
+		margin-top: 0.7rem;
+	}
+	.pg-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1rem;
+	}
+	.pg-tags li {
+		font-size: 0.72rem;
+		color: rgb(113 113 122);
+	}
+	.pg-source {
+		font-size: 0.75rem;
+		color: rgb(120 120 130);
+	}
+	.pg-source a {
+		color: rgb(147 197 253);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+	.pg-source a:hover {
+		color: rgb(191 219 254);
+	}
+	.pg-stage--light .pg-title {
+		color: #24201a;
+	}
+	.pg-stage--light .pg-desc {
+		color: #4b463d;
+	}
+	.pg-stage--light .pg-eyebrow {
+		color: #8a8377;
+	}
+	.pg-stage--light .pg-back {
+		color: #57534e;
+	}
+	.pg-stage--light .pg-back:hover {
+		color: #1c1917;
+	}
+	.pg-stage--light .pg-tags li {
+		color: #857e72;
+	}
+	.pg-stage--light .pg-source {
+		color: #6b6559;
+	}
+
+	/* ── Middle band: the effect ── */
+	.pg-canvas-wrap {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 42vh;
+	}
+	.pg-canvas {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+		touch-action: none;
+		cursor: crosshair;
+	}
+
+	/* ── Bottom band: the control console (dark on both themes, on purpose) ── */
+	.pg-bottom {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 0.75rem 2rem;
+		padding: clamp(0.9rem, 2.4vw, 1.35rem) clamp(1.25rem, 4vw, 2.75rem);
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(12, 14, 20, 0.55);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+	}
+	.pg-bottom__lead {
+		min-width: 12rem;
+		max-width: 26rem;
+	}
+	.pg-panel__label {
+		font-size: 0.68rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: rgb(96 165 250);
+	}
+	.pg-hint {
+		margin-top: 0.35rem;
+		font-size: 0.82rem;
+		line-height: 1.5;
+		color: rgb(212 212 216);
+		min-height: 1.1em;
+	}
+
+	/* Phones: stack the bands' inner rows full-width so nothing overflows the
+	   viewport (no horizontal scroll) and every control stays reachable by touch. */
+	@media (max-width: 640px) {
+		.pg-top__main {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.9rem;
+		}
+		.pg-top__meta {
+			flex-basis: auto;
+			max-width: 100%;
+		}
+		.pg-bottom {
+			flex-direction: column;
+			align-items: stretch;
+			justify-content: flex-start;
+			gap: 0.9rem;
+		}
+		.pg-bottom__lead {
+			max-width: 100%;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
-		.boot-in {
-			opacity: 1;
+		.pg-canvas {
+			cursor: default;
 		}
 	}
 </style>
 
-<script>
-	import { mountExperimentPreview } from '../../scripts/experiment-previews';
+<!-- Control widgets are built by the engine into .pg-controls at runtime, so
+     their styles must be global (scoped styles wouldn't reach injected DOM). -->
+<style is:global>
+	/* Console controls laid out in a horizontal row along the bottom band. */
+	.pg-controls {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 0.85rem 1.4rem;
+	}
+	.pg-ctrl {
+		display: block;
+		width: 9.5rem;
+	}
+	.pg-ctrl__row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		margin-bottom: 0.35rem;
+	}
+	.pg-ctrl__label {
+		font-size: 0.78rem;
+		color: rgb(212 212 216);
+	}
+	.pg-ctrl__val {
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		color: rgb(147 197 253);
+	}
+	.pg-range {
+		width: 100%;
+		height: 3px;
+		-webkit-appearance: none;
+		appearance: none;
+		background: rgba(255, 255, 255, 0.14);
+		border-radius: 999px;
+		outline: none;
+		accent-color: #93c5fd;
+		cursor: pointer;
+	}
+	.pg-range::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: #bfdbfe;
+		border: none;
+		box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
+	}
+	.pg-range::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border: none;
+		border-radius: 50%;
+		background: #bfdbfe;
+		box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
+	}
+	.pg-text {
+		width: 100%;
+		margin-top: 0.1rem;
+		padding: 0.4rem 0.6rem;
+		font-size: 0.85rem;
+		color: rgb(245 245 245);
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 0.5rem;
+		outline: none;
+	}
+	.pg-text:focus {
+		border-color: rgba(147, 197, 253, 0.6);
+	}
+	.pg-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		width: auto;
+		align-self: center;
+		font-size: 0.78rem;
+		color: rgb(212 212 216);
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+	}
+	.pg-toggle__dot {
+		width: 34px;
+		height: 18px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.14);
+		position: relative;
+		transition: background 0.2s;
+	}
+	.pg-toggle__dot::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: rgb(212 212 216);
+		transition: transform 0.2s;
+	}
+	.pg-toggle[aria-pressed='true'] .pg-toggle__dot {
+		background: rgba(96, 165, 250, 0.7);
+	}
+	.pg-toggle[aria-pressed='true'] .pg-toggle__dot::after {
+		transform: translateX(16px);
+		background: #eff6ff;
+	}
+	.pg-reset {
+		align-self: center;
+		padding: 0.4rem 0.9rem;
+		font-size: 0.75rem;
+		color: rgb(212 212 216);
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 0.5rem;
+		cursor: pointer;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
+	}
+	.pg-reset:hover {
+		color: rgb(245 245 245);
+		border-color: rgba(147, 197, 253, 0.5);
+	}
+</style>
 
-	function initStageTitle() {
+<script>
+	import { mountPlayground } from '../../scripts/experiment-playgrounds';
+
+	let instance: { destroy(): void } | null = null;
+
+	function initPlayground() {
 		const canvas = document.querySelector<HTMLCanvasElement>(
-			'.experiment-stage canvas.title-fx__canvas:not([data-preview-init])'
+			'.pg-canvas:not([data-pg-init])'
 		);
 		if (!canvas) return;
-		canvas.dataset.previewInit = 'true';
-		const textEl = canvas.parentElement?.querySelector<HTMLElement>('.title-fx__text');
+		canvas.dataset.pgInit = 'true';
+		const stage = canvas.closest<HTMLElement>('.pg-stage');
+		const controls = stage?.querySelector<HTMLElement>('[data-pg-controls]') ?? null;
+		const hint = stage?.querySelector<HTMLElement>('[data-pg-hint]') ?? null;
 		const slug = canvas.dataset.slug;
 		const codename = canvas.dataset.codename;
-		if (!textEl || !slug || !codename) return;
-		const stage = canvas.closest<HTMLElement>('.experiment-stage');
-		mountExperimentPreview(canvas, slug, codename, { auto: true, trigger: stage, textEl });
+		if (!slug || !codename) return;
+		instance = mountPlayground(canvas, slug, codename, controls, hint);
 	}
-	document.addEventListener('astro:page-load', initStageTitle);
-	initStageTitle();
+
+	// Tear the loop + listeners down before Astro swaps the page out.
+	function destroyPlayground() {
+		instance?.destroy();
+		instance = null;
+	}
+
+	document.addEventListener('astro:page-load', initPlayground);
+	document.addEventListener('astro:before-swap', destroyPlayground);
+	initPlayground();
 </script>

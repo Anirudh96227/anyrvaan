@@ -1,9 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import PageHeader from '../components/PageHeader.astro';
-import EntryCard from '../components/EntryCard.astro';
 import Footer from '../components/Footer.astro';
 
 const projects = (await getCollection('work', ({ data }) => !data.draft)).sort(
@@ -11,6 +11,15 @@ const projects = (await getCollection('work', ({ data }) => !data.draft)).sort(
 		(a.data.order ?? Infinity) - (b.data.order ?? Infinity) ||
 		Number(b.data.year) - Number(a.data.year)
 );
+
+// Three tiers, so the page argues an order instead of listing eleven equals:
+// the first two covers run full width, the rest of the covered work sits in a
+// two-up grid, and cover-less entries (the reference atlases, this site) close
+// the page as a compact reading list.
+const covered = projects.filter((p) => p.data.cover);
+const features = covered.slice(0, 2);
+const grid = covered.slice(2);
+const references = projects.filter((p) => !p.data.cover);
 ---
 
 <Layout
@@ -25,22 +34,94 @@ const projects = (await getCollection('work', ({ data }) => !data.draft)).sort(
 				title="Work"
 				intro="Case studies told as stories — context, thinking, exploration, iterations, lessons, outcome. A small set, shown in full, instead of a long list that never gets past the surface."
 			/>
-			<section class="mx-auto max-w-4xl px-6 pb-32">
-				<div class="flex flex-col gap-6">
+
+			<!-- Tier 1: the two lead projects, full width, image first. -->
+			<section class="mx-auto max-w-5xl px-6">
+				<div class="flex flex-col gap-20 sm:gap-24">
 					{
-						projects.map((p) => (
-							<EntryCard
-								href={`/work/${p.id}/`}
-								eyebrow="Case Study"
-								title={p.data.title}
-								description={p.data.summary}
-								meta={p.data.year}
-								tags={p.data.tags}
-							/>
+						features.map((p) => (
+							<a href={`/work/${p.id}/`} class="work-feature reveal group block">
+								<div class="overflow-hidden rounded-2xl border border-white/10 bg-black">
+									<Image
+										src={p.data.cover!}
+										alt={p.data.coverAlt ?? p.data.title}
+										widths={[640, 1024, 1600]}
+										sizes="(max-width: 1024px) 100vw, 1024px"
+										class="aspect-video w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+									/>
+								</div>
+								<div class="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+									<h2 class="text-h2 text-neutral-50">{p.data.title}</h2>
+									<p class="text-small text-neutral-400">
+										{p.data.tags[0]} — {p.data.year}
+									</p>
+								</div>
+								<p class="mt-3 max-w-2xl text-body text-neutral-400">{p.data.summary}</p>
+								<span class="mt-4 inline-flex items-center gap-2 text-small text-neutral-300 transition-colors group-hover:text-neutral-50">
+									Read the case study
+									<span aria-hidden="true" class="transition-transform group-hover:translate-x-1">
+										&rarr;
+									</span>
+								</span>
+							</a>
 						))
 					}
 				</div>
 			</section>
+
+			<!-- Tier 2: the rest of the filmed work, two-up. -->
+			<section class="mx-auto max-w-5xl px-6 pt-20 sm:pt-24">
+				<div class="grid gap-x-10 gap-y-16 sm:grid-cols-2">
+					{
+						grid.map((p) => (
+							<a href={`/work/${p.id}/`} class="reveal group block">
+								<div class="overflow-hidden rounded-2xl border border-white/10 bg-black">
+									<Image
+										src={p.data.cover!}
+										alt={p.data.coverAlt ?? p.data.title}
+										widths={[480, 800, 1200]}
+										sizes="(max-width: 640px) 100vw, 512px"
+										class="aspect-video w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+									/>
+								</div>
+								<div class="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+									<h3 class="text-h3 text-neutral-50">{p.data.title}</h3>
+									<p class="text-small text-neutral-400">{p.data.year}</p>
+								</div>
+								<p class="mt-2 text-small leading-relaxed text-neutral-400">
+									{p.data.tags.join(' · ')}
+								</p>
+							</a>
+						))
+					}
+				</div>
+			</section>
+
+			<!-- Tier 3: reference works — dense reading-list rows, no images. -->
+			{
+				references.length > 0 && (
+					<section class="mx-auto max-w-5xl px-6 pb-32 pt-24">
+						<p class="reveal text-eyebrow uppercase text-neutral-400">Field Guides &amp; References</p>
+						<ul class="mt-8 flex flex-col divide-y divide-white/5 border-y border-white/5">
+							{references.map((p) => (
+								<li class="reveal">
+									<a
+										href={`/work/${p.id}/`}
+										class="group flex flex-col gap-1 py-5 sm:flex-row sm:items-baseline sm:justify-between"
+									>
+										<span class="text-body-lg text-neutral-200 transition-colors group-hover:text-neutral-50">
+											{p.data.title}
+										</span>
+										<span class="text-small text-neutral-400">
+											{p.data.tags[0]} — {p.data.year}
+										</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
 		</main>
 		<Footer />
 	</div>

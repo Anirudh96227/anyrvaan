@@ -3,7 +3,6 @@ project: "rough-cut-divinity"
 draft: false
 number: 8
 title: "Good Mood, Bad Mood, Same Frame"
-creator: "Anyrvaan"
 thread: "Transformation, slowed down"
 video: "https://youtube.com/shorts/aCMun8Mvt9U"
 companion: "./_companions/08-burning-up-companion.jpeg"

@@ -3,7 +3,6 @@ project: "rough-cut-divinity"
 draft: false
 number: 7
 title: "Nobody, on Fire"
-creator: "Anyrvaan"
 thread: "Mystery, without a face"
 video: "https://youtube.com/shorts/4pNF0WvF6b8"
 companion: "./_companions/07-purple-fire-companion.jpeg"

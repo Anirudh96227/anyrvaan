@@ -3,7 +3,6 @@ project: "rough-cut-divinity"
 draft: false
 number: 6
 title: "Weather With a Career Plan"
-creator: "Anyrvaan"
 thread: "Potential, a second before purpose"
 video: "https://youtube.com/shorts/XOCLsF6YJ1M"
 companion: "./_companions/06-thunder-sword-companion.jpeg"

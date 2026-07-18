@@ -4,6 +4,8 @@ summary: "Thirteen places across India, each rebuilt as a hand-lit diorama the s
 year: "2025"
 order: 1
 tags: ["Miniature Art", "AI Art Direction", "Environment Design"]
+cover: "../../assets/work/miniature-india.jpg"
+coverAlt: "Monks holding candles at the mouth of a cave below Phugtal Monastery, rebuilt as a hand-lit miniature"
 thesis: "Make a place small enough to hold, and you look at it like you've never seen it before."
 studiesEyebrow: "The Set"
 studiesHeading: "Thirteen dioramas, one country."

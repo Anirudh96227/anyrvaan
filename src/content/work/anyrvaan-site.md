@@ -1,8 +1,10 @@
 ---
-title: "Anyrvaan.com"
+title: "The Studio Site"
 summary: "The studio's own site, built as a working case study in restraint — a cursor-reactive particle field that costs nothing at rest, a fluid editorial type system, and motion that only ever answers to attention."
 year: "2026"
 tags: ["Web Design", "Front-end Engineering", "Design Systems"]
+cover: "../../assets/work/anyrvaan-site.jpg"
+coverAlt: "The Anyrvaan wordmark glowing over a field of particles on the site itself"
 draft: true
 ---
 

@@ -4,6 +4,8 @@ summary: "A single devotional short built around one held breath — the world g
 year: "2026"
 order: 3
 tags: ["Motion Design", "AI Art Direction", "Devotional Animation"]
+cover: "../../assets/work/awakening-of-mahakal.jpg"
+coverAlt: "Shiva with a raised palm, third eye glowing, lightning tracing his skin"
 video: "https://youtu.be/vgE63bTzK04"
 thesis: "Power doesn't announce itself the moment it arrives. It gathers first, in a stillness so complete the whole world seems to be listening for it."
 draft: false

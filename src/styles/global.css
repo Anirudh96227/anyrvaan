@@ -450,6 +450,27 @@ body {
 		transition: none;
 	}
 }
+/* Phones: the two 3D panels can't sit side by side without their contents being
+   clipped, so stack them (source on top, result below), flatten the tilt, and
+   give each the full width. The canvas packets re-measure from the DOM on
+   resize, so they follow the panels into the new vertical arrangement. Pair this
+   with a taller (portrait) container — see the blog demo wrapper. */
+@media (max-width: 640px) {
+	.stod-panel {
+		left: 3%;
+		right: 3%;
+		width: auto;
+		height: 45%;
+	}
+	.stod-sheet {
+		top: 2.5%;
+		transform: translateY(0) rotateX(4deg) rotateY(3deg);
+	}
+	.stod-dash {
+		top: 52.5%;
+		transform: translateY(0) rotateX(4deg) rotateY(-3deg);
+	}
+}
 
 /* Ambient card background: a faint grid + a glowing neon line that traces and
    fades through the card's negative space, each card running its own pattern

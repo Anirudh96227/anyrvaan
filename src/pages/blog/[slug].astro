@@ -19,6 +19,15 @@ const { Content } = await render(post);
 const formatDate = (d: Date) =>
 	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 
+// A post's `youtube` can be a full YouTube URL or a local file (starts with
+// "/") — extract the video ID so we know which player to render.
+const getYouTubeId = (url: string): string | null =>
+	url.match(
+		/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+	)?.[1] ?? null;
+
+const postYoutubeId = post.data.youtube ? getYouTubeId(post.data.youtube) : null;
+
 // Motifs that carry their meaning visually (e.g. the funnel) need no caption.
 // Add an entry here only for a motif that genuinely needs a text cue.
 const heroCaptions: Record<string, { verb: string; hint: string }> = {};
@@ -64,9 +73,37 @@ const heroCaption = post.data.heroMotif ? heroCaptions[post.data.heroMotif] : nu
 				}
 			</header>
 			{
+				post.data.youtube && (
+					<div class="mx-auto max-w-4xl px-6 pb-16">
+						<div class="hero-video glow-frame reveal rounded-2xl">
+							<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
+								{postYoutubeId ? (
+									<iframe
+										class="h-full w-full"
+										src={`https://www.youtube-nocookie.com/embed/${postYoutubeId}?rel=0&modestbranding=1`}
+										data-autoplay-src={`https://www.youtube-nocookie.com/embed/${postYoutubeId}?rel=0&modestbranding=1&autoplay=1&mute=1`}
+										title={post.data.title}
+										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+										allowfullscreen
+									/>
+								) : (
+									<video
+										class="h-full w-full"
+										src={post.data.youtube}
+										controls
+										playsinline
+										preload="metadata"
+									/>
+								)}
+							</div>
+						</div>
+					</div>
+				)
+			}
+			{
 				post.data.demo === 'sheet-to-dashboard' && (
 					<div class="mx-auto max-w-5xl px-6 pb-16">
-						<div class="reveal aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
+						<div class="reveal aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-black sm:aspect-video">
 							<SheetToDashboard client:visible />
 						</div>
 					</div>

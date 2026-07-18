@@ -4,6 +4,8 @@ summary: "A single reflective orb travels through the entire history of existenc
 year: "2026"
 order: 4
 tags: ["Motion Design", "3D Animation", "Visual Effects"]
+cover: "../../assets/work/echoes-of-eternity.jpg"
+coverAlt: "A glowing golden figure walking out of a dark mountain horizon at dawn"
 behanceId: "235954251"
 thesis: "Something that only ever watches eventually has to become part of what it's watching."
 draft: false

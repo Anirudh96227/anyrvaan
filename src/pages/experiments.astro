@@ -10,15 +10,15 @@ const sorted = [...experiments].sort((a, b) => a.order - b.order);
 ---
 
 <Layout
-	title="UI Experiments — Anyrvaan"
-	description="An internal interaction lab: 24 prototypes exploring motion, physics, perception, and interface design."
+	title="Interaction Lab — Anyrvaan"
+	description="An internal interaction lab: typographic prototypes exploring motion, physics, perception, and interface design."
 >
 	<div class="min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
 			<PageHeader
-				eyebrow="Interaction Lab"
-				title="UI Experiments"
+				eyebrow="Experiments"
+				title="Interaction Lab"
 				intro="A growing collection of interaction prototypes exploring motion, physics, perception, and interface design. Each experiment begins with a small live preview before unfolding into a fully interactive playground."
 				label={`${sorted.length} Active Prototypes`}
 				fx
@@ -51,7 +51,7 @@ const sorted = [...experiments].sort((a, b) => a.order - b.order);
 
 	// The page's own title joins the lab: hovering the header block (or tapping
 	// it on mobile — each tap re-rolls) runs a randomly sampled sketch from the
-	// 24 on the "UI Experiments" text itself.
+	// collection on the "UI Experiments" text itself.
 	function initHeaderFx() {
 		const header = document.querySelector<HTMLElement>('[data-fx-header]:not([data-fx-init])');
 		if (!header) return;
@@ -61,7 +61,7 @@ const sorted = [...experiments].sort((a, b) => a.order - b.order);
 		if (!canvas || !textEl) return;
 		const slugs = Object.keys(RENDERERS);
 		const pick = () => slugs[(Math.random() * slugs.length) | 0];
-		mountExperimentPreview(canvas, pick, textEl.textContent?.trim() ?? 'UI Experiments', {
+		mountExperimentPreview(canvas, pick, textEl.textContent?.trim() ?? 'Interaction Lab', {
 			trigger: header,
 			textEl,
 			touchTap: 'retrigger',

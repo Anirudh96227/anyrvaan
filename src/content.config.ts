@@ -15,6 +15,10 @@ const blog = defineCollection({
 		// An interactive code-generated demo rendered above the article, in
 		// place of a hero motif, for posts that embed a live component.
 		demo: z.enum(['sheet-to-dashboard']).optional(),
+		// A single video (YouTube URL or local /path) shown as a framed hero
+		// player under the header — for posts whose subject is one film. The
+		// chapter films live in the Journal; each post embeds the relevant one.
+		youtube: z.string().optional(),
 		draft: z.boolean().default(false),
 	}),
 });
@@ -37,6 +41,11 @@ const work = defineCollection({
 			// lower comes first; entries without one sort after, by year.
 			order: z.number().optional(),
 			tags: z.array(z.string()).default([]),
+			// The project's face: one still shown on the /work index card and the
+			// homepage preview. Runs through Astro's image pipeline. Entries
+			// without one render as compact text rows (reference works).
+			cover: image().optional(),
+			coverAlt: z.string().optional(),
 			video: z.string().optional(),
 			poster: z.string().optional(),
 			// A single-piece case study can lead with an embedded Behance project

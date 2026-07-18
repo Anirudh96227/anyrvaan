@@ -4,6 +4,8 @@ summary: "Eight short films that stay with the moment before something finishes 
 year: "2026"
 order: 2
 tags: ["Motion Design", "AI Art Direction", "Devotional & Character Animation"]
+cover: "../../assets/work/rough-cut-divinity.jpg"
+coverAlt: "Graphite sketch of a kneeling figure before Nataraja dancing in a ring of clouds"
 thesis: "Every story like this already has an ending you know by heart. What's rare is the quiet moment just before it arrives."
 studiesEyebrow: "The Cuts"
 studiesHeading: "Eight moments, none of them finished."
