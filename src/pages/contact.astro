@@ -55,16 +55,14 @@ const elsewhere = ['Instagram', 'LinkedIn', 'GitHub'];
 			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
 				<div class="mx-auto max-w-4xl">
 					<p class="reveal text-eyebrow uppercase text-neutral-400">Elsewhere</p>
-					<ul class="reveal mt-8 flex flex-wrap gap-x-10 gap-y-3">
+					<ul class="reveal mt-8 flex flex-wrap gap-x-8 gap-y-3">
 						{
 							elsewhere.map((platform) => (
-								<li class="social-soon flex items-center gap-2 text-body text-neutral-400">
-									{platform}
-									<span class="social-soon__tag text-small text-neutral-500">— soon</span>
-								</li>
+								<li class="social-soon text-body text-neutral-300">{platform}</li>
 							))
 						}
 					</ul>
+					<p class="reveal mt-5 text-small text-neutral-500">Profiles going up shortly — email is the fastest way to reach me.</p>
 				</div>
 			</section>
 		</main>
@@ -89,11 +87,12 @@ const elsewhere = ['Instagram', 'LinkedIn', 'GitHub'];
 		.email-link.is-copied .email-link__label { animation: none; }
 	}
 
-	/* "— soon" gives a small playful flap on hover, so it reads intentional. */
-	.social-soon__tag { transition: transform 0.25s ease, color 0.25s ease; transform-origin: left center; }
-	.social-soon:hover .social-soon__tag { color: var(--color-neutral-300, #a3a3a3); }
+	/* Social names give a small playful lift on hover, so the row feels alive
+	   even before the profiles are live. */
+	.social-soon { transition: transform 0.25s ease, color 0.25s ease; transform-origin: left center; }
+	.social-soon:hover { color: var(--color-neutral-50, #fafafa); }
 	@media (prefers-reduced-motion: no-preference) {
-		.social-soon:hover .social-soon__tag { transform: rotate(-4deg) translateY(-1px); }
+		.social-soon:hover { transform: translateY(-2px); }
 	}
 </style>
 
