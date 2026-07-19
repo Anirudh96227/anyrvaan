@@ -80,8 +80,33 @@ const ogImageURL = new URL(image, Astro.site);
 	</head>
 	<body>
 		<slot />
+		<!-- Wormhole: on navigation, a cobalt field irises out from the tap point
+		     to cover the screen, the new page swaps beneath it, then it irises back
+		     in — so moving between pages feels like travelling, not reloading. -->
+		<div id="wormhole" aria-hidden="true"></div>
 	</body>
 </html>
+
+<style>
+	#wormhole {
+		position: fixed;
+		inset: 0;
+		z-index: 90;
+		pointer-events: none;
+		opacity: 0;
+		background: radial-gradient(
+			circle at var(--wx, 50%) var(--wy, 50%),
+			rgba(46, 124, 255, 0.28),
+			#08090d 62%
+		);
+		clip-path: circle(0% at var(--wx, 50%) var(--wy, 50%));
+	}
+	@media (prefers-reduced-motion: reduce) {
+		#wormhole {
+			display: none;
+		}
+	}
+</style>
 
 <script>
 	// Reveal-on-scroll for any element marked .reveal, on every page. Progressive:
@@ -1024,4 +1049,63 @@ const ogImageURL = new URL(image, Astro.site);
 	}
 	document.addEventListener('astro:page-load', initCardFx);
 	initCardFx();
+</script>
+
+<script>
+	// Wormhole travel between pages. A cobalt field irises out from wherever the
+	// visitor last tapped to cover the screen while the next page is fetched and
+	// swapped, then irises back in to reveal it. Uses Astro's View Transition
+	// lifecycle: grow on before-preparation, shrink on page-load. Disabled under
+	// reduced motion (the CSS hides the element; the JS just no-ops visually).
+	function initWormhole() {
+		const el = document.getElementById('wormhole');
+		if (!el) return;
+		if ((window as any).__wormholeInit) return;
+		(window as any).__wormholeInit = true;
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		let wx = '50%';
+		let wy = '50%';
+		document.addEventListener(
+			'pointerdown',
+			(e) => {
+				wx = `${e.clientX}px`;
+				wy = `${e.clientY}px`;
+			},
+			{ passive: true }
+		);
+
+		let travelling = false;
+		document.addEventListener('astro:before-preparation', () => {
+			if (reduce) return;
+			travelling = true;
+			el.style.setProperty('--wx', wx);
+			el.style.setProperty('--wy', wy);
+			el.style.transition = 'none';
+			el.style.opacity = '1';
+			el.style.clipPath = `circle(0% at ${wx} ${wy})`;
+			// force reflow so the 0% start is committed before the grow transition
+			void el.offsetWidth;
+			el.style.transition = 'clip-path 0.34s cubic-bezier(0.7, 0, 0.84, 0)';
+			el.style.clipPath = `circle(160% at ${wx} ${wy})`;
+		});
+
+		document.addEventListener('astro:page-load', () => {
+			if (!travelling) return;
+			travelling = false;
+			// ensure covered, then iris back in to reveal the new page
+			el.style.transition = 'none';
+			el.style.clipPath = `circle(160% at ${wx} ${wy})`;
+			void el.offsetWidth;
+			el.style.transition = 'clip-path 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+			el.style.clipPath = `circle(0% at ${wx} ${wy})`;
+			const done = () => {
+				el.style.opacity = '0';
+				el.removeEventListener('transitionend', done);
+			};
+			el.addEventListener('transitionend', done);
+		});
+	}
+	document.addEventListener('astro:page-load', initWormhole);
+	initWormhole();
 </script>

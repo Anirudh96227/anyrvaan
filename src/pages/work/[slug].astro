@@ -4,6 +4,7 @@ import { Image, getImage } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
+import WorldBackground, { type World } from '../../components/WorldBackground.tsx';
 
 export async function getStaticPaths() {
 	const projects = await getCollection('work', ({ data }) => !data.draft);
@@ -73,6 +74,17 @@ const frames = project.data.frames ?? [];
 const ogImage = project.data.cover
 	? (await getImage({ src: project.data.cover, width: 1200, format: 'jpeg' })).src
 	: undefined;
+
+// An ambient "world" behind the five filmed case studies, matched to subject.
+// Other case studies (the AI-image ones) keep the plain dark ground.
+const WORLDS: Record<string, World> = {
+	'effects-index': 'effects',
+	'spiritual-series': 'spiritual',
+	'dashboard-cinema': 'dashboard',
+	'retro-computing': 'retro',
+	'ui-replicas': 'ui',
+};
+const world = WORLDS[project.id];
 ---
 
 <Layout
@@ -81,9 +93,11 @@ const ogImage = project.data.cover
 	image={ogImage}
 	type="article"
 >
-	<div class="min-h-screen bg-neutral-950 text-neutral-50">
-		<Nav />
-		<main>
+	<div class:list={['relative min-h-screen text-neutral-50', !world && 'bg-neutral-950']}>
+		{world && <WorldBackground client:visible theme={world} />}
+		<div class="relative z-10">
+			<Nav />
+			<main>
 			<header class="mx-auto max-w-4xl px-6 pt-40 pb-16">
 				<p class="reveal text-eyebrow uppercase text-neutral-400">Case Study — {project.data.year}</p>
 				<h1 class="post-title reveal mt-6 text-h1 text-neutral-50">{project.data.title}</h1>
@@ -385,6 +399,7 @@ const ogImage = project.data.cover
 			</footer>
 		</main>
 		<Footer />
+		</div>
 	</div>
 </Layout>
 
