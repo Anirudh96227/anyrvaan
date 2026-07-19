@@ -32,9 +32,20 @@ const postYoutubeId = post.data.youtube ? getYouTubeId(post.data.youtube) : null
 // Add an entry here only for a motif that genuinely needs a text cue.
 const heroCaptions: Record<string, { verb: string; hint: string }> = {};
 const heroCaption = post.data.heroMotif ? heroCaptions[post.data.heroMotif] : null;
+
+// Share preview: film posts get the film's own thumbnail; the rest fall back
+// to the site-wide default OG image.
+const ogImage = postYoutubeId
+	? `https://i.ytimg.com/vi/${postYoutubeId}/maxresdefault.jpg`
+	: undefined;
 ---
 
-<Layout title={`${post.data.title} — Anyrvaan Journal`} description={post.data.description} type="article">
+<Layout
+	title={`${post.data.title} — Anyrvaan Journal`}
+	description={post.data.description}
+	image={ogImage}
+	type="article"
+>
 	<!-- Reading-progress beam: fills as the article scrolls past, in the
 	     green→blue tick language used elsewhere on the site. -->
 	<div class="read-progress" aria-hidden="true"><span class="read-progress__fill"></span></div>
