@@ -235,6 +235,84 @@ const ogImageURL = new URL(image, Astro.site);
 	document.addEventListener('astro:page-load', initSpotlight);
 	initSpotlight();
 
+	// Tag-chip bloom: hovering any [data-bloom] element fires ONE small
+	// like-burst (a ring that expands and fades + a few particles) from its
+	// center. Delegated at the document level so it survives view transitions
+	// and covers every tag pill across the site with no per-page wiring.
+	// Debounced per element; disabled under reduced motion / on coarse pointers.
+	function initTagBloom() {
+		if ((window as any).__tagBloomInit) return;
+		(window as any).__tagBloomInit = true;
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		if (matchMedia('(pointer: coarse)').matches) return;
+
+		const bloom = (el: HTMLElement) => {
+			const now = performance.now();
+			const last = Number(el.dataset.bloomAt || 0);
+			if (now - last < 450) return; // debounce rapid re-enters
+			el.dataset.bloomAt = String(now);
+			const r = el.getBoundingClientRect();
+			const cx = r.left + r.width / 2;
+			const cy = r.top + r.height / 2;
+			const c = document.createElement('canvas');
+			const S = 120;
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			c.width = S * dpr;
+			c.height = S * dpr;
+			c.style.cssText = `position:fixed;left:${cx - S / 2}px;top:${cy - S / 2}px;width:${S}px;height:${S}px;pointer-events:none;z-index:60;`;
+			document.body.appendChild(c);
+			const ctx = c.getContext('2d');
+			if (!ctx) return c.remove();
+			ctx.scale(dpr, dpr);
+			const n = 7;
+			const parts = Array.from({ length: n }, (_, i) => {
+				const a = (i / n) * Math.PI * 2 + Math.random() * 0.5;
+				const sp = 22 + Math.random() * 14;
+				return { a, sp };
+			});
+			const t0 = now;
+			const DUR = 480;
+			const tick = (t: number) => {
+				const p = Math.min(1, (t - t0) / DUR);
+				ctx.clearRect(0, 0, S, S);
+				const mid = S / 2;
+				// ring
+				const rr = 6 + p * 34;
+				ctx.beginPath();
+				ctx.arc(mid, mid, rr, 0, Math.PI * 2);
+				ctx.strokeStyle = `rgba(96,165,250,${(1 - p) * 0.7})`;
+				ctx.lineWidth = 2 * (1 - p) + 0.5;
+				ctx.stroke();
+				// particles
+				const ease = 1 - Math.pow(1 - p, 3);
+				for (const pt of parts) {
+					const d = pt.sp * ease;
+					const x = mid + Math.cos(pt.a) * d;
+					const y = mid + Math.sin(pt.a) * d;
+					ctx.beginPath();
+					ctx.arc(x, y, 2.4 * (1 - p) + 0.6, 0, Math.PI * 2);
+					ctx.fillStyle = `rgba(96,165,250,${1 - p})`;
+					ctx.fill();
+				}
+				if (p < 1) requestAnimationFrame(tick);
+				else c.remove();
+			};
+			requestAnimationFrame(tick);
+		};
+
+		document.addEventListener(
+			'pointerover',
+			(e) => {
+				const t = e.target as HTMLElement | null;
+				const chip = t?.closest<HTMLElement>('[data-bloom]');
+				if (chip) bloom(chip);
+			},
+			{ passive: true }
+		);
+	}
+	document.addEventListener('astro:page-load', initTagBloom);
+	initTagBloom();
+
 	// Code-generated post heroes. Each motif is a small canvas "visual verb"
 	// that enacts the post's title. initPostHero dispatches to the renderer named
 	// by the hero's data-motif. All pause off-screen / when the tab is hidden and

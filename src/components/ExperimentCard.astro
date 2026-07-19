@@ -39,7 +39,9 @@ const { slug, order, codename, classification, description, tags = [] } = Astro.
 			tags.length > 0 && (
 				<ul class="mt-6 flex flex-wrap gap-x-4 gap-y-1">
 					{tags.map((t) => (
-						<li class="text-small text-neutral-500">{t}</li>
+						<li class="text-small text-neutral-500 transition-colors group-hover:text-neutral-400" data-bloom>
+							{t}
+						</li>
 					))}
 				</ul>
 			)

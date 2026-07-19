@@ -35,9 +35,10 @@ const elsewhere = ['Instagram', 'LinkedIn', 'GitHub'];
 					<p class="reveal text-eyebrow uppercase text-neutral-400">Write In</p>
 					<a
 						href={`mailto:${email}`}
-						class="reveal group mt-8 block w-fit text-h1 text-neutral-50 transition-colors hover:text-neutral-300"
+						data-email={email}
+						class="email-link reveal group mt-8 block w-fit text-h1 text-neutral-50 transition-colors hover:text-neutral-300"
 					>
-						{email}
+						<span class="email-link__label">{email}</span>
 						<span
 							aria-hidden="true"
 							class="ml-2 inline-block transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
@@ -57,9 +58,9 @@ const elsewhere = ['Instagram', 'LinkedIn', 'GitHub'];
 					<ul class="reveal mt-8 flex flex-wrap gap-x-10 gap-y-3">
 						{
 							elsewhere.map((platform) => (
-								<li class="flex items-center gap-2 text-body text-neutral-400">
+								<li class="social-soon flex items-center gap-2 text-body text-neutral-400">
 									{platform}
-									<span class="text-small text-neutral-400">— soon</span>
+									<span class="social-soon__tag text-small text-neutral-500">— soon</span>
 								</li>
 							))
 						}
@@ -70,3 +71,64 @@ const elsewhere = ['Instagram', 'LinkedIn', 'GitHub'];
 		<Footer />
 	</div>
 </Layout>
+
+<style>
+	/* Rubber-band snap on the email when copied — the Rebound gesture, once. */
+	@keyframes email-rebound {
+		0% { transform: translateX(0); }
+		30% { transform: translateX(10px); }
+		55% { transform: translateX(-5px); }
+		78% { transform: translateX(2px); }
+		100% { transform: translateX(0); }
+	}
+	.email-link.is-copied .email-link__label {
+		display: inline-block;
+		animation: email-rebound 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.email-link.is-copied .email-link__label { animation: none; }
+	}
+
+	/* "— soon" gives a small playful flap on hover, so it reads intentional. */
+	.social-soon__tag { transition: transform 0.25s ease, color 0.25s ease; transform-origin: left center; }
+	.social-soon:hover .social-soon__tag { color: var(--color-neutral-300, #a3a3a3); }
+	@media (prefers-reduced-motion: no-preference) {
+		.social-soon:hover .social-soon__tag { transform: rotate(-4deg) translateY(-1px); }
+	}
+</style>
+
+<script>
+	// Click the email → copy to clipboard, snap the address (Rebound), and swap
+	// the label to "copied" for a moment. Falls back to the mailto: link if the
+	// clipboard API is unavailable.
+	function initEmailCopy() {
+		const link = document.querySelector<HTMLAnchorElement>('.email-link:not([data-copy-init])');
+		if (!link) return;
+		link.dataset.copyInit = 'true';
+		const label = link.querySelector<HTMLElement>('.email-link__label');
+		const email = link.dataset.email ?? '';
+		if (!label) return;
+		const original = label.textContent;
+		link.addEventListener('click', (e) => {
+			if (!navigator.clipboard) return; // let mailto: proceed
+			e.preventDefault();
+			navigator.clipboard
+				.writeText(email)
+				.then(() => {
+					label.textContent = 'copied to clipboard';
+					link.classList.remove('is-copied');
+					void link.offsetWidth; // restart the animation
+					link.classList.add('is-copied');
+					window.setTimeout(() => {
+						label.textContent = original;
+						link.classList.remove('is-copied');
+					}, 1600);
+				})
+				.catch(() => {
+					window.location.href = `mailto:${email}`;
+				});
+		});
+	}
+	document.addEventListener('astro:page-load', initEmailCopy);
+	initEmailCopy();
+</script>

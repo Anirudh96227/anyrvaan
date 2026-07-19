@@ -9,9 +9,25 @@ import Footer from '../components/Footer.astro';
 		<Nav />
 		<main>
 			<div class="mx-auto flex min-h-[70vh] max-w-4xl flex-col justify-center px-6 py-32">
-				<p class="reveal text-eyebrow uppercase text-neutral-400">404</p>
-				<h1 class="reveal mt-6 text-h1 text-neutral-50">Nothing here.</h1>
-				<p class="reveal mt-8 max-w-xl text-body-lg text-neutral-400">
+				<!-- The "404" scatters into debris and reassembles — the one page
+				     every visitor forgives being strange on. Click it to re-scatter.
+				     Reduced motion / no-JS: it just sits there, plainly. -->
+				<button
+					type="button"
+					class="notfound-fx w-fit cursor-pointer text-left"
+					aria-label="Scatter and reassemble"
+					data-notfound
+				>
+					<span class="title-fx relative inline-block">
+						<span
+							class="title-fx__text block text-[clamp(6rem,22vw,15rem)] font-semibold leading-none tracking-tight text-neutral-50"
+							>404</span
+						>
+						<canvas class="title-fx__canvas pointer-events-none absolute" aria-hidden="true"></canvas>
+					</span>
+				</button>
+				<h1 class="reveal mt-8 text-h2 text-neutral-100">Nothing here.</h1>
+				<p class="reveal mt-6 max-w-xl text-body-lg text-neutral-400">
 					Not every room in this site is built yet — and this particular one was never here to begin
 					with. The link that brought you here is either old or wrong.
 				</p>
@@ -29,3 +45,42 @@ import Footer from '../components/Footer.astro';
 		<Footer />
 	</div>
 </Layout>
+
+<style>
+	.title-fx {
+		position: relative;
+		display: inline-block;
+	}
+	.title-fx__canvas {
+		position: absolute;
+	}
+	.notfound-fx {
+		background: none;
+		border: 0;
+		padding: 0;
+	}
+</style>
+
+<script>
+	import { mountExperimentPreview } from '../scripts/experiment-previews';
+
+	// The "404" runs the Swarm sketch — scatter into debris, reassemble, break
+	// apart again — and re-triggers on click/tap. mountExperimentPreview no-ops
+	// under reduced motion, leaving the static numerals as the baseline.
+	function init404() {
+		const host = document.querySelector<HTMLElement>('[data-notfound]:not([data-fx-init])');
+		if (!host) return;
+		host.dataset.fxInit = 'true';
+		const canvas = host.querySelector<HTMLCanvasElement>('canvas.title-fx__canvas');
+		const textEl = host.querySelector<HTMLElement>('.title-fx__text');
+		if (!canvas || !textEl) return;
+		mountExperimentPreview(canvas, 'swarm', '404', {
+			auto: true,
+			trigger: host,
+			textEl,
+			touchTap: 'retrigger',
+		});
+	}
+	document.addEventListener('astro:page-load', init404);
+	init404();
+</script>

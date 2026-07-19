@@ -260,7 +260,7 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 
 		// draw / settle / break — one rAF loop that exists only mid-transition.
 		let raf = 0;
-		let state: 'empty' | 'drawing' | 'settling' | 'drawn' | 'breaking' = 'empty';
+		let state: 'empty' | 'drawing' | 'settling' | 'drawn' | 'breaking' | 'bloom' = 'empty';
 		let t0 = 0;
 		// What's currently on the canvas, so a break fades exactly the stroke
 		// that exists — a half-drawn circle fades as a half-drawn circle.
@@ -304,6 +304,18 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 					return; // fully absent: zero frames
 				}
 				raf = requestAnimationFrame(frame);
+			} else if (state === 'bloom') {
+				// Click reply: the circle completes at once in bright cobalt and
+				// settles to gray — an acknowledgement, not the slow stillness draw.
+				const p = Math.min(1, (now - t0) / 700);
+				curP = 1;
+				curMix = breatheEase(p);
+				paint(1, curMix, 1);
+				if (p >= 1) {
+					state = 'drawn';
+					return;
+				}
+				raf = requestAnimationFrame(frame);
 			}
 		}
 
@@ -318,6 +330,17 @@ const isActive = (href: string) => path === href || path === `${href}/` || path.
 		onActivity(() => {
 			if (state === 'empty' || state === 'breaking') return;
 			state = 'breaking';
+			t0 = performance.now();
+			stop();
+			raf = requestAnimationFrame(frame);
+		});
+
+		// Click the mark and it answers — completing itself in one bright bloom,
+		// independent of the slow stillness draw. A small reward for the curious.
+		canvas.style.cursor = 'pointer';
+		canvas.addEventListener('pointerdown', (e) => {
+			e.stopPropagation(); // don't let onActivity read this as "break"
+			state = 'bloom';
 			t0 = performance.now();
 			stop();
 			raf = requestAnimationFrame(frame);
