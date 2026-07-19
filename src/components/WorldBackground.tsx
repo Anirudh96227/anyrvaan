@@ -56,10 +56,25 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			pv[i] = 0.06 + Math.random() * 0.16; // slow upward drift
 		}
 
+		let scrollMax = 1;
+		const measureScroll = () => {
+			const d = document.documentElement;
+			scrollMax = Math.max(1, d.scrollHeight - d.clientHeight);
+		};
+		measureScroll();
+
 		function draw(t: number) {
 			ctx!.clearRect(0, 0, w, h);
 			const cx = w / 2,
 				cy = h * 0.42;
+
+			// Scroll-driven light (#7): the world wakes as you travel into the
+			// middle of the page and settles again at the ends — motion born from
+			// the visitor's own scroll. A cobalt horizon rises with progress.
+			const prog = Math.min(1, Math.max(0, (document.documentElement.scrollTop || window.scrollY) / scrollMax));
+			const ignite = Math.sin(prog * Math.PI); // 0 → 1 → 0 across the page
+			const light = 0.45 + 0.55 * ignite;
+			ctx!.globalAlpha = light;
 
 			if (theme === 'retro') {
 				// drifting scanlines + a slow brightness flicker
@@ -152,6 +167,17 @@ export default function WorldBackground({ theme }: { theme: World }) {
 					ctx!.fill();
 				}
 			}
+
+			// the horizon: a low cobalt glow that rises as you near the page's end
+			ctx!.globalAlpha = 1;
+			if (prog > 0.55) {
+				const rise = (prog - 0.55) / 0.45;
+				const g = ctx!.createLinearGradient(0, h, 0, h - 260 * rise);
+				g.addColorStop(0, `rgba(${COBALT}, ${(0.16 * rise).toFixed(3)})`);
+				g.addColorStop(1, `rgba(${COBALT}, 0)`);
+				ctx!.fillStyle = g;
+				ctx!.fillRect(0, h - 260 * rise, w, 260 * rise);
+			}
 		}
 
 		let raf = 0;
@@ -187,6 +213,7 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			clearTimeout(rt);
 			rt = window.setTimeout(() => {
 				resize();
+				measureScroll();
 				if (reduce) draw(0);
 			}, 180);
 		};
