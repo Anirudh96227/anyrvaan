@@ -6,6 +6,16 @@ order: 8
 tags: ["Animation", "Made with Code", "Computer History"]
 cover: "../../assets/work/retro-computing.jpg"
 coverAlt: "Minesweeper open on a teal Windows 95 desktop, taskbar and all, redrawn from scratch"
+frames:
+  - src: "../../assets/work/frames/retro-computing-a.jpg"
+    alt: "A Commodore 64 BASIC boot screen"
+    caption: "Commodore 64, 1982 — BASIC on a cold boot, redrawn by hand."
+  - src: "../../assets/work/frames/retro-computing-b.jpg"
+    alt: "A Windows 95 desktop with Minesweeper"
+    caption: "Windows 95 — the taskbar arrives, Minesweeper and all."
+  - src: "../../assets/work/frames/retro-computing-c.jpg"
+    alt: "The first iPhone home screen"
+    caption: "iPhone, 2007 — the home screen that ended the era."
 thesis: "You think you remember what old computers looked like. You mostly don't — and that gap is the whole thing."
 video: "/videos/retro-windows95.mp4"
 poster: "/images/retro-computing-poster.jpg"

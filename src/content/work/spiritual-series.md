@@ -6,6 +6,16 @@ order: 6
 tags: ["Animation", "Made with Code", "Sacred Patterns"]
 cover: "../../assets/work/spiritual-series.jpg"
 coverAlt: "A kaleidoscopic fold pattern mid-bloom on gallery-white paper, cobalt on ink"
+frames:
+  - src: "../../assets/work/frames/spiritual-series-a.jpg"
+    alt: "Concentric rings of dots around a blue center"
+    caption: "The Mandala, opening ring by ring from its center."
+  - src: "../../assets/work/frames/spiritual-series-b.jpg"
+    alt: "Light assembling through a rose-window pattern"
+    caption: "The Rose Window — light gathering through glass."
+  - src: "../../assets/work/frames/spiritual-series-c.jpg"
+    alt: "A slow radial sweep on a wheel"
+    caption: "The Turning Wheel — a sweep that always returns."
 thesis: "Some things you can't understand quickly. You have to look twice."
 video: "https://youtu.be/8cKdoxP5HD0"
 studiesEyebrow: "The Patterns"

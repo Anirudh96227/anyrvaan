@@ -6,6 +6,16 @@ order: 7
 tags: ["Animation", "Made with Code", "Storytelling"]
 cover: "../../assets/work/dashboard-cinema.jpg"
 coverAlt: "A dark operations dashboard mid-incident: red alert banner, error-rate charts rising"
+frames:
+  - src: "../../assets/work/frames/dashboard-cinema-a.jpg"
+    alt: "A calm dark operations dashboard"
+    caption: "The calm before — a status screen no one is watching yet."
+  - src: "../../assets/work/frames/dashboard-cinema-b.jpg"
+    alt: "A dashboard with a red alert banner"
+    caption: "The incident — one line creeps up before any alarm fires."
+  - src: "../../assets/work/frames/dashboard-cinema-c.jpg"
+    alt: "Charts recovering to healthy green"
+    caption: "Recovery — the whole board clears at once."
 thesis: "Watching a problem grow while nobody else has noticed yet — that feeling is the whole film."
 video: "/videos/dashboard-cinema.mp4"
 poster: "/images/dashboard-cinema-poster.jpg"

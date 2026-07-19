@@ -46,6 +46,18 @@ const work = defineCollection({
 			// without one render as compact text rows (reference works).
 			cover: image().optional(),
 			coverAlt: z.string().optional(),
+			// 16:9 stills pulled from the films — shown as a "Stills" strip under
+			// the narrative so a case study about screen work actually shows the
+			// screens, not just describes them. Run through the image pipeline.
+			frames: z
+				.array(
+					z.object({
+						src: image(),
+						alt: z.string(),
+						caption: z.string().optional(),
+					})
+				)
+				.optional(),
 			video: z.string().optional(),
 			poster: z.string().optional(),
 			// A single-piece case study can lead with an embedded Behance project

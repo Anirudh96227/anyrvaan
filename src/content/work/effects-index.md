@@ -6,6 +6,16 @@ order: 5
 tags: ["Animation", "Made with Code", "Collections"]
 cover: "../../assets/work/effects-index.jpg"
 coverAlt: "Effects Index title card: a huge cobalt 12 beside three liquid-fill pillar gauges"
+frames:
+  - src: "../../assets/work/frames/effects-index-a.jpg"
+    alt: "A kinetic quote grid mid-arrival"
+    caption: "'We shape our tools — thereafter they shape us.' The kinetic quote grid, Chapter 01."
+  - src: "../../assets/work/frames/effects-index-b.jpg"
+    alt: "A field of dots settling around a circle"
+    caption: "The Resonant Field — a physics study finding its rest, Chapter 05."
+  - src: "../../assets/work/frames/effects-index-c.jpg"
+    alt: "A spirograph pattern inside a giant 60"
+    caption: "Sacred Geometry — recursion drawn as a living spirograph, Chapter 08."
 thesis: "When you make hundreds of small things, the hard part isn't making them. It's ever finding one again."
 video: "https://youtu.be/zoRoKReWYY4"
 studiesEyebrow: "The Chapters"

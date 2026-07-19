@@ -6,6 +6,16 @@ order: 9
 tags: ["Animation", "Made with Code", "Interfaces"]
 cover: "../../assets/work/ui-replicas.jpg"
 coverAlt: "A faithful rebuild of Slack: purple sidebar, channel list, a message being typed"
+frames:
+  - src: "../../assets/work/frames/ui-replicas-a.jpg"
+    alt: "A rebuilt Excel sheet with a bar chart"
+    caption: "Excel — a live chart rebuilt cell by cell."
+  - src: "../../assets/work/frames/ui-replicas-b.jpg"
+    alt: "A rebuilt Slack workspace"
+    caption: "Slack — channel list and compose bar, faked to the pixel."
+  - src: "../../assets/work/frames/ui-replicas-c.jpg"
+    alt: "A rebuilt dark VS Code editor"
+    caption: "VS Code — a dark editor with a fake cursor typing."
 thesis: "I built these the slowest, most tedious way possible. That's the only reason they look real."
 video: "/videos/ui-replica-slack.mp4"
 poster: "/images/ui-replicas-poster.jpg"
