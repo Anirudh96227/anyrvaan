@@ -34,3 +34,7 @@ Above is the fast one — [The Pulse](https://youtu.be/vkMxG-ttrVE), counters an
 - [The Eightfold Star](https://youtu.be/EX6f280EOpk): folding symmetry
 - [The Rose Window](https://youtu.be/75cXdZoktBs): light through glass
 - [The Tree of Life](https://youtu.be/vLB2wmq6Gg0): branching outward
+- [The Way of Water](https://youtu.be/RZCxDRdyFdE): finding the low path
+- [The Turning Wheel](https://youtu.be/r32qalYaouc): motion that returns
+- [The Endless Knot](https://youtu.be/Y81MCk2L7as): one line, no beginning
+- [The One Sound](https://youtu.be/7n5JQYHUH9I): everything resolving to one note
