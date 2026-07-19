@@ -1,8 +1,10 @@
 ---
+import { Image } from 'astro:assets';
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
+import reelPoster from '../assets/work/reel-poster.jpg';
 
 // The practice, in evidence instead of adjectives — every number is a thing
 // on this site you can go watch or push on.
@@ -52,19 +54,36 @@ const principles = [
 				intro="My name's Anirudh. I design and build things that move — Anyrvaan is the name those things ship under. There's no team behind the word: every film, interface, and experiment here was designed and coded by the same pair of hands."
 			/>
 
-			<!-- Portfolio reel: same hero-video treatment (glow-frame, scroll-triggered
-			     muted autoplay via initHeroVideo in Layout.astro) as a case study's hero. -->
+			<!-- Portfolio reel: a click-to-play facade. The frame stays on-brand
+			     (the wordmark over the field) until you press play — only then
+			     does the YouTube player load, so its own thumbnail never shows. -->
 			<div class="mx-auto max-w-4xl px-6 pb-16">
-				<div class="hero-video glow-frame reveal rounded-2xl">
-					<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
-						<iframe
-							class="h-full w-full"
-							src="https://www.youtube-nocookie.com/embed/84ceFWedjds?rel=0&modestbranding=1"
-							data-autoplay-src="https://www.youtube-nocookie.com/embed/84ceFWedjds?rel=0&modestbranding=1&autoplay=1&mute=1"
-							title="Portfolio"
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowfullscreen
-						/>
+				<div class="glow-frame reveal rounded-2xl">
+					<div class="glow-frame__inner relative aspect-video overflow-hidden border border-white/10 bg-black">
+						<button
+							type="button"
+							class="reel-facade group absolute inset-0 block h-full w-full cursor-pointer text-left"
+							data-reel="84ceFWedjds"
+							aria-label="Play the studio reel — “Hi, I’m Anirudh”"
+						>
+							<Image
+								src={reelPoster}
+								alt="The studio reel — the Anyrvaan wordmark over a starfield"
+								class="h-full w-full object-cover opacity-90 transition-opacity duration-500 group-hover:opacity-100"
+							/>
+							<span aria-hidden="true" class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></span>
+							<span class="absolute bottom-0 left-0 flex w-full items-center justify-between gap-4 p-5 sm:p-7">
+								<span class="flex items-center gap-4">
+									<span class="flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-black/40 backdrop-blur-sm transition-colors group-hover:border-white group-hover:bg-black/60">
+										<svg width="16" height="18" viewBox="0 0 16 18" fill="none" aria-hidden="true">
+											<path d="M1 1.5v15l14-7.5-14-7.5z" fill="#fafafa"></path>
+										</svg>
+									</span>
+									<span class="text-body text-neutral-50">Watch the reel — “Hi, I’m Anirudh”</span>
+								</span>
+								<span class="hidden text-small text-neutral-300 sm:block">2 min</span>
+							</span>
+						</button>
 					</div>
 				</div>
 			</div>
@@ -151,3 +170,26 @@ const principles = [
 		<Footer />
 	</div>
 </Layout>
+
+<script>
+	// Click-to-play: swap the on-brand poster for the real YouTube player only
+	// on demand, so the video's own (off-brand) thumbnail never loads.
+	function initReel() {
+		const btn = document.querySelector<HTMLButtonElement>('.reel-facade:not([data-reel-init])');
+		if (!btn) return;
+		btn.dataset.reelInit = 'true';
+		btn.addEventListener('click', () => {
+			const id = btn.dataset.reel;
+			if (!id) return;
+			const iframe = document.createElement('iframe');
+			iframe.className = 'h-full w-full';
+			iframe.src = `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&autoplay=1`;
+			iframe.title = 'The studio reel';
+			iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+			iframe.allowFullscreen = true;
+			btn.replaceWith(iframe);
+		});
+	}
+	document.addEventListener('astro:page-load', initReel);
+	initReel();
+</script>
