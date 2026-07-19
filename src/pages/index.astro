@@ -55,7 +55,12 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 				<h1 class="hero-wordmark">Anyrvaan</h1>
 				<p class="hero-line hero-line--1 mt-8 text-eyebrow uppercase text-neutral-400">Motion born from stillness</p>
 				<p class="hero-line hero-line--2 mt-12 text-body-lg text-neutral-300">
-					I design and code things that move — films, interfaces, and interaction experiments.
+					I design and code things that <span
+						class="move-fx title-fx relative inline-block"
+						><span class="title-fx__text">move</span><canvas
+							class="title-fx__canvas pointer-events-none absolute"
+							aria-hidden="true"></canvas></span
+					> — films, interfaces, and interaction experiments.
 				</p>
 			</div>
 
@@ -894,4 +899,54 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 	});
 	document.addEventListener('astro:page-load', boot);
 	boot();
+</script>
+
+<script>
+	import { mountExperimentPreview } from '../scripts/experiment-previews';
+
+	// Motion above the fold: the word "move" performs one lab mechanic shortly
+	// after the hero settles — proof, in the first screen, that this is a motion
+	// portfolio — then rests. Hovering it replays a fresh sketch. No-ops under
+	// reduced motion (the word stays plain), and runs zero frames at rest.
+	const MOVE_SKETCHES = ['swarm', 'spectrum', 'flux-ink', 'split-flap', 'collapse'];
+	let moveField: { destroy(): void } | null = null;
+
+	function initMoveWord() {
+		const span = document.querySelector<HTMLElement>('.move-fx:not([data-move-init])');
+		if (!span) return;
+		span.dataset.moveInit = 'true';
+		const canvas = span.querySelector<HTMLCanvasElement>('canvas.title-fx__canvas');
+		const textEl = span.querySelector<HTMLElement>('.title-fx__text');
+		if (!canvas || !textEl) return;
+
+		const pick = () => MOVE_SKETCHES[(Math.random() * MOVE_SKETCHES.length) | 0];
+		moveField?.destroy();
+		moveField = mountExperimentPreview(canvas, pick, 'move', {
+			trigger: span,
+			textEl,
+			touchTap: 'retrigger',
+		});
+
+		// One unprompted performance once the intro has settled — then it rests
+		// until hovered. Desktop only (touch users tap to play). Skipped under
+		// reduced motion, where the mount is inert anyway.
+		if (
+			matchMedia('(prefers-reduced-motion: reduce)').matches ||
+			matchMedia('(pointer: coarse)').matches
+		)
+			return;
+		const play = () => {
+			span.dispatchEvent(new PointerEvent('pointerenter'));
+			window.setTimeout(() => span.dispatchEvent(new PointerEvent('pointerleave')), 2600);
+		};
+		if (document.fonts?.ready) document.fonts.ready.then(() => window.setTimeout(play, 2600));
+		else window.setTimeout(play, 3000);
+	}
+
+	document.addEventListener('astro:before-swap', () => {
+		moveField?.destroy();
+		moveField = null;
+	});
+	document.addEventListener('astro:page-load', initMoveWord);
+	initMoveWord();
 </script>
