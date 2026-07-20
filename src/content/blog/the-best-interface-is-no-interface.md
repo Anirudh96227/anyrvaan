@@ -22,4 +22,4 @@ The thing I respect most in the sources is that they police their own evidence, 
 
 ## Where it shows up
 
-This is the thinking behind the quietest moments in my work — the stretches in [Dashboard Cinema](/work/dashboard-cinema/) where the screen says nothing and just lets a rising line do the talking. It's also the deliberate flip side of [the field guide to app animations](/work/ui-animation-atlas/), which collects all the ways a screen *does* reach for your eye. Same subject, opposite directions. The full collection of quiet ideas is [a field guide to quiet apps](/work/anti-ui-atlas/).
+This is the thinking behind the quietest moments in my work — the stretches where a screen says nothing and just lets a rising line do the talking. It's also the deliberate flip side of [the field guide to app animations](/work/ui-animation-atlas/), which collects all the ways a screen *does* reach for your eye. Same subject, opposite directions. The full collection of quiet ideas is [a field guide to quiet apps](/work/anti-ui-atlas/).

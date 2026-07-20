@@ -80,29 +80,25 @@ const ogImageURL = new URL(image, Astro.site);
 	</head>
 	<body>
 		<slot />
-		<!-- Wormhole: on navigation, a cobalt field irises out from the tap point
-		     to cover the screen, the new page swaps beneath it, then it irises back
-		     in — so moving between pages feels like travelling, not reloading. -->
-		<div id="wormhole" aria-hidden="true"></div>
+		<!-- Nav gather: on a link click, a scatter of particles converges on the
+		     tap point for about a second while the next page loads, then releases —
+		     a small "collecting" flourish over the page swap. -->
+		<canvas id="nav-particles" aria-hidden="true"></canvas>
 	</body>
 </html>
 
 <style>
-	#wormhole {
+	#nav-particles {
 		position: fixed;
 		inset: 0;
+		width: 100%;
+		height: 100%;
 		z-index: 90;
 		pointer-events: none;
 		opacity: 0;
-		background: radial-gradient(
-			circle at var(--wx, 50%) var(--wy, 50%),
-			rgba(46, 124, 255, 0.28),
-			#08090d 62%
-		);
-		clip-path: circle(0% at var(--wx, 50%) var(--wy, 50%));
 	}
 	@media (prefers-reduced-motion: reduce) {
-		#wormhole {
+		#nav-particles {
 			display: none;
 		}
 	}
@@ -1052,60 +1048,138 @@ const ogImageURL = new URL(image, Astro.site);
 </script>
 
 <script>
-	// Wormhole travel between pages. A cobalt field irises out from wherever the
-	// visitor last tapped to cover the screen while the next page is fetched and
-	// swapped, then irises back in to reveal it. Uses Astro's View Transition
-	// lifecycle: grow on before-preparation, shrink on page-load. Disabled under
-	// reduced motion (the CSS hides the element; the JS just no-ops visually).
-	function initWormhole() {
-		const el = document.getElementById('wormhole');
-		if (!el) return;
-		if ((window as any).__wormholeInit) return;
-		(window as any).__wormholeInit = true;
-		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+	// Nav gather: on a link click, a scatter of particles converges on the tap
+	// point while the next page is fetched, then releases as the new page settles
+	// — a light "collecting" flourish over Astro's own page swap, instead of a
+	// full-screen cover. Disabled under reduced motion (CSS hides the canvas).
+	function initNavGather() {
+		const canvas = document.getElementById('nav-particles') as HTMLCanvasElement | null;
+		if (!canvas) return;
+		if ((window as any).__navGatherInit) return;
+		(window as any).__navGatherInit = true;
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
 
-		let wx = '50%';
-		let wy = '50%';
-		document.addEventListener(
+		const lowTier =
+			matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4;
+		const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+		let vw = 0,
+			vh = 0;
+		const size = () => {
+			vw = window.innerWidth;
+			vh = window.innerHeight;
+			canvas.width = Math.round(vw * dpr);
+			canvas.height = Math.round(vh * dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		};
+		size();
+		window.addEventListener('resize', size);
+
+		// Where the visitor last pressed — the point everything gathers to.
+		let gx = vw / 2,
+			gy = vh / 2;
+		window.addEventListener(
 			'pointerdown',
 			(e) => {
-				wx = `${e.clientX}px`;
-				wy = `${e.clientY}px`;
+				gx = e.clientX;
+				gy = e.clientY;
 			},
 			{ passive: true }
 		);
 
-		let travelling = false;
-		document.addEventListener('astro:before-preparation', () => {
-			if (reduce) return;
-			travelling = true;
-			el.style.setProperty('--wx', wx);
-			el.style.setProperty('--wy', wy);
-			el.style.transition = 'none';
-			el.style.opacity = '1';
-			el.style.clipPath = `circle(0% at ${wx} ${wy})`;
-			// force reflow so the 0% start is committed before the grow transition
-			void el.offsetWidth;
-			el.style.transition = 'clip-path 0.34s cubic-bezier(0.7, 0, 0.84, 0)';
-			el.style.clipPath = `circle(160% at ${wx} ${wy})`;
-		});
+		const N = lowTier ? 40 : 84;
+		const px = new Float32Array(N);
+		const py = new Float32Array(N);
+		const alpha = new Float32Array(N);
+		const spd = new Float32Array(N);
+		let raf = 0;
+		let running = false;
+		let phase: 'gather' | 'release' = 'gather';
+		let startT = 0;
+		let releaseT = 0;
+		let active = false;
 
+		function spawn() {
+			for (let i = 0; i < N; i++) {
+				// seeded on a loose ring around the point so they visibly travel in
+				const a = Math.random() * Math.PI * 2;
+				const d = (0.4 + Math.random() * 0.8) * Math.max(vw, vh) * 0.5;
+				px[i] = gx + Math.cos(a) * d;
+				py[i] = gy + Math.sin(a) * d;
+				alpha[i] = 0.45 + Math.random() * 0.55;
+				spd[i] = 0.09 + Math.random() * 0.13;
+			}
+		}
+
+		function stop() {
+			running = false;
+			if (raf) cancelAnimationFrame(raf);
+			raf = 0;
+			ctx!.clearRect(0, 0, vw, vh);
+			canvas!.style.opacity = '0';
+		}
+
+		function frame(now: number) {
+			raf = 0;
+			ctx!.clearRect(0, 0, vw, vh);
+			const releasing = phase === 'release';
+			const fade = releasing ? Math.max(0, 1 - (now - releaseT) / 360) : 1;
+			// a soft cobalt glow blooms at the gather point as they collect
+			const glowT = Math.min(1, (now - startT) / 480) * fade;
+			if (glowT > 0) {
+				const gr = 54 + 46 * glowT;
+				const g = ctx!.createRadialGradient(gx, gy, 0, gx, gy, gr);
+				g.addColorStop(0, `rgba(96,165,250,${(0.26 * glowT).toFixed(3)})`);
+				g.addColorStop(1, 'rgba(96,165,250,0)');
+				ctx!.fillStyle = g;
+				ctx!.beginPath();
+				ctx!.arc(gx, gy, gr, 0, Math.PI * 2);
+				ctx!.fill();
+			}
+			for (let i = 0; i < N; i++) {
+				px[i] += (gx - px[i]) * spd[i];
+				py[i] += (gy - py[i]) * spd[i];
+				ctx!.globalAlpha = alpha[i] * fade;
+				ctx!.fillStyle = i % 4 === 0 ? 'rgb(96,165,250)' : 'rgb(235,235,235)';
+				ctx!.beginPath();
+				ctx!.arc(px[i], py[i], 1.7, 0, Math.PI * 2);
+				ctx!.fill();
+			}
+			ctx!.globalAlpha = 1;
+			if (releasing) {
+				canvas!.style.opacity = String(fade);
+				if (fade <= 0) {
+					stop();
+					return;
+				}
+			}
+			raf = requestAnimationFrame(frame);
+		}
+
+		function start() {
+			if (running) return;
+			running = true;
+			startT = performance.now();
+			canvas!.style.opacity = '1';
+			raf = requestAnimationFrame(frame);
+		}
+
+		document.addEventListener('astro:before-preparation', () => {
+			size();
+			spawn();
+			phase = 'gather';
+			active = true;
+			start();
+		});
 		document.addEventListener('astro:page-load', () => {
-			if (!travelling) return;
-			travelling = false;
-			// ensure covered, then iris back in to reveal the new page
-			el.style.transition = 'none';
-			el.style.clipPath = `circle(160% at ${wx} ${wy})`;
-			void el.offsetWidth;
-			el.style.transition = 'clip-path 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-			el.style.clipPath = `circle(0% at ${wx} ${wy})`;
-			const done = () => {
-				el.style.opacity = '0';
-				el.removeEventListener('transitionend', done);
-			};
-			el.addEventListener('transitionend', done);
+			if (!active) return;
+			active = false;
+			phase = 'release';
+			releaseT = performance.now();
+			if (!running) start();
 		});
 	}
-	document.addEventListener('astro:page-load', initWormhole);
-	initWormhole();
+	document.addEventListener('astro:page-load', initNavGather);
+	initNavGather();
 </script>

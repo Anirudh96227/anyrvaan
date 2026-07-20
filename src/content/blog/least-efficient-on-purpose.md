@@ -3,6 +3,7 @@ title: "I Did It the Hard Way on Purpose"
 description: "I rebuilt ten apps the slowest, most tedious way possible — every button placed by hand, nothing reused. That sounds like a waste of time. It's the whole reason they look real instead of like a mockup."
 date: 2026-07-17
 tags: ["making things", "interfaces", "process"]
+youtube: "https://youtu.be/_iNkm_Lu1ng"
 ---
 
 The rule I set for [rebuilding ten apps by hand](/work/ui-replicas/) was a strange one: do it the slowest, most tedious way possible. No shortcuts. Nothing reused between apps. Every row, every button, every little badge placed by hand, one at a time. That's the opposite of how you're supposed to build things. It's also exactly why the results look like the real apps instead of like someone's rough impression of them.
@@ -17,4 +18,20 @@ The realness hides in things you'd never consciously watch. Drag across some cel
 
 ## Real in the corners you'd never think about
 
-The lesson I keep from it is that believability isn't spread evenly — some tiny details carry far more of it than others. A real-looking web address sitting quietly at the top of a fake browser sells the whole thing harder than anything in the middle of the screen. And one click making several things change at once — a badge, a number, a banner all updating together — reads as real because that's how real software actually reacts. There's a quiet pride in choosing the hard road on purpose, and it pays off in a way the easy road simply can't. That same idea — one action rippling out into many — does the dramatic heavy lifting in [Dashboard Cinema](/work/dashboard-cinema/), and the ten apps are [here](/work/ui-replicas/).
+The lesson I keep from it is that believability isn't spread evenly — some tiny details carry far more of it than others. A real-looking web address sitting quietly at the top of a fake browser sells the whole thing harder than anything in the middle of the screen. And one click making several things change at once — a badge, a number, a banner all updating together — reads as real because that's how real software actually reacts. There's a quiet pride in choosing the hard road on purpose, and it pays off in a way the easy road simply can't. That same idea — one action rippling out into many — is exactly what makes the ten apps feel alive; they're [here](/work/ui-replicas/).
+
+## Watch all ten
+
+Here are the ten rebuilt apps, in order:
+
+- [Ch. 01 — QuickBooks](https://youtu.be/RVHNGm_MY3w): accounting dashboard & transactions
+- [Ch. 02 — Excel](https://youtu.be/8dfzgqPwCNk): live chart & cell sum selection
+- [Ch. 03 — Slack](https://youtu.be/_iNkm_Lu1ng): workspace channels & live message reactions
+- [Ch. 04 — Gmail](https://youtu.be/FgNHHivbCho): compose window, thread collapse & toast
+- [Ch. 05 — Stripe](https://youtu.be/pchlP7TUGf4): payment processing & refund state
+- [Ch. 06 — Xero](https://youtu.be/Jr7t--AcFNE): bank reconciliation matching
+- [Ch. 07 — Notion](https://youtu.be/4RzTOUyOGsM): database list & to-do checkboxes
+- [Ch. 08 — Google Calendar](https://youtu.be/KH8EjT2fmLo): event creation grid
+- [Ch. 09 — VS Code](https://youtu.be/-BDITjM5RMg): dark code editor & terminal output
+- [Ch. 10 — Trello](https://youtu.be/P93oIhtsrXQ): kanban board card drag & tilt
+

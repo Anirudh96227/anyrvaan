@@ -17,7 +17,7 @@ frames:
     alt: "The first iPhone home screen"
     caption: "iPhone, 2007 — the home screen that ended the era."
 thesis: "You think you remember what old computers looked like. You mostly don't — and that gap is the whole thing."
-video: "/videos/retro-windows95.mp4"
+video: "https://youtu.be/koKwwvKAbYc"
 poster: "/images/retro-computing-poster.jpg"
 studiesEyebrow: "The Eras"
 studiesHeading: "Ten machines, rebuilt from scratch."

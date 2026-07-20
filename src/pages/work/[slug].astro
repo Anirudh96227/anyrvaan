@@ -5,7 +5,6 @@ import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import WorldBackground, { type World } from '../../components/WorldBackground.tsx';
-import ScrollFilm from '../../components/ScrollFilm.tsx';
 
 export async function getStaticPaths() {
 	const projects = await getCollection('work', ({ data }) => !data.draft);
@@ -81,16 +80,10 @@ const ogImage = project.data.cover
 const WORLDS: Record<string, World> = {
 	'effects-index': 'effects',
 	'spiritual-series': 'spiritual',
-	'dashboard-cinema': 'dashboard',
 	'retro-computing': 'retro',
 	'ui-replicas': 'ui',
 };
 const world = WORLDS[project.id];
-
-// Scroll-as-playhead: for a locally-hosted film whose whole thesis is "a
-// screen that holds you like a movie", the hero pins and the visitor's scroll
-// drives the playhead. Only Dashboard Cinema for now — it's the flagship.
-const scrollFilm = project.id === 'dashboard-cinema' && project.data.video?.startsWith('/');
 ---
 
 <Layout
@@ -150,18 +143,7 @@ const scrollFilm = project.id === 'dashboard-cinema' && project.data.video?.star
 			}
 
 			{
-				scrollFilm && (
-					<ScrollFilm
-						client:visible
-						src={project.data.video!}
-						poster={project.data.poster}
-						title={project.data.title}
-					/>
-				)
-			}
-
-			{
-				!scrollFilm && project.data.video && (
+				project.data.video && (
 					<div class="mx-auto max-w-4xl px-6 pb-16">
 						<div class="hero-video glow-frame reveal rounded-2xl">
 							<div class="glow-frame__inner aspect-video border border-white/10 bg-black">

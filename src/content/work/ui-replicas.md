@@ -17,7 +17,7 @@ frames:
     alt: "A rebuilt dark VS Code editor"
     caption: "VS Code — a dark editor with a fake cursor typing."
 thesis: "I built these the slowest, most tedious way possible. That's the only reason they look real."
-video: "/videos/ui-replica-slack.mp4"
+video: "https://youtu.be/_iNkm_Lu1ng"
 poster: "/images/ui-replicas-poster.jpg"
 studiesEyebrow: "The Ten"
 studiesHeading: "Ten apps, faked to the pixel."
@@ -31,4 +31,4 @@ The instruction I gave myself sounds like a joke: build them the slowest, most t
 
 What sells it is the stuff nobody looks at directly. In the Excel one, drag across some cells and the little sum quietly updates at the bottom, exactly where it should be. In Slack, a reaction on a message ticks from one to two, as if a coworker just added theirs. In Gmail, replying collapses the thread and the "message sent" note slides in dark at the corner. None of those are the point of the shot — but they're the things your eye checks without knowing it, to decide if what it's seeing is real. Miss them and the whole thing feels slightly wrong.
 
-The mouse is the trick that ties it together. It doesn't teleport — it eases toward a button and slows down just before it lands, the way a real hand does, then gives a tiny press when it clicks. There's an odd pride in doing something the hard way on purpose, and it pays off in a way the easy way never could. The same idea — that one click should ripple out and change several things at once — does the dramatic work in [Dashboard Cinema](/work/dashboard-cinema/), and why the tedious path was the right one is [I did it the hard way on purpose](/blog/least-efficient-on-purpose/).
+The mouse is the trick that ties it together. It doesn't teleport — it eases toward a button and slows down just before it lands, the way a real hand does, then gives a tiny press when it clicks. There's an odd pride in doing something the hard way on purpose, and it pays off in a way the easy way never could. The same idea — that one click should ripple out and change several things at once — is why the tedious path was the right one: [I did it the hard way on purpose](/blog/least-efficient-on-purpose/).
