@@ -604,7 +604,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.stroke();
 			} else if (currentEra === 7) {
 				// =================================================================
-				// ERA 8: BLACKBERRY CURVE (2006) - REALISTIC MOBILE HANDSET + BBM UI
+				// ERA 8: BLACKBERRY CURVE (2006) - PERFECTLY PROPORTIONED HANDSET
 				// =================================================================
 				const phoneH = h * 0.94;
 				const phoneW = w * 0.44;
@@ -620,33 +620,33 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 
 				// Handset Rounded Bezel Silhouette
 				ctx.beginPath();
-				ctx.roundRect(px, py, phoneW, phoneH, 24);
+				ctx.roundRect(px, py, phoneW, phoneH, 20);
 				ctx.fill();
 				ctx.strokeStyle = '#3b475d';
 				ctx.lineWidth = 3;
 				ctx.stroke();
 
 				// Silver Metallic Side Rail Accents
-				ctx.strokeStyle = '#94a3b8';
+				ctx.strokeStyle = '#64748b';
 				ctx.lineWidth = 1;
-				ctx.strokeRect(px + 3, py + 10, phoneW - 6, phoneH - 20);
+				ctx.strokeRect(px + 3, py + 8, phoneW - 6, phoneH - 16);
 
 				// Top Earpiece Speaker Mesh
 				ctx.fillStyle = '#0f172a';
-				ctx.fillRect(px + phoneW / 2 - 24, py + 12, 48, 6);
+				ctx.fillRect(px + phoneW / 2 - 24, py + 10, 48, 5);
 				ctx.fillStyle = '#64748b';
-				ctx.fillRect(px + phoneW / 2 - 20, py + 14, 40, 2);
+				ctx.fillRect(px + phoneW / 2 - 20, py + 11, 40, 2);
 
 				// Chrome BlackBerry Text Logo below speaker
 				ctx.fillStyle = '#cbd5e1';
 				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('BlackBerry', px + phoneW / 2 - 28, py + 30);
+				ctx.fillText('BlackBerry', px + phoneW / 2 - 28, py + 26);
 
 				// 2. Illuminated Screen Display Box
-				const screenX = px + 16;
-				const screenY = py + 38;
-				const screenW = phoneW - 32;
-				const screenH = phoneH * 0.44;
+				const screenX = px + 14;
+				const screenY = py + 32;
+				const screenW = phoneW - 28;
+				const screenH = phoneH * 0.42;
 
 				ctx.fillStyle = '#070a10';
 				ctx.fillRect(screenX, screenY, screenW, screenH);
@@ -679,69 +679,82 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillStyle = '#ffffff';
 				ctx.fillText('Yeah, pixel perfect 🚀 R ✓', b2X + 8, chatY + 59);
 
-				// 3. Physical Convenience Keys (Send, Menu, Trackball, Back, End)
-				const keyRowY = screenY + screenH + 10;
+				// 3. Navigation Cluster Row (Send, Menu, Trackball, Escape, End)
+				const navY = screenY + screenH + 8;
+				const btnW = 32;
+				const btnH = 20;
 
 				// Green Send Button
 				ctx.fillStyle = '#166534';
-				ctx.fillRect(px + 16, keyRowY, 26, 18);
+				ctx.fillRect(px + 14, navY, btnW, btnH);
+				ctx.strokeStyle = '#22c55e';
+				ctx.strokeRect(px + 14, navY, btnW, btnH);
 				ctx.fillStyle = '#22c55e';
 				ctx.font = 'bold 10px sans-serif';
-				ctx.fillText('📞', px + 22, keyRowY + 13);
+				ctx.fillText('📞', px + 23, navY + 14);
 
 				// Menu Button
-				ctx.fillStyle = '#334155';
-				ctx.fillRect(px + 46, keyRowY, 26, 18);
+				ctx.fillStyle = '#1e293b';
+				ctx.fillRect(px + 50, navY, btnW, btnH);
+				ctx.strokeStyle = '#475569';
+				ctx.strokeRect(px + 50, navY, btnW, btnH);
 
 				// Translucent Pearl Trackball (Center)
 				const ballCx = px + phoneW / 2;
-				const ballCy = keyRowY + 9;
+				const ballCy = navY + 10;
 				ctx.fillStyle = '#ffffff';
 				ctx.beginPath();
-				ctx.arc(ballCx, ballCy, 9, 0, Math.PI * 2);
+				ctx.arc(ballCx, ballCy, 10, 0, Math.PI * 2);
 				ctx.fill();
-				ctx.strokeStyle = '#60a5fa';
+				ctx.strokeStyle = '#38bdf8';
 				ctx.lineWidth = 2;
 				ctx.stroke();
 
 				// Escape Back Button
-				ctx.fillStyle = '#334155';
-				ctx.fillRect(px + phoneW - 72, keyRowY, 26, 18);
+				ctx.fillStyle = '#1e293b';
+				ctx.fillRect(px + phoneW - 82, navY, btnW, btnH);
+				ctx.strokeStyle = '#475569';
+				ctx.strokeRect(px + phoneW - 82, navY, btnW, btnH);
 
 				// Red End Button
 				ctx.fillStyle = '#991b1b';
-				ctx.fillRect(px + phoneW - 42, keyRowY, 26, 18);
+				ctx.fillRect(px + phoneW - 46, navY, btnW, btnH);
+				ctx.strokeStyle = '#ef4444';
+				ctx.strokeRect(px + phoneW - 46, navY, btnW, btnH);
 				ctx.fillStyle = '#ef4444';
-				ctx.fillText('🔴', px + phoneW - 36, keyRowY + 13);
+				ctx.fillText('🔴', px + phoneW - 37, navY + 14);
 
-				// 4. Textured 3D QWERTY Keypad Grid
-				const kpY = keyRowY + 26;
+				// 4. Full-Height 4-Row 3D QWERTY Keypad Grid
+				const kpY = navY + 28;
 				const rows = [
 					['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-					['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-					['ALT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '↵'],
+					['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'DEL'],
+					['ALT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'SYM', '↵'],
+					['aA', '0', 'SPACE', 'A#', '↵'],
 				];
 
+				const keyH = 20;
+
 				rows.forEach((rowKeys, rIdx) => {
-					const rY = kpY + rIdx * 16;
+					const rY = kpY + rIdx * (keyH + 4);
 
 					// Metallic horizontal fret line between rows
 					ctx.fillStyle = '#64748b';
-					ctx.fillRect(px + 16, rY - 2, phoneW - 32, 1);
+					ctx.fillRect(px + 14, rY - 2, phoneW - 28, 1);
 
-					const kw = (phoneW - 40) / rowKeys.length;
+					const kw = (phoneW - 28) / rowKeys.length;
 					rowKeys.forEach((kLabel, cIdx) => {
-						const kx = px + 20 + cIdx * kw;
+						const kx = px + 14 + cIdx * kw;
 						const isLit = activeKey && activeKey === kLabel;
 
 						ctx.fillStyle = isLit ? '#38bdf8' : '#1e293b';
-						ctx.fillRect(kx, rY, kw - 2, 12);
+						ctx.fillRect(kx + 1, rY, kw - 2, keyH);
 						ctx.strokeStyle = '#475569';
-						ctx.strokeRect(kx, rY, kw - 2, 12);
+						ctx.strokeRect(kx + 1, rY, kw - 2, keyH);
 
 						ctx.fillStyle = isLit ? '#000000' : '#ffffff';
-						ctx.font = 'bold 8px sans-serif';
-						ctx.fillText(kLabel, kx + kw / 2 - 4, rY + 9);
+						ctx.font = 'bold 9px sans-serif';
+						ctx.fillText(kLabel, kx + kw / 2 - 4, rY + 13);
 					});
 				});
 			} else {
