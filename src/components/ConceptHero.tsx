@@ -61,7 +61,14 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 
 	const triggerDegauss = () => {
 		setDegaussFlash(1);
-		setTimeout(() => setDegaussFlash(0), 400);
+		document.documentElement.classList.remove('degauss-active');
+		void document.documentElement.offsetWidth;
+		document.documentElement.classList.add('degauss-active');
+
+		setTimeout(() => {
+			setDegaussFlash(0);
+			document.documentElement.classList.remove('degauss-active');
+		}, 450);
 	};
 
 	useEffect(() => {
