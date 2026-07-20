@@ -1018,6 +1018,19 @@ body {
 	transform: rotateY(180deg);
 	overflow: hidden;
 }
+
+/* Theater Mode: Dims the surrounding page into a pitch-black projection room */
+html.theater-mode body {
+	background-color: #000000 !important;
+	transition: background-color 0.6s ease;
+}
+html.theater-mode header,
+html.theater-mode article,
+html.theater-mode footer,
+html.theater-mode section:not(:has(.glow-frame)) {
+	opacity: 0.25;
+	transition: opacity 0.6s ease;
+}
 .flip-card.is-flipped .flip-card__face--front {
 	transform: rotateY(180deg);
 }
