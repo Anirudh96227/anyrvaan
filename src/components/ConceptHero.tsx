@@ -41,11 +41,15 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 	selectedEraRef.current = selectedEraIndex;
 
 	const eras = [
-		{ name: '1982 — COMMODORE 64', label: 'C64 BASIC' },
-		{ name: '1984 — MACINTOSH 128K', label: 'MAC OS 1' },
-		{ name: '1995 — WINDOWS 95', label: 'WIN 95' },
-		{ name: '1999 — WINAMP 2.0', label: 'WINAMP' },
-		{ name: '2007 — FIRST iPHONE', label: 'iPHONE' },
+		{ name: '1982 — COMMODORE 64', label: 'C64 BASIC (1982)' },
+		{ name: '1984 — MACINTOSH 128K', label: 'MAC SYSTEM 1 (1984)' },
+		{ name: '1985 — MS-DOS 3.1', label: 'MS-DOS (1985)' },
+		{ name: '1995 — WINDOWS 95', label: 'WINDOWS 95 (1995)' },
+		{ name: '1996 — GEOCITIES WEB', label: 'GEOCITIES (1996)' },
+		{ name: '1999 — WINAMP 2.0', label: 'WINAMP 2.0 (1999)' },
+		{ name: '2004 — iPod CLICK WHEEL', label: 'iPOD (2004)' },
+		{ name: '2006 — BLACKBERRY CURVE', label: 'BLACKBERRY (2006)' },
+		{ name: '2007 — FIRST iPHONE', label: 'FIRST iPHONE (2007)' },
 	];
 
 	useEffect(() => {
@@ -103,8 +107,8 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const px = e.clientX - rect.left;
 			const py = e.clientY - rect.top;
 
-			// Check interactive Minesweeper clicks when Win95 era is active
-			if (preset === 'retro' && (selectedEraRef.current === 2 || selectedEraRef.current === 0)) {
+			// Check interactive Minesweeper clicks when Win95 era is active (index 3)
+			if (preset === 'retro' && selectedEraRef.current === 3) {
 				const mX = w * 0.32;
 				const mY = h * 0.22;
 				const gridX = mX + 24;
@@ -161,7 +165,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		let accumulatedTime = 0;
 
 		// -------------------------------------------------------------------------
-		// PRESET 1: RETRO COMPUTING — Interactive morph across 5 eras
+		// PRESET 1: RETRO COMPUTING — Interactive morph across ALL 9 eras
 		// -------------------------------------------------------------------------
 		const drawRetro = (t: number) => {
 			ctx.fillStyle = '#06080e';
@@ -178,7 +182,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			}
 
 			if (currentEra === 0) {
-				// C64 BASIC (1982)
+				// 1. C64 BASIC (1982)
 				ctx.fillStyle = '#3a3ab0';
 				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
 				ctx.fillStyle = '#a0a0ff';
@@ -190,7 +194,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillText('64K RAM SYSTEM  38911 BASIC BYTES FREE', w * 0.19, h * 0.35);
 				ctx.fillText('READY.', w * 0.19, h * 0.44);
 
-				// Interactive typing command
 				const chars = "LOAD '*',8,1";
 				const count = Math.min(chars.length, Math.floor((t * 0.005) % 18));
 				ctx.fillText(chars.slice(0, count), w * 0.19, h * 0.52);
@@ -199,14 +202,13 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					ctx.fillRect(w * 0.19 + count * 8.5, h * 0.48, 10, 14);
 				}
 			} else if (currentEra === 1) {
-				// Macintosh System 1 (1984)
+				// 2. Macintosh System 1 (1984)
 				ctx.fillStyle = '#d4d8de';
 				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
 				ctx.strokeStyle = '#101418';
 				ctx.lineWidth = 2;
 				ctx.strokeRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
 
-				// Top Menu bar
 				ctx.fillStyle = '#ffffff';
 				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, 26);
 				ctx.strokeRect(w * 0.12, h * 0.12, w * 0.76, 26);
@@ -214,7 +216,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = 'bold 12px sans-serif';
 				ctx.fillText('  File  Edit  View  Special', w * 0.15, h * 0.12 + 18);
 
-				// Macintosh Window
 				const winW = w * 0.48;
 				const winH = h * 0.42;
 				const wx = w * 0.22 + Math.sin(t * 0.001) * 10;
@@ -227,7 +228,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillStyle = '#ffffff';
 				ctx.fillText('System Folder (1-bit)', wx + 20, wy + 14);
 
-				// Folder icons inside Mac Window
 				for (let fi = 0; fi < 3; fi++) {
 					ctx.fillStyle = '#000000';
 					ctx.fillRect(wx + 30 + fi * 60, wy + 38, 32, 24);
@@ -235,25 +235,39 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					ctx.fillRect(wx + 32 + fi * 60, wy + 40, 28, 20);
 				}
 			} else if (currentEra === 2) {
-				// Windows 95 (1995) + Interactive Minesweeper
+				// 3. MS-DOS 3.1 (1985)
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
+
+				ctx.fillStyle = '#00ff66';
+				ctx.font = '13px monospace';
+				ctx.fillText('MS-DOS Version 3.10 (C)Copyright Microsoft Corp 1981-1985', w * 0.16, h * 0.25);
+				ctx.fillText('C:\\> DIR /W', w * 0.16, h * 0.35);
+
+				ctx.fillText('[COMMAND.COM]   [AUTOEXEC.BAT]   [CONFIG.SYS]', w * 0.16, h * 0.46);
+				ctx.fillText('[DOOM.EXE]      [RETRO.BAT]      [GRAPHICS.DRV]', w * 0.16, h * 0.54);
+
+				ctx.fillText('C:\\> _', w * 0.16, h * 0.66);
+				if (Math.sin(t * 0.01) > 0) {
+					ctx.fillRect(w * 0.16 + 40, h * 0.66 - 12, 10, 14);
+				}
+			} else if (currentEra === 3) {
+				// 4. Windows 95 (1995) + Interactive Minesweeper
 				ctx.fillStyle = '#008080';
 				ctx.fillRect(w * 0.1, h * 0.1, w * 0.8, h * 0.8);
 
-				// Taskbar
 				const tbY = h * 0.9 - 28;
 				ctx.fillStyle = '#c0c0c0';
 				ctx.fillRect(w * 0.1, tbY, w * 0.8, 28);
 				ctx.strokeStyle = '#ffffff';
 				ctx.strokeRect(w * 0.1, tbY, w * 0.8, 28);
 
-				// Start button
 				ctx.fillStyle = '#c0c0c0';
 				ctx.fillRect(w * 0.11, tbY + 3, 75, 22);
 				ctx.fillStyle = '#000000';
 				ctx.font = 'bold 11px sans-serif';
 				ctx.fillText('Start', w * 0.11 + 24, tbY + 18);
 
-				// Minesweeper window
 				const mX = w * 0.32;
 				const mY = h * 0.22;
 				const mW = w * 0.36;
@@ -263,13 +277,11 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.strokeStyle = '#808080';
 				ctx.strokeRect(mX, mY, mW, mH);
 
-				// Title bar
 				ctx.fillStyle = '#000080';
 				ctx.fillRect(mX + 3, mY + 3, mW - 6, 22);
 				ctx.fillStyle = '#ffffff';
 				ctx.fillText('Minesweeper — Click Cells!', mX + 10, mY + 18);
 
-				// Minesweeper grid (3x3 interactive)
 				const gridX = mX + 24;
 				const gridY = mY + 60;
 				const cellSize = 28;
@@ -290,21 +302,53 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 						ctx.fillText(cell.mine ? '💣' : String(cell.count), cx + 7, cy + 19);
 					}
 				});
-			} else if (currentEra === 3) {
-				// Winamp 2.0 (1999)
+			} else if (currentEra === 4) {
+				// 5. GeoCities Web (1996)
+				ctx.fillStyle = '#080018';
+				ctx.fillRect(w * 0.1, h * 0.1, w * 0.8, h * 0.8);
+
+				// Tiled Starfield pattern
+				ctx.fillStyle = '#ffffff';
+				for (let i = 0; i < 40; i++) {
+					const sx = w * 0.1 + ((i * 37) % (w * 0.8));
+					const sy = h * 0.1 + ((i * 53) % (h * 0.8));
+					ctx.fillRect(sx, sy, 2, 2);
+				}
+
+				// GeoCities Under Construction Banner
+				ctx.fillStyle = '#ffcc00';
+				ctx.fillRect(w * 0.2, h * 0.2, w * 0.6, 32);
+				ctx.fillStyle = '#000000';
+				ctx.font = 'bold 12px monospace';
+				ctx.fillText('⚠️ UNDER CONSTRUCTION ⚠️', w * 0.28, h * 0.2 + 20);
+
+				// Marquee Scrolling Text
+				const marqueeX = w * 0.1 + ((t * 0.08) % (w * 0.65));
+				ctx.fillStyle = '#ff00ff';
+				ctx.font = '14px sans-serif';
+				ctx.fillText('*** WELCOME TO MY RETRO HOMEPAGE! ***', marqueeX, h * 0.45);
+
+				// Hit Counter
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(w * 0.35, h * 0.62, 120, 26);
+				ctx.strokeStyle = '#00ff00';
+				ctx.strokeRect(w * 0.35, h * 0.62, 120, 26);
+				ctx.fillStyle = '#00ff00';
+				ctx.font = 'bold 13px monospace';
+				ctx.fillText('VISITORS: 004281', w * 0.36, h * 0.62 + 18);
+			} else if (currentEra === 5) {
+				// 6. Winamp 2.0 (1999)
 				ctx.fillStyle = '#12151e';
 				ctx.fillRect(w * 0.18, h * 0.18, w * 0.64, h * 0.64);
 				ctx.strokeStyle = '#353e50';
 				ctx.strokeRect(w * 0.18, h * 0.18, w * 0.64, h * 0.64);
 
-				// Glowing LED Display
 				ctx.fillStyle = '#000000';
 				ctx.fillRect(w * 0.22, h * 0.24, w * 0.56, 32);
 				ctx.fillStyle = '#00ff66';
 				ctx.font = 'bold 12px monospace';
 				ctx.fillText('WINAMP - 01. ANYRVAAN AUDIO SYSTEM (1999)', w * 0.24, h * 0.24 + 20);
 
-				// Spectrum visualizer bars
 				const bars = 20;
 				const barW = (w * 0.52) / bars;
 				for (let i = 0; i < bars; i++) {
@@ -316,8 +360,86 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					ctx.fillStyle = colorGrad;
 					ctx.fillRect(w * 0.22 + i * (barW + 2), h * 0.7 - bh, barW - 2, bh);
 				}
+			} else if (currentEra === 6) {
+				// 7. iPod Click Wheel (2004)
+				const podW = w * 0.38;
+				const podH = h * 0.78;
+				const px = (w - podW) / 2;
+				const py = (h - podH) / 2;
+
+				// White Glossy Body
+				ctx.fillStyle = '#f2f4f8';
+				ctx.fillRect(px, py, podW, podH);
+				ctx.strokeStyle = '#d0d4dc';
+				ctx.strokeRect(px, py, podW, podH);
+
+				// Blue Backlit LCD Screen
+				ctx.fillStyle = '#60a5fa';
+				ctx.fillRect(px + 16, py + 16, podW - 32, podH * 0.4);
+				ctx.fillStyle = '#000000';
+				ctx.font = 'bold 11px sans-serif';
+				ctx.fillText('Now Playing', px + 26, py + 34);
+				ctx.font = '12px sans-serif';
+				ctx.fillText('Anyrvaan — Click Wheel', px + 26, py + 54);
+
+				// Progress bar
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(px + 26, py + 70, podW - 52, 6);
+				ctx.fillStyle = '#ffffff';
+				ctx.fillRect(px + 26, py + 70, (podW - 52) * 0.6, 6);
+
+				// Click Wheel Circle
+				const wheelCx = px + podW / 2;
+				const wheelCy = py + podH * 0.72;
+				ctx.fillStyle = '#e2e6ee';
+				ctx.beginPath();
+				ctx.arc(wheelCx, wheelCy, podW * 0.28, 0, Math.PI * 2);
+				ctx.fill();
+
+				ctx.fillStyle = '#ffffff';
+				ctx.beginPath();
+				ctx.arc(wheelCx, wheelCy, podW * 0.1, 0, Math.PI * 2);
+				ctx.fill();
+			} else if (currentEra === 7) {
+				// 8. BlackBerry Curve (2006)
+				const bbW = w * 0.4;
+				const bbH = h * 0.8;
+				const bx = (w - bbW) / 2;
+				const by = (h - bbH) / 2;
+
+				// Dark Device Body
+				ctx.fillStyle = '#181e2a';
+				ctx.fillRect(bx, by, bbW, bbH);
+
+				// Screen Display
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(bx + 16, by + 16, bbW - 32, bbH * 0.45);
+
+				ctx.fillStyle = '#00a0ff';
+				ctx.font = 'bold 11px sans-serif';
+				ctx.fillText('BlackBerry Messenger (BBM)', bx + 24, by + 34);
+
+				ctx.fillStyle = '#222d3d';
+				ctx.fillRect(bx + 24, by + 46, bbW - 48, 26);
+				ctx.fillStyle = '#ffffff';
+				ctx.font = '10px sans-serif';
+				ctx.fillText('PIN: 28A9F04B connected', bx + 30, by + 63);
+
+				// Glowing Trackball
+				ctx.fillStyle = '#ffffff';
+				ctx.beginPath();
+				ctx.arc(bx + bbW / 2, by + bbH * 0.55, 8, 0, Math.PI * 2);
+				ctx.fill();
+
+				// QWERTY keyboard dots
+				ctx.fillStyle = '#3a4454';
+				for (let r = 0; r < 3; r++) {
+					for (let c = 0; c < 8; c++) {
+						ctx.fillRect(bx + 20 + c * (bbW * 0.1), by + bbH * 0.65 + r * 14, 10, 8);
+					}
+				}
 			} else {
-				// iPhone 1st Gen (2007)
+				// 9. First iPhone (2007)
 				const phoneW = w * 0.34;
 				const phoneH = h * 0.75;
 				const px = (w - phoneW) / 2;
@@ -328,7 +450,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.strokeStyle = '#48484a';
 				ctx.strokeRect(px, py, phoneW, phoneH);
 
-				// Screen Glossy App Grid
 				ctx.fillStyle = '#000000';
 				ctx.fillRect(px + 10, py + 24, phoneW - 20, phoneH - 48);
 
@@ -345,7 +466,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					ctx.fillText(ic, ix + 7, iy + 22);
 				});
 
-				// Slide to Unlock
 				const slideX = px + 20 + (Math.sin(t * 0.003) * 0.5 + 0.5) * (phoneW - 100);
 				ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
 				ctx.fillRect(px + 20, py + phoneH - 55, phoneW - 40, 24);
@@ -362,7 +482,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.arc(mouseX, mouseY, loupeRadius, 0, Math.PI * 2);
 				ctx.clip();
 
-				// Zoomed 2.5x rendering
 				ctx.fillStyle = '#000000';
 				ctx.fillRect(mouseX - loupeRadius, mouseY - loupeRadius, loupeRadius * 2, loupeRadius * 2);
 				ctx.drawImage(
@@ -377,14 +496,12 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					loupeRadius * 2
 				);
 
-				// Pixel Grid lines over Loupe
 				ctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
 				ctx.lineWidth = 1;
 				ctx.stroke();
 
 				ctx.restore();
 
-				// Loupe border ring
 				ctx.strokeStyle = '#60a5fa';
 				ctx.lineWidth = 2;
 				ctx.beginPath();
@@ -396,7 +513,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillText('2.5x LOUPE', mouseX - 22, mouseY + loupeRadius + 14);
 			}
 
-			// Degauss glitch flash effect
 			if (degaussFlash > 0) {
 				ctx.fillStyle = 'rgba(96, 165, 250, 0.3)';
 				ctx.fillRect(0, 0, w, h);
@@ -412,7 +528,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			}
 			const totalTime = accumulatedTime + timeOffsetRef.current;
 
-			// Update live film timecode string (HH:MM:SS:FF)
 			const secTotal = Math.floor(totalTime / 1000);
 			const framesCount = Math.floor((totalTime % 1000) / (1000 / 24));
 			const ss = String(secTotal % 60).padStart(2, '0');
@@ -442,7 +557,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 
 	return (
 		<div className="mx-auto max-w-4xl px-6 pb-12">
-			{/* Interactive Era Selector Dial / Tabs */}
+			{/* Interactive Era Selector Dial / Tabs (ALL 9 ERAS) */}
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
 				<div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
 					{eras.map((era, idx) => (
