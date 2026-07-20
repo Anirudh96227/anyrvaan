@@ -23,6 +23,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 	const [isTheater, setIsTheater] = useState<boolean>(false);
 	const [isPaused, setIsPaused] = useState<boolean>(false);
 	const [degaussFlash, setDegaussFlash] = useState<number>(0);
+	const [activeKey, setActiveKey] = useState<string>('');
 
 	// Interactive Minesweeper state inside Win95 canvas
 	const [minesGrid, setMinesGrid] = useState<Array<{ clicked: boolean; mine: boolean; count: number }>>(() =>
@@ -73,6 +74,18 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			document.documentElement.classList.remove('degauss-active');
 		}, 450);
 	};
+
+	// Listen for physical keyboard typing to light up BlackBerry QWERTY keys!
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key.length === 1) {
+				setActiveKey(e.key.toUpperCase());
+				setTimeout(() => setActiveKey(''), 350);
+			}
+		};
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, []);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -180,7 +193,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		};
 
 		// -------------------------------------------------------------------------
-		// 60FPS REACT CANVAS ANIMATION ENGINE (FULL-BLEED 16:9 RENDERING)
+		// FULL-BLEED 16:9 REALISTIC UI SIMULATION ENGINE FOR ALL 9 ERAS
 		// -------------------------------------------------------------------------
 		const drawRetro = (t: number) => {
 			ctx.fillStyle = '#04060a';
@@ -189,23 +202,16 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const currentEra = selectedEraRef.current;
 			setActiveLabel(eras[currentEra]?.name || eras[0].name);
 
-			// Dynamic CRT Scanlines & Background Grid
+			// CRT Scanline Overlay
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
 			const scanOffset = (t * 0.04) % 4;
 			for (let y = scanOffset; y < h; y += 4) {
 				ctx.fillRect(0, y, w, 1);
 			}
 
-			// Interactive Mouse Glow Wave
-			const mouseGrad = ctx.createRadialGradient(mouseX, mouseY, 10, mouseX, mouseY, 180);
-			mouseGrad.addColorStop(0, 'rgba(96, 165, 250, 0.12)');
-			mouseGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-			ctx.fillStyle = mouseGrad;
-			ctx.fillRect(0, 0, w, h);
-
 			if (currentEra === 0) {
 				// 1. COMMODORE 64 (1982)
-				ctx.fillStyle = '#352879'; // C64 Outer Border
+				ctx.fillStyle = '#352879';
 				ctx.fillRect(0, 0, w, h);
 
 				const screenX = w * 0.12;
@@ -533,158 +539,230 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					ctx.fillRect(bx, eqY + eqH - bh, barW - 2, bh);
 				}
 			} else if (currentEra === 6) {
-				// 7. iPod CLICK WHEEL (2004)
-				const podW = w * 0.38;
-				const podH = h * 0.88;
-				const px = (w - podW) / 2;
-				const py = (h - podH) / 2;
+				// 7. iPod CLICK WHEEL (2004) - Full Screen Focused iPod OS
+				ctx.fillStyle = '#0c1017';
+				ctx.fillRect(0, 0, w, h);
 
-				const bodyGrad = ctx.createLinearGradient(px, py, px + podW, py + podH);
-				bodyGrad.addColorStop(0, '#ffffff');
-				bodyGrad.addColorStop(1, '#e0e4ec');
-				ctx.fillStyle = bodyGrad;
-				ctx.fillRect(px, py, podW, podH);
-				ctx.strokeStyle = '#cbd5e1';
-				ctx.strokeRect(px, py, podW, podH);
+				// Full-bleed Screen Frame
+				const podX = w * 0.12;
+				const podY = h * 0.08;
+				const podW = w * 0.76;
+				const podH = h * 0.84;
 
+				// Blue Backlit LCD
 				ctx.fillStyle = '#bae6fd';
-				ctx.fillRect(px + 18, py + 18, podW - 36, podH * 0.38);
+				ctx.fillRect(podX, podY, podW, podH);
 				ctx.strokeStyle = '#0284c7';
-				ctx.strokeRect(px + 18, py + 18, podW - 36, podH * 0.38);
+				ctx.lineWidth = 2;
+				ctx.strokeRect(podX, podY, podW, podH);
+
+				// iPod Header Bar
+				ctx.fillStyle = '#0284c7';
+				ctx.fillRect(podX, podY, podW, 32);
+				ctx.fillStyle = '#ffffff';
+				ctx.font = 'bold 14px sans-serif';
+				ctx.fillText('▶  Now Playing', podX + 20, podY + 22);
+				ctx.fillText('🔋 98%', podX + podW - 70, podY + 22);
+
+				// Album Art Box (Vinyl Vector)
+				const artW = podH * 0.48;
+				const artX = podX + 30;
+				const artY = podY + 52;
+				ctx.fillStyle = '#0f172a';
+				ctx.fillRect(artX, artY, artW, artW);
+
+				ctx.fillStyle = '#334155';
+				ctx.beginPath();
+				ctx.arc(artX + artW / 2, artY + artW / 2, artW * 0.4, 0, Math.PI * 2);
+				ctx.fill();
 
 				ctx.fillStyle = '#0284c7';
-				ctx.fillRect(px + 18, py + 18, podW - 36, 22);
+				ctx.beginPath();
+				ctx.arc(artX + artW / 2, artY + artW / 2, artW * 0.15, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Track Metadata
+				const metaX = artX + artW + 35;
+				ctx.fillStyle = '#0f172a';
+				ctx.font = 'bold 18px sans-serif';
+				ctx.fillText('Innerbloom (Retro Cut)', metaX, artY + 30);
+				ctx.font = '14px sans-serif';
+				ctx.fillStyle = '#334155';
+				ctx.fillText('Artist: Anyrvaan', metaX, artY + 60);
+				ctx.fillText('Album: UI Archaeology (2004)', metaX, artY + 85);
+
+				// Timeline Scrubber
+				ctx.fillStyle = '#94a3b8';
+				ctx.fillRect(metaX, artY + 115, podW - artW - 100, 8);
+				ctx.fillStyle = '#0284c7';
+				ctx.fillRect(metaX, artY + 115, (podW - artW - 100) * 0.58, 8);
+
+				ctx.fillStyle = '#0f172a';
+				ctx.font = 'bold 12px monospace';
+				ctx.fillText('02:14 / 04:08', metaX, artY + 145);
+			} else if (currentEra === 7) {
+				// =================================================================
+				// ERA 8: BLACKBERRY CURVE (2006) - Full-Bleed BBM Messenger & Key HUD
+				// =================================================================
+				const screenX = w * 0.05;
+				const screenY = h * 0.05;
+				const screenW = w * 0.9;
+				const screenH = h * 0.9;
+
+				// Dark BlackBerry Theme Frame
+				ctx.fillStyle = '#0b0f19';
+				ctx.fillRect(screenX, screenY, screenW, screenH);
+				ctx.strokeStyle = '#1e293b';
+				ctx.lineWidth = 2;
+				ctx.strokeRect(screenX, screenY, screenW, screenH);
+
+				// Top BBM OS Status Bar
+				ctx.fillStyle = '#0084ff';
+				ctx.fillRect(screenX, screenY, screenW, 36);
+
+				ctx.fillStyle = '#ffffff';
+				ctx.font = 'bold 14px sans-serif';
+				ctx.fillText('🍇 BlackBerry Messenger (BBM)', screenX + 16, screenY + 23);
+				ctx.font = '12px sans-serif';
+				ctx.fillText('3G 📶  14:28 PM  🔋 98%', screenX + screenW - 170, screenY + 23);
+
+				// Active Chat Profile Bar
+				ctx.fillStyle = '#1e293b';
+				ctx.fillRect(screenX, screenY + 36, screenW, 44);
+
+				// Profile Avatar
+				ctx.fillStyle = '#60a5fa';
+				ctx.beginPath();
+				ctx.arc(screenX + 30, screenY + 58, 14, 0, Math.PI * 2);
+				ctx.fill();
 				ctx.fillStyle = '#ffffff';
 				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('Now Playing', px + 26, py + 33);
-				ctx.fillText('🔋', px + podW - 38, py + 33);
+				ctx.fillText('A', screenX + 26, screenY + 62);
 
-				ctx.fillStyle = '#0f172a';
-				ctx.font = 'bold 12px sans-serif';
-				ctx.fillText('Innerbloom (Retro Cut)', px + 26, py + 62);
-				ctx.font = '11px sans-serif';
-				ctx.fillText('Anyrvaan — UI Archaeology', px + 26, py + 80);
-
+				// Contact Info
+				ctx.fillStyle = '#ffffff';
+				ctx.font = 'bold 13px sans-serif';
+				ctx.fillText('Anirudh [Design Lead]  ● Online', screenX + 54, screenY + 52);
 				ctx.fillStyle = '#94a3b8';
-				ctx.fillRect(px + 26, py + 96, podW - 52, 6);
-				ctx.fillStyle = '#0284c7';
-				ctx.fillRect(px + 26, py + 96, (podW - 52) * 0.58, 6);
+				ctx.font = '11px sans-serif';
+				ctx.fillText('PIN: 28A9F04B • Status: Building retro UI archaeology 🚀', screenX + 54, screenY + 68);
 
-				ctx.fillStyle = '#0f172a';
-				ctx.font = '10px monospace';
-				ctx.fillText('02:14 / 04:08', px + 26, py + 116);
+				// BBM Chat Conversation Area
+				const chatY = screenY + 90;
 
-				const wheelCx = px + podW / 2;
-				const wheelCy = py + podH * 0.72;
-				const wheelRadius = podW * 0.28;
-
+				// Incoming Message Bubble 1 (Left)
+				ctx.fillStyle = '#1e293b';
+				ctx.fillRect(screenX + 24, chatY + 10, screenW * 0.52, 45);
 				ctx.fillStyle = '#f8fafc';
-				ctx.beginPath();
-				ctx.arc(wheelCx, wheelCy, wheelRadius, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.strokeStyle = '#cbd5e1';
-				ctx.stroke();
-
-				ctx.fillStyle = '#64748b';
-				ctx.font = 'bold 10px sans-serif';
-				ctx.fillText('MENU', wheelCx - 15, wheelCy - wheelRadius + 16);
-				ctx.fillText('⏯', wheelCx - 6, wheelCy + wheelRadius - 8);
-				ctx.fillText('⏮', wheelCx - wheelRadius + 8, wheelCy + 4);
-				ctx.fillText('⏭', wheelCx + wheelRadius - 20, wheelCy + 4);
-
-				ctx.fillStyle = '#ffffff';
-				ctx.beginPath();
-				ctx.arc(wheelCx, wheelCy, podW * 0.09, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.strokeStyle = '#cbd5e1';
-				ctx.stroke();
-			} else if (currentEra === 7) {
-				// 8. BLACKBERRY CURVE (2006)
-				const bbW = w * 0.44;
-				const bbH = h * 0.88;
-				const bx = (w - bbW) / 2;
-				const by = (h - bbH) / 2;
-
-				ctx.fillStyle = '#161c28';
-				ctx.fillRect(bx, by, bbW, bbH);
-				ctx.strokeStyle = '#323c50';
-				ctx.strokeRect(bx, by, bbW, bbH);
-
-				ctx.fillStyle = '#090d16';
-				ctx.fillRect(bx + 16, by + 16, bbW - 32, bbH * 0.46);
-
-				ctx.fillStyle = '#00a0ff';
-				ctx.fillRect(bx + 16, by + 16, bbW - 32, 22);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = 'bold 10px sans-serif';
-				ctx.fillText('BBM  3G 📶 14:28', bx + 22, by + 31);
-
-				ctx.fillStyle = '#222d3f';
-				ctx.fillRect(bx + 24, by + 48, bbW - 60, 32);
-				ctx.fillStyle = '#ffffff';
+				ctx.font = '13px sans-serif';
+				ctx.fillText('Hey! Is the new BlackBerry BBM interface live?', screenX + 36, chatY + 32);
+				ctx.fillStyle = '#94a3b8';
 				ctx.font = '10px sans-serif';
-				ctx.fillText('Hey! Is the new UI live?', bx + 30, by + 68);
+				ctx.fillText('14:26 PM', screenX + screenW * 0.52 - 35, chatY + 48);
 
+				// Outgoing Message Bubble 2 (Right - Blue with Read Receipt)
+				const b2X = screenX + screenW * 0.42;
 				ctx.fillStyle = '#0084ff';
-				ctx.fillRect(bx + 50, by + 90, bbW - 60, 32);
+				ctx.fillRect(b2X, chatY + 70, screenW * 0.54, 45);
 				ctx.fillStyle = '#ffffff';
-				ctx.fillText('Yeah, pixel perfect 🚀', bx + 56, by + 110);
+				ctx.font = '13px sans-serif';
+				ctx.fillText('Yeah! Full-screen BBM with real D & R ticks! 🚀', b2X + 16, chatY + 92);
+				ctx.fillStyle = '#e0f2fe';
+				ctx.font = 'bold 11px sans-serif';
+				ctx.fillText('14:27 PM  R ✓', b2X + screenW * 0.54 - 85, chatY + 108);
+
+				// Typing Indicator Bar
+				if (Math.sin(t * 0.005) > 0) {
+					ctx.fillStyle = '#94a3b8';
+					ctx.font = 'italic 12px sans-serif';
+					ctx.fillText('Anirudh is typing...', screenX + 30, chatY + 140);
+				}
+
+				// Interactive Pearl Trackball HUD (Right Side)
+				const tbCx = screenX + screenW - 50;
+				const tbCy = screenY + screenH - 50;
 
 				ctx.fillStyle = '#ffffff';
 				ctx.beginPath();
-				ctx.arc(bx + bbW / 2, by + bbH * 0.55, 8, 0, Math.PI * 2);
+				ctx.arc(tbCx, tbCy, 14, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.strokeStyle = '#60a5fa';
+				ctx.lineWidth = 2;
 				ctx.stroke();
 
-				ctx.fillStyle = '#2a3446';
-				for (let r = 0; r < 3; r++) {
-					for (let c = 0; c < 9; c++) {
-						ctx.fillRect(bx + 20 + c * (bbW * 0.095), by + bbH * 0.65 + r * 14, 10, 8);
-					}
+				// Light Up Active Key when Typing
+				if (activeKey) {
+					ctx.fillStyle = 'rgba(96, 165, 250, 0.4)';
+					ctx.fillRect(screenX + 20, screenY + screenH - 40, 160, 26);
+					ctx.fillStyle = '#60a5fa';
+					ctx.font = 'bold 12px monospace';
+					ctx.fillText(`KEY: ${activeKey}`, screenX + 30, screenY + screenH - 23);
 				}
 			} else {
-				// 9. FIRST iPHONE (2007)
-				const phoneW = w * 0.38;
-				const phoneH = h * 0.88;
-				const px = (w - phoneW) / 2;
-				const py = (h - phoneH) / 2;
-
-				ctx.fillStyle = '#1b1b1e';
-				ctx.fillRect(px, py, phoneW, phoneH);
-				ctx.strokeStyle = '#404044';
-				ctx.strokeRect(px, py, phoneW, phoneH);
-
+				// 9. FIRST iPHONE (2007) - Full-Screen iOS 1 Home Screen
 				ctx.fillStyle = '#000000';
-				ctx.fillRect(px + 12, py + 20, phoneW - 24, phoneH - 40);
+				ctx.fillRect(0, 0, w, h);
 
+				// iOS 1 Wallpaper (Water Droplets / Dark Gradient)
+				const wallGrad = ctx.createRadialGradient(w / 2, h / 2, 50, w / 2, h / 2, w * 0.6);
+				wallGrad.addColorStop(0, '#1e293b');
+				wallGrad.addColorStop(1, '#020617');
+				ctx.fillStyle = wallGrad;
+				ctx.fillRect(0, 0, w, h);
+
+				// iOS Status Bar
 				ctx.fillStyle = '#ffffff';
-				ctx.font = '10px sans-serif';
-				ctx.fillText('AT&T 📶  14:28  🔋', px + 20, py + 34);
+				ctx.font = 'bold 12px sans-serif';
+				ctx.fillText('AT&T 📶  14:28 PM  🔋 98%', 30, 24);
 
-				const appIcons = ['📱 Phone', '✉️ Mail', '🌐 Safari', '🎵 iPod', '📷 Photos', '⚙️ Settings'];
+				// 4x4 iOS 1 App Grid
+				const appIcons = [
+					{ name: 'Messages', icon: '💬', bg: '#22c55e' },
+					{ name: 'Calendar', icon: '📅', bg: '#ffffff' },
+					{ name: 'Photos', icon: '🌻', bg: '#eab308' },
+					{ name: 'Camera', icon: '📷', bg: '#64748b' },
+					{ name: 'YouTube', icon: '📺', bg: '#ef4444' },
+					{ name: 'Stocks', icon: '📈', bg: '#000000' },
+					{ name: 'Maps', icon: '🗺️', bg: '#3b82f6' },
+					{ name: 'Weather', icon: '☀️', bg: '#38bdf8' },
+				];
+
 				appIcons.forEach((ic, i) => {
-					const r = Math.floor(i / 3);
-					const c = i % 3;
-					const ix = px + 24 + c * (phoneW * 0.28);
-					const iy = py + 52 + r * 54;
+					const r = Math.floor(i / 4);
+					const c = i % 4;
+					const ix = w * 0.15 + c * (w * 0.2);
+					const iy = 50 + r * 85;
 
-					ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-					ctx.fillRect(ix, iy, 34, 34);
-					ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-					ctx.strokeRect(ix, iy, 34, 34);
+					ctx.fillStyle = ic.bg;
+					ctx.fillRect(ix, iy, 48, 48);
+					ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+					ctx.lineWidth = 1;
+					ctx.strokeRect(ix, iy, 48, 48);
+
+					ctx.font = '22px sans-serif';
+					ctx.fillText(ic.icon, ix + 12, iy + 33);
 
 					ctx.fillStyle = '#ffffff';
-					ctx.font = '10px sans-serif';
-					ctx.fillText(ic.split(' ')[0], ix + 8, iy + 22);
+					ctx.font = '12px sans-serif';
+					ctx.fillText(ic.name, ix + 2, iy + 65);
 				});
 
-				const slideX = px + 20 + (Math.sin(t * 0.003) * 0.5 + 0.5) * (phoneW - 100);
-				ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-				ctx.fillRect(px + 20, py + phoneH - 55, phoneW - 40, 26);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = '11px sans-serif';
-				ctx.fillText('slide to unlock >', slideX, py + phoneH - 38);
+				// Bottom Glossy Dock
+				const dockY = h - 75;
+				ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+				ctx.fillRect(w * 0.1, dockY, w * 0.8, 60);
+
+				const dockIcons = [
+					{ name: 'Phone', icon: '📞' },
+					{ name: 'Mail', icon: '✉️' },
+					{ name: 'Safari', icon: '🧭' },
+					{ name: 'iPod', icon: '🎵' },
+				];
+				dockIcons.forEach((ic, i) => {
+					const dx = w * 0.18 + i * (w * 0.18);
+					ctx.font = '24px sans-serif';
+					ctx.fillText(ic.icon, dx, dockY + 40);
+				});
 			}
 
 			if (degaussFlash > 0) {
@@ -726,7 +804,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('pointerup', onPointerUp);
 		};
-	}, [preset, isPaused, degaussFlash, minesGrid]);
+	}, [preset, isPaused, degaussFlash, minesGrid, activeKey]);
 
 	return (
 		<div className="mx-auto max-w-4xl px-6 pb-12">
@@ -766,7 +844,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 						isCinematic ? 'aspect-[2.39/1]' : 'aspect-video'
 					}`}
 				>
-					{/* 60FPS REACT CANVAS ANIMATION HERO */}
+					{/* 60FPS FULL-BLEED REALISTIC REACT CANVAS HERO */}
 					<canvas ref={canvasRef} className="h-full w-full block cursor-pointer" />
 
 					{/* Overlay Info Badge */}
