@@ -844,9 +844,9 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 
 	return (
 		<div className="mx-auto max-w-4xl px-6 pb-12">
-			{/* Interactive Era Selector Dial / Tabs (ALL 9 ERAS) */}
-			<div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-				<div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+			{/* Interactive Era Selector Dial / Horizontal Scroll Bar for Mobile */}
+			<div className="mb-4 flex items-center justify-between gap-2 border-b border-white/10 pb-3 overflow-hidden">
+				<div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-1 min-w-0 pr-2">
 					{eras.map((era, idx) => (
 						<button
 							key={era.name}
@@ -855,7 +855,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 								setSelectedEraIndex(idx);
 								triggerDegauss();
 							}}
-							className={`rounded-full px-3 py-1 text-xs font-mono transition-all duration-300 ${
+							className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-mono transition-all duration-300 ${
 								selectedEraIndex === idx
 									? 'border border-blue-400 bg-blue-500/20 text-blue-300 shadow-[0_0_15px_rgba(96,165,250,0.4)]'
 									: 'border border-white/10 bg-black/40 text-neutral-400 hover:border-white/30 hover:text-white'
@@ -868,16 +868,16 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				<button
 					type="button"
 					onClick={triggerDegauss}
-					className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-mono text-amber-300 hover:bg-amber-500/20 transition-colors"
+					className="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-mono text-amber-300 hover:bg-amber-500/20 transition-colors"
 				>
-					⚡ Degauss Glitch
+					⚡ Degauss
 				</button>
 			</div>
 
 			<div className="glow-frame reveal rounded-2xl">
 				<div
 					className={`glow-frame__inner relative overflow-hidden border border-white/10 bg-neutral-950 transition-all duration-500 ${
-						isCinematic ? 'aspect-[2.39/1]' : 'aspect-video'
+						isCinematic ? 'aspect-[2.39/1]' : 'aspect-square sm:aspect-video'
 					}`}
 				>
 					{/* 60FPS REALISTIC CANVAS HERO */}
