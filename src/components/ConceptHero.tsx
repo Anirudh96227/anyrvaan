@@ -16,7 +16,7 @@ interface ConceptHeroProps {
 
 export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const [selectedEraIndex, setSelectedEraIndex] = useState<number>(0);
+	const [selectedTab, setSelectedTab] = useState<number>(0);
 	const [activeLabel, setActiveLabel] = useState<string>('');
 	const [timecode, setTimecode] = useState<string>('00:00:00:00');
 	const [isCinematic, setIsCinematic] = useState<boolean>(false);
@@ -37,20 +37,70 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 	const timeOffsetRef = useRef<number>(0);
 	const isDraggingRef = useRef<boolean>(false);
 	const lastXRef = useRef<number>(0);
-	const selectedEraRef = useRef<number>(selectedEraIndex);
-	selectedEraRef.current = selectedEraIndex;
+	const selectedTabRef = useRef<number>(selectedTab);
+	selectedTabRef.current = selectedTab;
 
-	const eras = [
-		{ name: '1982 — COMMODORE 64', label: 'C64 BASIC (1982)' },
-		{ name: '1984 — MACINTOSH 128K', label: 'MAC SYSTEM 1 (1984)' },
-		{ name: '1985 — MS-DOS 3.3', label: 'MS-DOS (1985)' },
-		{ name: '1995 — WINDOWS 95', label: 'WINDOWS 95 (1995)' },
-		{ name: '1996 — GEOCITIES WEB', label: 'GEOCITIES (1996)' },
-		{ name: '1999 — WINAMP 2.80', label: 'WINAMP 2.0 (1999)' },
-		{ name: '2004 — iPod CLICK WHEEL', label: 'iPOD (2004)' },
-		{ name: '2006 — BLACKBERRY CURVE', label: 'BLACKBERRY (2006)' },
-		{ name: '2007 — FIRST iPHONE', label: 'FIRST iPHONE (2007)' },
-	];
+	// -------------------------------------------------------------------------
+	// TAB DEFINITIONS FOR ALL 4 DISTINCT CASE STUDY PROJECTS
+	// -------------------------------------------------------------------------
+	const TABS: Record<ConceptPreset, Array<{ name: string; label: string; youtubeId?: string }>> = {
+		'retro': [
+			{ name: '1982 — COMMODORE 64', label: 'C64 BASIC (1982)', youtubeId: 'JfT72pZBGXE' },
+			{ name: '1984 — MACINTOSH 128K', label: 'MAC SYSTEM 1 (1984)', youtubeId: 'srY5Hl5ysJ0' },
+			{ name: '1985 — MS-DOS 3.3', label: 'MS-DOS (1985)', youtubeId: 'L-GyutcRC3E' },
+			{ name: '1995 — WINDOWS 95', label: 'WINDOWS 95 (1995)', youtubeId: 'koKwwvKAbYc' },
+			{ name: '1996 — GEOCITIES WEB', label: 'GEOCITIES (1996)', youtubeId: '_G0CyXzIhPI' },
+			{ name: '1999 — WINAMP 2.80', label: 'WINAMP 2.0 (1999)', youtubeId: 'O7SyoE5u4Hg' },
+			{ name: '2004 — iPod CLICK WHEEL', label: 'iPOD (2004)', youtubeId: 'F7320h99MmE' },
+			{ name: '2006 — BLACKBERRY CURVE', label: 'BLACKBERRY (2006)', youtubeId: 'u4Nl4woIM5A' },
+			{ name: '2007 — FIRST iPHONE', label: 'FIRST iPHONE (2007)', youtubeId: 'ji9fXA-R2kM' },
+		],
+		'ui-replicas': [
+			{ name: 'APP 01 — QUICKBOOKS', label: 'QUICKBOOKS', youtubeId: 'RVHNGm_MY3w' },
+			{ name: 'APP 02 — EXCEL', label: 'EXCEL', youtubeId: '8dfzgqPwCNk' },
+			{ name: 'APP 03 — SLACK', label: 'SLACK', youtubeId: '_iNkm_Lu1ng' },
+			{ name: 'APP 04 — GMAIL', label: 'GMAIL', youtubeId: 'FgNHHivbCho' },
+			{ name: 'APP 05 — STRIPE', label: 'STRIPE', youtubeId: 'pchlP7TUGf4' },
+			{ name: 'APP 06 — XERO', label: 'XERO', youtubeId: 'Jr7t--AcFNE' },
+			{ name: 'APP 07 — NOTION', label: 'NOTION', youtubeId: '4RzTOUyOGsM' },
+			{ name: 'APP 08 — GOOGLE CALENDAR', label: 'GOOGLE CALENDAR', youtubeId: 'KH8EjT2fmLo' },
+			{ name: 'APP 09 — VS CODE', label: 'VS CODE', youtubeId: '-BDITjM5RMg' },
+			{ name: 'APP 10 — TRELLO', label: 'TRELLO', youtubeId: 'P93oIhtsrXQ' },
+		],
+		'effects': [
+			{ name: 'CH 01 — KINETIC TYPOGRAPHY ARRIVALS', label: 'ARRIVALS', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 02 — COUNTERS & STEPPERS', label: 'COUNTERS', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 03 — SCREEN FULL OF DATA', label: 'DATA FIELDS', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 04 — RESONANT FIELD PHYSICS', label: 'RESONANCE', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 05 — LIQUID PILLAR GAUGES', label: 'PULSE GAUGES', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 06 — RECURSIVE PATTERNS', label: 'RECURSION', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 07 — KINETIC QUOTE GRID', label: 'KINETIC TYPE', youtubeId: 'zoRoKReWYY4' },
+			{ name: 'CH 08 — SACRED SPIROGRAPH', label: 'SPIROGRAPH', youtubeId: 'zoRoKReWYY4' },
+		],
+		'spiritual': [
+			{ name: 'STUDY 01 — PHUGTAL MONASTERY', label: 'PHUGTAL MONASTERY', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 02 — VALLEY OF FLOWERS', label: 'VALLEY OF FLOWERS', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 03 — LANGZA BUDDHA', label: 'LANGZA BUDDHA', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 04 — TAJ MAHAL', label: 'TAJ MAHAL', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 05 — DASHASHWAMEDH GHAT', label: 'DASHASHWAMEDH GHAT', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 06 — KONARK SUN TEMPLE', label: 'KONARK SUN TEMPLE', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 07 — KUNZUM PASS', label: 'KUNZUM PASS', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 08 — MYSORE PALACE', label: 'MYSORE PALACE', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 09 — RED FORT', label: 'RED FORT', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 10 — GUNA CAVES', label: 'GUNA CAVES', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 11 — GOLDEN TEMPLE', label: 'GOLDEN TEMPLE', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 12 — CHADAR TREK', label: 'CHADAR TREK', youtubeId: '8cKdoxP5HD0' },
+			{ name: 'STUDY 13 — MEENAKSHI TEMPLE', label: 'MEENAKSHI TEMPLE', youtubeId: '8cKdoxP5HD0' },
+		],
+		'dashboard': [
+			{ name: 'DASHBOARD — ANALYTICS ENGINE', label: 'ANALYTICS CINEMA' },
+		],
+		'anti-ui': [
+			{ name: 'ANTI-UI — QUIET APPS FIELD GUIDE', label: 'QUIET APPS GUIDE' },
+		]
+	};
+
+	const currentTabList = TABS[preset] || TABS['retro'];
 
 	useEffect(() => {
 		if (isTheater) {
@@ -117,8 +167,8 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const px = e.clientX - rect.left;
 			const py = e.clientY - rect.top;
 
-			// Minesweeper clicks when Win95 (index 3) is active
-			if (preset === 'retro' && selectedEraRef.current === 3) {
+			// Check interactive Minesweeper clicks when Win95 era is active in Retro mode
+			if (preset === 'retro' && selectedTabRef.current === 3) {
 				const mX = w * 0.28;
 				const mY = h * 0.16;
 				const gridX = mX + (w * 0.44) / 2 - 42;
@@ -191,24 +241,363 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		};
 
 		// -------------------------------------------------------------------------
-		// 60FPS CANVAS ENGINE — AUTHENTIC REALISTIC HANDSET AND OS SIMULATION
+		// RENDER CANVAS FOR THE ACTIVE CASE STUDY PRESET & TAB
 		// -------------------------------------------------------------------------
-		const drawRetro = (t: number) => {
+		const drawScene = (t: number) => {
 			ctx.fillStyle = '#04060a';
 			ctx.fillRect(0, 0, w, h);
 
-			const currentEra = selectedEraRef.current;
-			setActiveLabel(eras[currentEra]?.name || eras[0].name);
+			const tabIdx = selectedTabRef.current;
+			const currentTab = currentTabList[tabIdx] || currentTabList[0];
+			setActiveLabel(currentTab.name);
 
-			// CRT Scanline Overlay
+			// CRT Scanlines
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
 			const scanOffset = (t * 0.04) % 4;
 			for (let y = scanOffset; y < h; y += 4) {
 				ctx.fillRect(0, y, w, 1);
 			}
 
+			if (preset === 'ui-replicas') {
+				// =================================================================
+				// PRESET 2: TEN APPS REBUILT BY HAND (UI REPLICAS)
+				// =================================================================
+				ctx.fillStyle = '#0f172a';
+				ctx.fillRect(0, 0, w, h);
+
+				if (tabIdx === 0) {
+					// 1. QUICKBOOKS
+					ctx.fillStyle = '#1e293b';
+					ctx.fillRect(0, 0, w * 0.22, h);
+					ctx.fillStyle = '#3b82f6';
+					ctx.fillRect(0, 0, w * 0.22, 40);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 12px sans-serif';
+					ctx.fillText('QuickBooks', 15, 25);
+
+					ctx.fillStyle = '#0f172a';
+					ctx.fillRect(w * 0.24, 20, w * 0.72, h - 40);
+					ctx.fillStyle = '#ffffff';
+					ctx.fillText('Transactions Ledger — Revenue $142,850', w * 0.26, 45);
+
+					// Ledger table rows
+					for (let i = 0; i < 6; i++) {
+						ctx.fillStyle = i % 2 === 0 ? '#1e293b' : '#334155';
+						ctx.fillRect(w * 0.26, 65 + i * 32, w * 0.68, 28);
+						ctx.fillStyle = '#ffffff';
+						ctx.font = '11px sans-serif';
+						ctx.fillText(`INV-0042${i} • Payment Received`, w * 0.28, 83 + i * 32);
+						ctx.fillText(`+$${(1250 * (i + 1)).toLocaleString()}`, w * 0.82, 83 + i * 32);
+					}
+				} else if (tabIdx === 1) {
+					// 2. EXCEL
+					ctx.fillStyle = '#107c41';
+					ctx.fillRect(0, 0, w, 32);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 12px sans-serif';
+					ctx.fillText('Microsoft Excel — Sales_Q3.xlsx', 15, 20);
+
+					ctx.fillStyle = '#ffffff';
+					ctx.fillRect(0, 32, w, h - 60);
+
+					// Cell Grid
+					ctx.strokeStyle = '#e2e8f0';
+					for (let x = 0; x < w; x += 80) {
+						ctx.beginPath();
+						ctx.moveTo(x, 32);
+						ctx.lineTo(x, h - 28);
+						ctx.stroke();
+					}
+					for (let y = 32; y < h - 28; y += 24) {
+						ctx.beginPath();
+						ctx.moveTo(0, y);
+						ctx.lineTo(w, y);
+						ctx.stroke();
+					}
+
+					// Selected Cell Range
+					ctx.fillStyle = 'rgba(16, 124, 65, 0.15)';
+					ctx.fillRect(80, 56, 240, 120);
+					ctx.strokeStyle = '#107c41';
+					ctx.lineWidth = 2;
+					ctx.strokeRect(80, 56, 240, 120);
+
+					// Bottom Sum Status Bar
+					ctx.fillStyle = '#f1f5f9';
+					ctx.fillRect(0, h - 28, w, 28);
+					ctx.fillStyle = '#0f172a';
+					ctx.font = '11px sans-serif';
+					ctx.fillText('READY  •  AVERAGE: $1,428  |  COUNT: 15  |  SUM: $21,420', 15, h - 10);
+				} else if (tabIdx === 2) {
+					// 3. SLACK
+					ctx.fillStyle = '#3f0e40';
+					ctx.fillRect(0, 0, w * 0.25, h);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 13px sans-serif';
+					ctx.fillText('Anirudh HQ', 16, 25);
+					ctx.font = '11px sans-serif';
+					ctx.fillText('# general', 24, 60);
+					ctx.fillText('# design', 24, 85);
+					ctx.fillStyle = 'rgba(255,255,255,0.2)';
+					ctx.fillRect(10, 95, w * 0.22, 24);
+					ctx.fillStyle = '#ffffff';
+					ctx.fillText('# standup', 24, 111);
+
+					// Main Chat Feed
+					ctx.fillStyle = '#1a1d21';
+					ctx.fillRect(w * 0.25, 0, w * 0.75, h);
+
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 12px sans-serif';
+					ctx.fillText('Anirudh  14:28 PM', w * 0.28, 40);
+					ctx.font = '12px sans-serif';
+					ctx.fillStyle = '#d1d5db';
+					ctx.fillText('Pushed the new UI Replicas build. 10 apps, faked to the pixel! 🚀', w * 0.28, 60);
+
+					// Emoji Reaction Tick (+1)
+					ctx.fillStyle = '#2c323b';
+					ctx.fillRect(w * 0.28, 75, 48, 22);
+					ctx.strokeStyle = '#3b82f6';
+					ctx.strokeRect(w * 0.28, 75, 48, 22);
+					ctx.fillStyle = '#60a5fa';
+					ctx.fillText('🚀 3', w * 0.28 + 8, 90);
+				} else if (tabIdx === 3) {
+					// 4. GMAIL
+					ctx.fillStyle = '#ffffff';
+					ctx.fillRect(0, 0, w, h);
+
+					// Top Header
+					ctx.fillStyle = '#ea4335';
+					ctx.fillRect(0, 0, w, 40);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 14px sans-serif';
+					ctx.fillText('✉️ Gmail — Inbox (3)', 20, 26);
+
+					// Email Threads List
+					for (let i = 0; i < 4; i++) {
+						ctx.fillStyle = i === 0 ? '#f1f5f9' : '#ffffff';
+						ctx.fillRect(20, 50 + i * 36, w - 40, 32);
+						ctx.strokeStyle = '#e2e8f0';
+						ctx.strokeRect(20, 50 + i * 36, w - 40, 32);
+
+						ctx.fillStyle = '#0f172a';
+						ctx.font = i === 0 ? 'bold 11px sans-serif' : '11px sans-serif';
+						ctx.fillText('Stripe Support • Payment notification for $142.85', 35, 70 + i * 36);
+					}
+
+					// Message Sent Toast Note
+					ctx.fillStyle = '#1e293b';
+					ctx.fillRect(20, h - 45, 180, 32);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = '11px sans-serif';
+					ctx.fillText('Message sent.  Undo', 30, h - 25);
+				} else if (tabIdx === 4) {
+					// 5. STRIPE
+					ctx.fillStyle = '#0a2540';
+					ctx.fillRect(0, 0, w, h);
+
+					ctx.fillStyle = '#635bfc';
+					ctx.fillRect(0, 0, 160, h);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 14px sans-serif';
+					ctx.fillText('stripe', 20, 30);
+
+					// Metrics Card
+					ctx.fillStyle = '#1a1f36';
+					ctx.fillRect(180, 20, w - 200, 75);
+					ctx.fillStyle = '#adbdcc';
+					ctx.font = '11px sans-serif';
+					ctx.fillText('Gross volume', 195, 40);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 22px sans-serif';
+					ctx.fillText('$142,850.00', 195, 70);
+
+					// Animated Revenue Curve
+					ctx.strokeStyle = '#00d4b6';
+					ctx.lineWidth = 3;
+					ctx.beginPath();
+					for (let x = 180; x < w - 20; x += 10) {
+						const y = 160 - Math.sin((x + t * 0.05) * 0.02) * 35;
+						if (x === 180) ctx.moveTo(x, y);
+						else ctx.lineTo(x, y);
+					}
+					ctx.stroke();
+				} else if (tabIdx === 5) {
+					// 6. XERO
+					ctx.fillStyle = '#00b4d8';
+					ctx.fillRect(0, 0, w, 36);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 13px sans-serif';
+					ctx.fillText('xero — Bank Reconciliation', 20, 23);
+
+					ctx.fillStyle = '#f8fafc';
+					ctx.fillRect(0, 36, w, h - 36);
+
+					ctx.fillStyle = '#0f172a';
+					ctx.font = 'bold 12px sans-serif';
+					ctx.fillText('Statement Line: Payment $1,250.00', 25, 65);
+					ctx.fillStyle = '#16a34a';
+					ctx.fillRect(w - 120, 50, 95, 28);
+					ctx.fillStyle = '#ffffff';
+					ctx.fillText('OK  Match ✓', w - 100, 68);
+				} else if (tabIdx === 6) {
+					// 7. NOTION
+					ctx.fillStyle = '#191919';
+					ctx.fillRect(0, 0, w, h);
+
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 18px sans-serif';
+					ctx.fillText('📝 UI Archaeology Research', 30, 45);
+
+					ctx.fillStyle = '#94a3b8';
+					ctx.font = '12px sans-serif';
+					ctx.fillText('Press "/" for commands, or type code blocks...', 30, 75);
+
+					// Slash Menu Popover
+					ctx.fillStyle = '#252525';
+					ctx.fillRect(30, 90, 180, 80);
+					ctx.strokeStyle = '#333333';
+					ctx.strokeRect(30, 90, 180, 80);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = '11px sans-serif';
+					ctx.fillText('H1  Heading 1', 42, 112);
+					ctx.fillText('☑️  To-do list', 42, 134);
+					ctx.fillText('📋  Board view', 42, 156);
+				} else if (tabIdx === 7) {
+					// 8. GOOGLE CALENDAR
+					ctx.fillStyle = '#ffffff';
+					ctx.fillRect(0, 0, w, h);
+
+					ctx.fillStyle = '#1a73e8';
+					ctx.fillRect(0, 0, w, 36);
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 12px sans-serif';
+					ctx.fillText('📅 Google Calendar — Week View', 20, 23);
+
+					// 7 Column Days Grid
+					for (let i = 0; i < 7; i++) {
+						ctx.strokeStyle = '#e8eaed';
+						ctx.strokeRect(i * (w / 7), 36, w / 7, h - 36);
+					}
+
+					// Event Card Drag
+					ctx.fillStyle = '#e8f0fe';
+					ctx.fillRect(w / 7 + 4, 60, w / 7 - 8, 55);
+					ctx.strokeStyle = '#1a73e8';
+					ctx.strokeRect(w / 7 + 4, 60, w / 7 - 8, 55);
+					ctx.fillStyle = '#1967d2';
+					ctx.font = 'bold 10px sans-serif';
+					ctx.fillText('Design Sync', w / 7 + 10, 78);
+				} else if (tabIdx === 8) {
+					// 9. VS CODE
+					ctx.fillStyle = '#1e1e1e';
+					ctx.fillRect(0, 0, w, h);
+
+					// Sidebar File Tree
+					ctx.fillStyle = '#252526';
+					ctx.fillRect(0, 0, 140, h);
+					ctx.fillStyle = '#cccccc';
+					ctx.font = 'bold 11px sans-serif';
+					ctx.fillText('EXPLORER', 12, 24);
+					ctx.font = '11px sans-serif';
+					ctx.fillText('📄 index.ts', 20, 50);
+					ctx.fillText('📄 App.tsx', 20, 72);
+
+					// Code Editor View
+					ctx.fillStyle = '#569cd6';
+					ctx.font = '12px monospace';
+					ctx.fillText('const', 160, 45);
+					ctx.fillStyle = '#4fc1ff';
+					ctx.fillText(' app', 205, 45);
+					ctx.fillStyle = '#d4d4d4';
+					ctx.fillText(' = rebuildApp("Slack");', 240, 45);
+				} else {
+					// 10. TRELLO
+					ctx.fillStyle = '#0079bf';
+					ctx.fillRect(0, 0, w, h);
+
+					// 3 Kanban Columns
+					const colW = w * 0.28;
+					['To Do', 'In Progress', 'Done'].forEach((title, idx) => {
+						const cx = 20 + idx * (colW + 15);
+						ctx.fillStyle = '#ebecf0';
+						ctx.fillRect(cx, 25, colW, h - 50);
+
+						ctx.fillStyle = '#172b4d';
+						ctx.font = 'bold 12px sans-serif';
+						ctx.fillText(title, cx + 12, 45);
+
+						ctx.fillStyle = '#ffffff';
+						ctx.fillRect(cx + 8, 58, colW - 16, 36);
+						ctx.fillStyle = '#0f172a';
+						ctx.font = '11px sans-serif';
+						ctx.fillText('Pixel perfect UI rebuild', cx + 16, 80);
+					});
+				}
+			} else if (preset === 'effects') {
+				// =================================================================
+				// PRESET 3: THE EFFECTS INDEX (KINETIC CODE ANIMATION ENGINE)
+				// =================================================================
+				ctx.fillStyle = '#040814';
+				ctx.fillRect(0, 0, w, h);
+
+				// Liquid Pillar Gauges
+				for (let i = 0; i < 3; i++) {
+					const gx = w * 0.3 + i * 85;
+					const gy = h * 0.25;
+					const gh = h * 0.55;
+
+					ctx.fillStyle = '#1e293b';
+					ctx.fillRect(gx, gy, 48, gh);
+
+					const fillH = (Math.sin(t * 0.004 + i * 0.8) * 0.4 + 0.5) * gh;
+					ctx.fillStyle = '#2563eb';
+					ctx.fillRect(gx, gy + gh - fillH, 48, fillH);
+				}
+
+				ctx.fillStyle = '#ffffff';
+				ctx.font = 'bold 16px sans-serif';
+				ctx.fillText('THE EFFECTS INDEX — Kinetic Code Animation', 30, 40);
+			} else if (preset === 'spiritual') {
+				// =================================================================
+				// PRESET 4: THE SPIRITUAL SERIES (CONTEMPLATIVE SACRED GEOMETRY)
+				// =================================================================
+				ctx.fillStyle = '#06050a';
+				ctx.fillRect(0, 0, w, h);
+
+				const cx = w / 2;
+				const cy = h / 2;
+
+				// Concentric Mandala Circles
+				ctx.strokeStyle = '#38bdf8';
+				ctx.lineWidth = 1.5;
+
+				for (let r = 20; r < 120; r += 20) {
+					ctx.beginPath();
+					ctx.arc(cx, cy, r + Math.sin(t * 0.002 + r) * 5, 0, Math.PI * 2);
+					ctx.stroke();
+				}
+
+				ctx.fillStyle = '#ffffff';
+				ctx.font = 'bold 15px sans-serif';
+				ctx.fillText('THE SPIRITUAL SERIES — Sacred Geometry', 30, 40);
+			} else {
+				// DEFAULT RETRO COMPUTING PRESET (PRESET 1)
+				drawRetro(t);
+			}
+
+			if (degaussFlash > 0) {
+				ctx.fillStyle = 'rgba(96, 165, 250, 0.35)';
+				ctx.fillRect(0, 0, w, h);
+			}
+		};
+
+		// Retro drawing sub-routine for preset === 'retro'
+		const drawRetro = (t: number) => {
+			const currentEra = selectedTabRef.current;
+
 			if (currentEra === 0) {
-				// 1. COMMODORE 64 (1982)
+				// C64
 				ctx.fillStyle = '#352879';
 				ctx.fillRect(0, 0, w, h);
 
@@ -226,162 +615,10 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillText('**** COMMODORE 64 BASIC V2 ****', screenX + 35, screenY + 45);
 				ctx.fillText(' 64K RAM SYSTEM  38911 BASIC BYTES FREE', screenX + 35, screenY + 70);
 				ctx.fillText('READY.', screenX + 35, screenY + 110);
-
-				const cmd = "10 PRINT \"ANYRVAAN RETRO COMPUTING\"";
-				const step = Math.floor((t * 0.005) % 28);
-				const typed = step < 16 ? cmd.slice(0, step) : cmd;
-
-				ctx.fillText(typed, screenX + 35, screenY + 140);
-
-				if (step >= 16) {
-					ctx.fillText('20 GOTO 10', screenX + 35, screenY + 165);
-					ctx.fillText('RUN', screenX + 35, screenY + 190);
-					ctx.fillText('ANYRVAAN RETRO COMPUTING', screenX + 35, screenY + 215);
-					ctx.fillText('ANYRVAAN RETRO COMPUTING', screenX + 35, screenY + 240);
-				}
-
-				if (Math.sin(t * 0.008) > 0) {
-					const curX = screenX + 35 + (step < 16 ? typed.length * 8.5 : 0);
-					const curY = step < 16 ? screenY + 128 : screenY + 252;
-					ctx.fillRect(curX, curY, 10, 15);
-				}
-			} else if (currentEra === 1) {
-				// 2. MACINTOSH SYSTEM 1 (1984)
-				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(0, 0, w, h);
-
-				ctx.fillStyle = 'rgba(0,0,0,0.14)';
-				for (let py = 0; py < h; py += 4) {
-					for (let px = (py % 8 === 0 ? 0 : 2); px < w; px += 4) {
-						ctx.fillRect(px, py, 2, 2);
-					}
-				}
-
-				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(0, 0, w, 28);
-				ctx.strokeStyle = '#000000';
-				ctx.lineWidth = 1;
-				ctx.strokeRect(0, 0, w, 28);
-
-				ctx.fillStyle = '#000000';
-				ctx.font = 'bold 12px sans-serif';
-				ctx.fillText('  File  Edit  View  Special', 20, 18);
-
-				ctx.strokeRect(w - 75, 45, 36, 28);
-				ctx.fillRect(w - 47, 55, 4, 8);
-				ctx.font = '10px sans-serif';
-				ctx.fillText('Macintosh HD', w - 85, 88);
-
-				ctx.strokeRect(w - 70, h - 75, 30, 35);
-				ctx.fillText('Trash', w - 72, h - 25);
-
-				const winX = w * 0.15 + Math.sin(t * 0.001) * 6;
-				const winY = h * 0.16;
-				const winW = w * 0.65;
-				const winH = h * 0.68;
-
-				ctx.fillStyle = '#000000';
-				ctx.fillRect(winX + 4, winY + 4, winW, winH);
-
-				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(winX, winY, winW, winH);
-				ctx.strokeRect(winX, winY, winW, winH);
-
-				ctx.strokeRect(winX, winY, winW, 22);
-				for (let ly = winY + 5; ly < winY + 19; ly += 3) {
-					ctx.fillRect(winX + 26, ly, winW - 36, 1);
-				}
-
-				ctx.strokeRect(winX + 6, winY + 5, 12, 12);
-				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(winX + 8, winY + 7, 8, 8);
-
-				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(winX + winW / 2 - 50, winY + 3, 100, 16);
-				ctx.fillStyle = '#000000';
-				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('System Folder', winX + winW / 2 - 42, winY + 15);
-
-				const items = [
-					{ name: 'Finder', icon: '😃' },
-					{ name: 'System', icon: '💻' },
-					{ name: 'MacWrite', icon: '📝' },
-					{ name: 'MacPaint', icon: '🎨' },
-					{ name: 'Control Panel', icon: '🎛️' },
-					{ name: 'Clipboard', icon: '📋' },
-				];
-				items.forEach((item, idx) => {
-					const ix = winX + 35 + (idx % 3) * 110;
-					const iy = winY + 45 + Math.floor(idx / 3) * 75;
-					ctx.strokeRect(ix, iy, 34, 30);
-					ctx.font = '16px sans-serif';
-					ctx.fillText(item.icon, ix + 8, iy + 22);
-					ctx.font = '10px sans-serif';
-					ctx.fillText(item.name, ix - 6, iy + 48);
-				});
-			} else if (currentEra === 2) {
-				// 3. MS-DOS 3.3 (1985)
-				ctx.fillStyle = '#040904';
-				ctx.fillRect(0, 0, w, h);
-
-				ctx.fillStyle = '#00ff66';
-				ctx.font = '14px monospace';
-
-				ctx.fillText('MS-DOS Version 3.30 (C)Copyright Microsoft Corp 1981-1987', 40, 50);
-				ctx.fillText('C:\\> VER', 40, 85);
-				ctx.fillText('C:\\> DIR /W', 40, 115);
-
-				ctx.fillText(' Volume in drive C is DOS_SYSTEM', 40, 145);
-				ctx.fillText(' Directory of C:\\', 40, 165);
-
-				ctx.fillText('[COMMAND.COM]   [AUTOEXEC.BAT]   [CONFIG.SYS]    [DOOM.EXE]', 40, 200);
-				ctx.fillText('[WOLF3D.EXE]    [RETRO.BAT]      [GRAPHICS.DRV]  [SYSTEM.DAT]', 40, 225);
-
-				ctx.fillText('       10 File(s)    14,285,760 bytes free', 40, 265);
-
-				ctx.fillText('C:\\> DOOM.EXE', 40, 300);
-				ctx.fillText('Loading DOOM Engine v1.1...', 40, 325);
-
-				ctx.fillText('C:\\> _', 40, 360);
-				if (Math.sin(t * 0.01) > 0) {
-					ctx.fillRect(80, 348, 10, 15);
-				}
 			} else if (currentEra === 3) {
-				// 4. WINDOWS 95 (1995)
+				// Win95
 				ctx.fillStyle = '#008080';
 				ctx.fillRect(0, 0, w, h);
-
-				const desktopIcons = [
-					{ name: 'My Computer', x: 25, y: 30 },
-					{ name: 'Network', x: 25, y: 105 },
-					{ name: 'Recycle Bin', x: 25, y: 180 },
-					{ name: 'Internet Explorer', x: 25, y: 255 },
-				];
-				desktopIcons.forEach((ic) => {
-					drawBevelBox(ic.x, ic.y, 36, 32, false, '#c0c0c0');
-					ctx.fillStyle = '#000080';
-					ctx.fillRect(ic.x + 4, ic.y + 4, 28, 24);
-					ctx.fillStyle = '#ffffff';
-					ctx.font = '11px sans-serif';
-					ctx.fillText(ic.name, ic.x - 8, ic.y + 46);
-				});
-
-				const tbY = h - 34;
-				drawBevelBox(0, tbY, w, 34, false, '#c0c0c0');
-
-				drawBevelBox(4, tbY + 4, 80, 26, false, '#c0c0c0');
-				ctx.fillStyle = '#000000';
-				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('Start', 32, tbY + 21);
-				ctx.fillStyle = '#ff0000';
-				ctx.fillRect(14, tbY + 10, 5, 5);
-				ctx.fillStyle = '#00ff00';
-				ctx.fillRect(20, tbY + 10, 5, 5);
-
-				drawBevelBox(w - 80, tbY + 4, 74, 26, true, '#c0c0c0');
-				ctx.fillStyle = '#000000';
-				ctx.font = '11px sans-serif';
-				ctx.fillText('14:28 PM', w - 70, tbY + 21);
 
 				const mX = w * 0.28;
 				const mY = h * 0.16;
@@ -389,421 +626,35 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				const mH = h * 0.65;
 
 				drawBevelBox(mX, mY, mW, mH, false, '#c0c0c0');
-
 				ctx.fillStyle = '#000080';
 				ctx.fillRect(mX + 3, mY + 3, mW - 6, 22);
 				ctx.fillStyle = '#ffffff';
 				ctx.font = 'bold 11px sans-serif';
 				ctx.fillText('Minesweeper', mX + 10, mY + 18);
-
-				drawBevelBox(mX + 12, mY + 32, mW - 24, 34, true, '#c0c0c0');
-
-				ctx.fillStyle = '#000000';
-				ctx.fillRect(mX + 20, mY + 37, 42, 24);
-				ctx.fillStyle = '#ff0000';
-				ctx.font = 'bold 16px monospace';
-				ctx.fillText('010', mX + 24, mY + 55);
-
-				const smileyX = mX + mW / 2 - 12;
-				drawBevelBox(smileyX, mY + 37, 24, 24, false, '#c0c0c0');
-				ctx.fillStyle = '#ffff00';
-				ctx.beginPath();
-				ctx.arc(smileyX + 12, mY + 49, 8, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.fillStyle = '#000000';
-				ctx.fillRect(smileyX + 8, mY + 46, 2, 3);
-				ctx.fillRect(smileyX + 14, mY + 46, 2, 3);
-
-				const gridX = mX + mW / 2 - 42;
-				const gridY = mY + 70;
-				const cellSize = 28;
-
-				drawBevelBox(gridX - 4, gridY - 4, cellSize * 3 + 8, cellSize * 3 + 8, true, '#c0c0c0');
-
-				minesGrid.forEach((cell, idx) => {
-					const r = Math.floor(idx / 3);
-					const c = idx % 3;
-					const cx = gridX + c * cellSize;
-					const cy = gridY + r * cellSize;
-
-					drawBevelBox(cx, cy, cellSize - 2, cellSize - 2, cell.clicked, '#c0c0c0');
-
-					if (cell.clicked) {
-						ctx.fillStyle = cell.mine ? '#ef4444' : '#0000ff';
-						ctx.font = 'bold 14px monospace';
-						ctx.fillText(cell.mine ? '💣' : String(cell.count), cx + 7, cy + 19);
-					}
-				});
-			} else if (currentEra === 4) {
-				// 5. GEOCITIES WEB (1996)
-				drawBevelBox(0, 0, w, h, false, '#c0c0c0');
-
-				ctx.fillStyle = '#000080';
-				ctx.fillRect(3, 3, w - 6, 22);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('Netscape Navigator - [Welcome to Anirudh\'s GeoCities Homepage!]', 10, 18);
-
-				drawBevelBox(8, 30, w - 16, 26, true, '#ffffff');
-				ctx.fillStyle = '#000000';
-				ctx.font = '11px monospace';
-				ctx.fillText('Location: http://www.geocities.com/SiliconValley/Heights/4281/', 16, 47);
-
-				const webY = 62;
-				const webH = h - 66;
-				ctx.fillStyle = '#080018';
-				ctx.fillRect(8, webY, w - 16, webH);
-
-				ctx.fillStyle = '#ffffff';
-				for (let i = 0; i < 60; i++) {
-					const sx = 12 + ((i * 41) % (w - 24));
-					const sy = webY + 8 + ((i * 59) % (webH - 16));
-					ctx.fillRect(sx, sy, 2, 2);
-				}
-
-				ctx.fillStyle = '#ffcc00';
-				ctx.fillRect(w * 0.2, webY + 20, w * 0.6, 30);
-				ctx.fillStyle = '#000000';
-				ctx.font = 'bold 13px monospace';
-				ctx.fillText('⚠️ UNDER CONSTRUCTION ⚠️', w * 0.28, webY + 40);
-
-				const marqueeX = 20 + ((t * 0.08) % (w - 220));
-				ctx.fillStyle = '#ff00ff';
-				ctx.font = 'bold 14px sans-serif';
-				ctx.fillText('*** WELCOME TO MY 1996 RETRO HOMEPAGE! ***', marqueeX, webY + 85);
-
-				const grad = ctx.createLinearGradient(20, 0, w - 20, 0);
-				grad.addColorStop(0, '#ff0000');
-				grad.addColorStop(0.2, '#ffff00');
-				grad.addColorStop(0.4, '#00ff00');
-				grad.addColorStop(0.6, '#00ffff');
-				grad.addColorStop(0.8, '#0000ff');
-				grad.addColorStop(1, '#ff00ff');
-				ctx.fillStyle = grad;
-				ctx.fillRect(20, webY + 110, w - 40, 4);
-
-				ctx.fillStyle = '#000000';
-				ctx.fillRect(w / 2 - 75, webY + 135, 150, 32);
-				ctx.strokeStyle = '#00ff00';
-				ctx.strokeRect(w / 2 - 75, webY + 135, 150, 32);
-				ctx.fillStyle = '#00ff00';
-				ctx.font = 'bold 15px monospace';
-				ctx.fillText('VISITORS: 004281', w / 2 - 66, webY + 157);
-			} else if (currentEra === 5) {
-				// 6. WINAMP 2.80 (1999)
-				const waX = w * 0.18;
-				const waY = h * 0.12;
-				const waW = w * 0.64;
-				const waH = h * 0.76;
-
-				ctx.fillStyle = '#1c2230';
-				ctx.fillRect(waX, waY, waW, waH);
-				ctx.strokeStyle = '#3d485e';
-				ctx.lineWidth = 2;
-				ctx.strokeRect(waX, waY, waW, waH);
-
-				ctx.fillStyle = '#0e121a';
-				ctx.fillRect(waX + 4, waY + 4, waW - 8, 22);
-				ctx.fillStyle = '#00ff66';
-				ctx.font = 'bold 11px monospace';
-				ctx.fillText('WINAMP - 01. ANYRVAAN AUDIO ARCHAEOLOGY (1999)', waX + 12, waY + 19);
-
-				ctx.fillStyle = '#000000';
-				ctx.fillRect(waX + 16, waY + 34, waW - 32, 50);
-				ctx.strokeStyle = '#00ff66';
-				ctx.strokeRect(waX + 16, waY + 34, waW - 32, 50);
-
-				ctx.fillStyle = '#00ff66';
-				ctx.font = 'bold 20px monospace';
-				ctx.fillText('02:14', waX + 26, waY + 68);
-				ctx.font = '10px monospace';
-				ctx.fillText('128 kbps  44 kHz  STEREO  EQ PL', waX + 110, waY + 56);
-
-				const bars = 24;
-				const barW = (waW - 48) / bars;
-				const eqY = waY + 96;
-				const eqH = waH - 116;
-
-				for (let i = 0; i < bars; i++) {
-					const bh = (Math.sin(t * 0.007 + i * 0.35) * 0.45 + 0.55) * eqH;
-					const bx = waX + 24 + i * barW;
-
-					const colorGrad = ctx.createLinearGradient(0, eqY + eqH, 0, eqY);
-					colorGrad.addColorStop(0, '#1d4ed8');
-					colorGrad.addColorStop(0.5, '#60a5fa');
-					colorGrad.addColorStop(1, '#00ff66');
-
-					ctx.fillStyle = colorGrad;
-					ctx.fillRect(bx, eqY + eqH - bh, barW - 2, bh);
-				}
-			} else if (currentEra === 6) {
-				// 7. iPod CLICK WHEEL (2004)
-				const podW = Math.min(w * 0.85, w < 600 ? 300 : 340);
-				const podH = h * 0.88;
-				const px = (w - podW) / 2;
-				const py = (h - podH) / 2;
-
-				const bodyGrad = ctx.createLinearGradient(px, py, px + podW, py + podH);
-				bodyGrad.addColorStop(0, '#ffffff');
-				bodyGrad.addColorStop(1, '#e0e4ec');
-				ctx.fillStyle = bodyGrad;
-				ctx.fillRect(px, py, podW, podH);
-				ctx.strokeStyle = '#cbd5e1';
-				ctx.strokeRect(px, py, podW, podH);
-
-				ctx.fillStyle = '#bae6fd';
-				ctx.fillRect(px + 18, py + 18, podW - 36, podH * 0.38);
-				ctx.strokeStyle = '#0284c7';
-				ctx.strokeRect(px + 18, py + 18, podW - 36, podH * 0.38);
-
-				ctx.fillStyle = '#0284c7';
-				ctx.fillRect(px + 18, py + 18, podW - 36, 22);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('Now Playing', px + 26, py + 33);
-				ctx.fillText('🔋', px + podW - 38, py + 33);
-
-				ctx.fillStyle = '#0f172a';
-				ctx.font = 'bold 12px sans-serif';
-				ctx.fillText('Innerbloom (Retro Cut)', px + 26, py + 62);
-				ctx.font = '11px sans-serif';
-				ctx.fillText('Anyrvaan — UI Archaeology', px + 26, py + 80);
-
-				ctx.fillStyle = '#94a3b8';
-				ctx.fillRect(px + 26, py + 96, podW - 52, 6);
-				ctx.fillStyle = '#0284c7';
-				ctx.fillRect(px + 26, py + 96, (podW - 52) * 0.58, 6);
-
-				ctx.fillStyle = '#0f172a';
-				ctx.font = '10px monospace';
-				ctx.fillText('02:14 / 04:08', px + 26, py + 116);
-
-				const wheelCx = px + podW / 2;
-				const wheelCy = py + podH * 0.72;
-				const wheelRadius = podW * 0.28;
-
-				ctx.fillStyle = '#f8fafc';
-				ctx.beginPath();
-				ctx.arc(wheelCx, wheelCy, wheelRadius, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.strokeStyle = '#cbd5e1';
-				ctx.stroke();
-
-				ctx.fillStyle = '#64748b';
-				ctx.font = 'bold 10px sans-serif';
-				ctx.fillText('MENU', wheelCx - 15, wheelCy - wheelRadius + 16);
-				ctx.fillText('⏯', wheelCx - 6, wheelCy + wheelRadius - 8);
-				ctx.fillText('⏮', wheelCx - wheelRadius + 8, wheelCy + 4);
-				ctx.fillText('⏭', wheelCx + wheelRadius - 20, wheelCy + 4);
-
-				ctx.fillStyle = '#ffffff';
-				ctx.beginPath();
-				ctx.arc(wheelCx, wheelCy, podW * 0.09, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.strokeStyle = '#cbd5e1';
-				ctx.stroke();
 			} else if (currentEra === 7) {
-				// =================================================================
-				// ERA 8: BLACKBERRY CURVE (2006) - MOBILE RESPONSIVE HANDSET
-				// =================================================================
+				// BlackBerry
 				const phoneH = h * 0.94;
 				const phoneW = Math.min(w * 0.85, w < 600 ? 320 : 380);
 				const px = (w - phoneW) / 2;
 				const py = (h - phoneH) / 2;
 
-				// 1. Dark Metallic Titanium Handset Body
-				const phoneGrad = ctx.createLinearGradient(px, py, px + phoneW, py + phoneH);
-				phoneGrad.addColorStop(0, '#222a38');
-				phoneGrad.addColorStop(0.5, '#141a24');
-				phoneGrad.addColorStop(1, '#090d14');
-				ctx.fillStyle = phoneGrad;
-
-				// Handset Rounded Bezel Silhouette
-				ctx.beginPath();
-				ctx.roundRect(px, py, phoneW, phoneH, 20);
-				ctx.fill();
-				ctx.strokeStyle = '#3b475d';
-				ctx.lineWidth = 3;
-				ctx.stroke();
-
-				// Silver Metallic Side Rail Accents
-				ctx.strokeStyle = '#64748b';
-				ctx.lineWidth = 1;
-				ctx.strokeRect(px + 3, py + 8, phoneW - 6, phoneH - 16);
-
-				// Top Earpiece Speaker Mesh
-				ctx.fillStyle = '#0f172a';
-				ctx.fillRect(px + phoneW / 2 - 24, py + 10, 48, 5);
-				ctx.fillStyle = '#64748b';
-				ctx.fillRect(px + phoneW / 2 - 20, py + 11, 40, 2);
-
-				// Chrome BlackBerry Text Logo below speaker
-				ctx.fillStyle = '#cbd5e1';
-				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('BlackBerry', px + phoneW / 2 - 28, py + 26);
-
-				// 2. Illuminated Screen Display Box
-				const screenX = px + 14;
-				const screenY = py + 32;
-				const screenW = phoneW - 28;
-				const screenH = phoneH * 0.42;
-
-				ctx.fillStyle = '#070a10';
-				ctx.fillRect(screenX, screenY, screenW, screenH);
-				ctx.strokeStyle = '#334155';
-				ctx.lineWidth = 2;
-				ctx.strokeRect(screenX, screenY, screenW, screenH);
-
-				// BBM Top Bar inside Screen
-				ctx.fillStyle = '#0084ff';
-				ctx.fillRect(screenX, screenY, screenW, 24);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = 'bold 10px sans-serif';
-				ctx.fillText('🍇 BBM', screenX + 8, screenY + 16);
-				ctx.fillText('3G 📶 14:28 PM', screenX + screenW - 75, screenY + 16);
-
-				// BBM Chat Conversation inside Screen
-				const chatY = screenY + 30;
-
-				// Message 1 (Incoming)
-				ctx.fillStyle = '#1e293b';
-				ctx.fillRect(screenX + 8, chatY + 8, screenW * 0.72, 28);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = '10px sans-serif';
-				ctx.fillText('Hey! Is the new UI live?', screenX + 14, chatY + 25);
-
-				// Message 2 (Outgoing Blue Bubble with Read Receipt)
-				const b2X = screenX + screenW * 0.25;
-				ctx.fillStyle = '#0084ff';
-				ctx.fillRect(b2X, chatY + 42, screenW * 0.7, 28);
-				ctx.fillStyle = '#ffffff';
-				ctx.fillText('Yeah, pixel perfect 🚀 R ✓', b2X + 8, chatY + 59);
-
-				// 3. Navigation Cluster Row (Send, Menu, Trackball, Escape, End)
-				const navY = screenY + screenH + 8;
-				const btnW = 32;
-				const btnH = 20;
-
-				// Green Send Button
-				ctx.fillStyle = '#166534';
-				ctx.fillRect(px + 14, navY, btnW, btnH);
-				ctx.strokeStyle = '#22c55e';
-				ctx.strokeRect(px + 14, navY, btnW, btnH);
-				ctx.fillStyle = '#22c55e';
-				ctx.font = 'bold 10px sans-serif';
-				ctx.fillText('📞', px + 23, navY + 14);
-
-				// Menu Button
-				ctx.fillStyle = '#1e293b';
-				ctx.fillRect(px + 50, navY, btnW, btnH);
-				ctx.strokeStyle = '#475569';
-				ctx.strokeRect(px + 50, navY, btnW, btnH);
-
-				// Translucent Pearl Trackball (Center)
-				const ballCx = px + phoneW / 2;
-				const ballCy = navY + 10;
-				ctx.fillStyle = '#ffffff';
-				ctx.beginPath();
-				ctx.arc(ballCx, ballCy, 10, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.strokeStyle = '#38bdf8';
-				ctx.lineWidth = 2;
-				ctx.stroke();
-
-				// Escape Back Button
-				ctx.fillStyle = '#1e293b';
-				ctx.fillRect(px + phoneW - 82, navY, btnW, btnH);
-				ctx.strokeStyle = '#475569';
-				ctx.strokeRect(px + phoneW - 82, navY, btnW, btnH);
-
-				// Red End Button
-				ctx.fillStyle = '#991b1b';
-				ctx.fillRect(px + phoneW - 46, navY, btnW, btnH);
-				ctx.strokeStyle = '#ef4444';
-				ctx.strokeRect(px + phoneW - 46, navY, btnW, btnH);
-				ctx.fillStyle = '#ef4444';
-				ctx.fillText('🔴', px + phoneW - 37, navY + 14);
-
-				// 4. Full-Height 4-Row 3D QWERTY Keypad Grid
-				const kpY = navY + 28;
-				const rows = [
-					['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-					['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'DEL'],
-					['ALT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'SYM', '↵'],
-					['aA', '0', 'SPACE', 'A#', '↵'],
-				];
-
-				const keyH = 20;
-
-				rows.forEach((rowKeys, rIdx) => {
-					const rY = kpY + rIdx * (keyH + 4);
-
-					// Metallic horizontal fret line between rows
-					ctx.fillStyle = '#64748b';
-					ctx.fillRect(px + 14, rY - 2, phoneW - 28, 1);
-
-					const kw = (phoneW - 28) / rowKeys.length;
-					rowKeys.forEach((kLabel, cIdx) => {
-						const kx = px + 14 + cIdx * kw;
-						const isLit = activeKey && activeKey === kLabel;
-
-						ctx.fillStyle = isLit ? '#38bdf8' : '#1e293b';
-						ctx.fillRect(kx + 1, rY, kw - 2, keyH);
-						ctx.strokeStyle = '#475569';
-						ctx.strokeRect(kx + 1, rY, kw - 2, keyH);
-
-						ctx.fillStyle = isLit ? '#000000' : '#ffffff';
-						ctx.font = 'bold 9px sans-serif';
-						ctx.fillText(kLabel, kx + kw / 2 - 4, rY + 13);
-					});
-				});
-			} else {
-				// 9. FIRST iPHONE (2007)
-				const phoneW = Math.min(w * 0.85, w < 600 ? 300 : 340);
-				const phoneH = h * 0.88;
-				const px = (w - phoneW) / 2;
-				const py = (h - phoneH) / 2;
-
-				ctx.fillStyle = '#1b1b1e';
+				ctx.fillStyle = '#141a24';
 				ctx.fillRect(px, py, phoneW, phoneH);
-				ctx.strokeStyle = '#404044';
+				ctx.strokeStyle = '#3b475d';
 				ctx.strokeRect(px, py, phoneW, phoneH);
 
-				ctx.fillStyle = '#000000';
-				ctx.fillRect(px + 12, py + 20, phoneW - 24, phoneH - 40);
-
+				ctx.fillStyle = '#0084ff';
+				ctx.fillRect(px + 14, py + 32, phoneW - 28, 24);
 				ctx.fillStyle = '#ffffff';
-				ctx.font = '10px sans-serif';
-				ctx.fillText('AT&T 📶  14:28  🔋', px + 20, py + 34);
-
-				const appIcons = ['📱 Phone', '✉️ Mail', '🌐 Safari', '🎵 iPod', '📷 Photos', '⚙️ Settings'];
-				appIcons.forEach((ic, i) => {
-					const r = Math.floor(i / 3);
-					const c = i % 3;
-					const ix = px + 24 + c * (phoneW * 0.28);
-					const iy = py + 52 + r * 54;
-
-					ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-					ctx.fillRect(ix, iy, 34, 34);
-					ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-					ctx.strokeRect(ix, iy, 34, 34);
-
-					ctx.fillStyle = '#ffffff';
-					ctx.font = '10px sans-serif';
-					ctx.fillText(ic.split(' ')[0], ix + 8, iy + 22);
-				});
-
-				const slideX = px + 20 + (Math.sin(t * 0.003) * 0.5 + 0.5) * (phoneW - 100);
-				ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-				ctx.fillRect(px + 20, py + phoneH - 55, phoneW - 40, 26);
-				ctx.fillStyle = '#ffffff';
-				ctx.font = '11px sans-serif';
-				ctx.fillText('slide to unlock >', slideX, py + phoneH - 38);
-			}
-
-			if (degaussFlash > 0) {
-				ctx.fillStyle = 'rgba(96, 165, 250, 0.35)';
+				ctx.font = 'bold 10px sans-serif';
+				ctx.fillText('🍇 BBM Messenger', px + 22, py + 48);
+			} else {
+				// Full-bleed Operating System composition
+				ctx.fillStyle = '#0a0f1d';
 				ctx.fillRect(0, 0, w, h);
+				ctx.fillStyle = '#60a5fa';
+				ctx.font = 'bold 16px sans-serif';
+				ctx.fillText(currentTabList[currentEra]?.name || 'RETRO ERA', 40, 50);
 			}
 		};
 
@@ -824,7 +675,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const ff = String(framesCount).padStart(2, '0');
 			setTimecode(`${hh}:${mm}:${ss}:${ff}`);
 
-			drawRetro(totalTime);
+			drawScene(totalTime);
 
 			if (!reduceMotion) {
 				animId = requestAnimationFrame(render);
@@ -844,24 +695,24 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 
 	return (
 		<div className="mx-auto max-w-4xl px-6 pb-12">
-			{/* Interactive Era Selector Dial / Horizontal Scroll Bar for Mobile */}
+			{/* Interactive Selector Tabs unique to each of the 4 case studies */}
 			<div className="mb-4 flex items-center justify-between gap-2 border-b border-white/10 pb-3 overflow-hidden">
 				<div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-1 min-w-0 pr-2">
-					{eras.map((era, idx) => (
+					{currentTabList.map((tab, idx) => (
 						<button
-							key={era.name}
+							key={tab.name}
 							type="button"
 							onClick={() => {
-								setSelectedEraIndex(idx);
+								setSelectedTab(idx);
 								triggerDegauss();
 							}}
 							className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-mono transition-all duration-300 ${
-								selectedEraIndex === idx
+								selectedTab === idx
 									? 'border border-blue-400 bg-blue-500/20 text-blue-300 shadow-[0_0_15px_rgba(96,165,250,0.4)]'
 									: 'border border-white/10 bg-black/40 text-neutral-400 hover:border-white/30 hover:text-white'
 							}`}
 						>
-							{era.label}
+							{tab.label}
 						</button>
 					))}
 				</div>
@@ -887,7 +738,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					<div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-3 rounded-full border border-white/15 bg-black/70 px-4 py-1.5 backdrop-blur-md">
 						<span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
 						<span className="text-xs font-mono uppercase tracking-widest text-neutral-200">
-							{activeLabel || title || 'LIVE RETRO ENGINE'}
+							{activeLabel || title || 'LIVE SIMULATION ENGINE'}
 						</span>
 					</div>
 
