@@ -297,15 +297,41 @@ const world = WORLDS[project.id];
 																referrerpolicy="strict-origin-when-cross-origin"
 															/>
 														) : studyYoutubeId ? (
-															<iframe
-																class="h-full w-full"
-																src=""
-																data-lazy-src={`https://www.youtube-nocookie.com/embed/${studyYoutubeId}?rel=0&modestbranding=1&playsinline=1`}
-																title={study.data.title}
-																loading="lazy"
-																allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-																allowfullscreen
-															/>
+															<div
+																class="study-youtube-facade group relative flex h-full w-full cursor-pointer flex-col justify-between overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-950 to-black p-6 transition-colors hover:from-neutral-850"
+																data-youtube-id={studyYoutubeId}
+																data-title={study.data.title}
+															>
+																{study.data.poster ? (
+																	<img
+																		src={study.data.poster}
+																		alt={study.data.title}
+																		class="absolute inset-0 h-full w-full object-cover opacity-75 transition-opacity duration-500 group-hover:opacity-95"
+																	/>
+																) : null}
+																<div className="relative z-10 flex items-center justify-between">
+																	<span class="font-mono text-eyebrow text-blue-400">
+																		CH. {String(i + 1).padStart(2, '0')}
+																	</span>
+																	<span class="font-mono text-[10px] text-neutral-500 uppercase tracking-widest">
+																		ANYRVAAN FILM
+																	</span>
+																</div>
+																<div className="relative z-10 my-auto py-4">
+																	<h4 class="text-h3 font-medium text-neutral-50">{study.data.title}</h4>
+																	{study.data.thread && (
+																		<p class="mt-1 text-small text-neutral-400">{study.data.thread}</p>
+																	)}
+																</div>
+																<div className="relative z-10 flex items-center gap-3 text-small text-neutral-300 transition-colors group-hover:text-blue-400">
+																	<span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/50 backdrop-blur-sm transition-colors group-hover:border-blue-400 group-hover:bg-blue-500/20">
+																		<svg width="12" height="14" viewBox="0 0 16 18" fill="none" aria-hidden="true">
+																			<path d="M1 1.5v15l14-7.5-14-7.5z" fill="currentColor"></path>
+																		</svg>
+																	</span>
+																	<span>Play chapter film</span>
+																</div>
+															</div>
 														) : (
 															<video
 																class="h-full w-full object-cover"
@@ -537,4 +563,26 @@ const world = WORLDS[project.id];
 	}
 	document.addEventListener('astro:page-load', initToolChain);
 	initToolChain();
+
+	function initYoutubeFacades() {
+		document.querySelectorAll<HTMLElement>('.study-youtube-facade:not([data-facade-init])').forEach((facade) => {
+			facade.dataset.facadeInit = 'true';
+			facade.addEventListener('click', () => {
+				const youtubeId = facade.getAttribute('data-youtube-id');
+				const title = facade.getAttribute('data-title') || '';
+				if (!youtubeId) return;
+
+				const iframe = document.createElement('iframe');
+				iframe.className = 'h-full w-full';
+				iframe.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&autoplay=1`;
+				iframe.title = title;
+				iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+				iframe.allowFullscreen = true;
+
+				facade.replaceWith(iframe);
+			});
+		});
+	}
+	document.addEventListener('astro:page-load', initYoutubeFacades);
+	initYoutubeFacades();
 </script>
