@@ -16,18 +16,38 @@ interface ConceptHeroProps {
 
 export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const [selectedEraIndex, setSelectedEraIndex] = useState<number>(0);
 	const [activeLabel, setActiveLabel] = useState<string>('');
 	const [timecode, setTimecode] = useState<string>('00:00:00:00');
-	const [isCinematic, setIsCinematic] = useState<boolean>(false); // 2.39:1 Anamorphic mode toggle
-	const [isTheater, setIsTheater] = useState<boolean>(false); // Dim page background toggle
-	const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
+	const [isCinematic, setIsCinematic] = useState<boolean>(false);
+	const [isTheater, setIsTheater] = useState<boolean>(false);
 	const [isPaused, setIsPaused] = useState<boolean>(false);
+	const [degaussFlash, setDegaussFlash] = useState<number>(0);
+	const [enableLoupe, setEnableLoupe] = useState<boolean>(true);
+
+	// Interactive Minesweeper state inside Win95 canvas
+	const [minesGrid, setMinesGrid] = useState<Array<{ clicked: boolean; mine: boolean; count: number }>>(() =>
+		Array.from({ length: 9 }, (_, i) => ({
+			clicked: false,
+			mine: i === 4 || i === 7,
+			count: i === 4 || i === 7 ? 9 : (i % 2 === 0 ? 1 : 2),
+		}))
+	);
 
 	const timeOffsetRef = useRef<number>(0);
 	const isDraggingRef = useRef<boolean>(false);
 	const lastXRef = useRef<number>(0);
+	const selectedEraRef = useRef<number>(selectedEraIndex);
+	selectedEraRef.current = selectedEraIndex;
 
-	// Theater mode effect: toggles dark backdrop on body
+	const eras = [
+		{ name: '1982 — COMMODORE 64', label: 'C64 BASIC' },
+		{ name: '1984 — MACINTOSH 128K', label: 'MAC OS 1' },
+		{ name: '1995 — WINDOWS 95', label: 'WIN 95' },
+		{ name: '1999 — WINAMP 2.0', label: 'WINAMP' },
+		{ name: '2007 — FIRST iPHONE', label: 'iPHONE' },
+	];
+
 	useEffect(() => {
 		if (isTheater) {
 			document.documentElement.classList.add('theater-mode');
@@ -38,6 +58,11 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			document.documentElement.classList.remove('theater-mode');
 		};
 	}, [isTheater]);
+
+	const triggerDegauss = () => {
+		setDegaussFlash(1);
+		setTimeout(() => setDegaussFlash(0), 400);
+	};
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -64,8 +89,35 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 
 		let mouseX = w / 2;
 		let mouseY = h / 2;
+		let isMouseOver = false;
 
 		const onPointerDown = (e: PointerEvent) => {
+			const rect = canvas.getBoundingClientRect();
+			const px = e.clientX - rect.left;
+			const py = e.clientY - rect.top;
+
+			// Check interactive Minesweeper clicks when Win95 era is active
+			if (preset === 'retro' && (selectedEraRef.current === 2 || selectedEraRef.current === 0)) {
+				const mX = w * 0.32;
+				const mY = h * 0.22;
+				const gridX = mX + 24;
+				const gridY = mY + 60;
+				const cellSize = 28;
+
+				if (px >= gridX && px <= gridX + cellSize * 3 && py >= gridY && py <= gridY + cellSize * 3) {
+					const col = Math.floor((px - gridX) / cellSize);
+					const row = Math.floor((py - gridY) / cellSize);
+					const idx = row * 3 + col;
+					if (idx >= 0 && idx < 9) {
+						setMinesGrid((prev) =>
+							prev.map((cell, i) => (i === idx ? { ...cell, clicked: true } : cell))
+						);
+						triggerDegauss();
+						return;
+					}
+				}
+			}
+
 			isDraggingRef.current = true;
 			lastXRef.current = e.clientX;
 		};
@@ -74,12 +126,18 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const rect = canvas.getBoundingClientRect();
 			mouseX = e.clientX - rect.left;
 			mouseY = e.clientY - rect.top;
+			isMouseOver = true;
 
 			if (isDraggingRef.current) {
 				const dx = e.clientX - lastXRef.current;
-				timeOffsetRef.current += dx * 30; // Interactive timeline scrubbing
+				timeOffsetRef.current += dx * 40;
 				lastXRef.current = e.clientX;
 			}
+		};
+
+		const onPointerLeave = () => {
+			isMouseOver = false;
+			isDraggingRef.current = false;
 		};
 
 		const onPointerUp = () => {
@@ -87,6 +145,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		};
 
 		canvas.addEventListener('pointerdown', onPointerDown);
+		canvas.addEventListener('pointerleave', onPointerLeave);
 		window.addEventListener('pointermove', onPointerMove);
 		window.addEventListener('pointerup', onPointerUp);
 
@@ -95,271 +154,245 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		let accumulatedTime = 0;
 
 		// -------------------------------------------------------------------------
-		// PRESET 1: RETRO COMPUTING — Looping morph across C64, Mac, Win95, Winamp
+		// PRESET 1: RETRO COMPUTING — Interactive morph across 5 eras
 		// -------------------------------------------------------------------------
 		const drawRetro = (t: number) => {
-			ctx.fillStyle = '#05070a';
+			ctx.fillStyle = '#06080e';
 			ctx.fillRect(0, 0, w, h);
 
-			const phase = Math.abs((t * 0.00035) % 4); // 4 eras
-			const eraIndex = Math.floor(phase);
+			const currentEra = selectedEraRef.current;
+			setActiveLabel(eras[currentEra]?.name || eras[0].name);
 
-			const eras = ['1982 — COMMODORE 64', '1984 — MACINTOSH 128K', '1995 — WINDOWS 95', '1999 — WINAMP 2.0'];
-			setActiveLabel(eras[eraIndex] || eras[0]);
-
-			// Ambient CRT scanlines
-			ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
-			for (let y = 0; y < h; y += 4) {
+			// Dynamic CRT scanline sweep
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+			const scanOffset = (t * 0.04) % 4;
+			for (let y = scanOffset; y < h; y += 4) {
 				ctx.fillRect(0, y, w, 1);
 			}
 
-			if (eraIndex === 0) {
-				// C64 BASIC cold boot
-				ctx.fillStyle = '#3c3cb8';
-				ctx.fillRect(w * 0.15, h * 0.15, w * 0.7, h * 0.7);
+			if (currentEra === 0) {
+				// C64 BASIC (1982)
+				ctx.fillStyle = '#3a3ab0';
+				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
 				ctx.fillStyle = '#a0a0ff';
-				ctx.fillRect(w * 0.18, h * 0.18, w * 0.64, h * 0.64);
+				ctx.fillRect(w * 0.15, h * 0.15, w * 0.7, h * 0.7);
 
-				ctx.fillStyle = '#3c3cb8';
-				ctx.font = 'bold 13px monospace';
-				ctx.fillText('*** COMMODORE 64 BASIC V2 ***', w * 0.22, h * 0.32);
-				ctx.fillText('64K RAM SYSTEM  38911 BASIC BYTES FREE', w * 0.22, h * 0.38);
-				ctx.fillText('READY.', w * 0.22, h * 0.46);
+				ctx.fillStyle = '#3a3ab0';
+				ctx.font = 'bold 14px monospace';
+				ctx.fillText('**** COMMODORE 64 BASIC V2 ****', w * 0.19, h * 0.28);
+				ctx.fillText('64K RAM SYSTEM  38911 BASIC BYTES FREE', w * 0.19, h * 0.35);
+				ctx.fillText('READY.', w * 0.19, h * 0.44);
+
+				// Interactive typing command
+				const chars = "LOAD '*',8,1";
+				const count = Math.min(chars.length, Math.floor((t * 0.005) % 18));
+				ctx.fillText(chars.slice(0, count), w * 0.19, h * 0.52);
 
 				if (Math.sin(t * 0.008) > 0) {
-					ctx.fillRect(w * 0.22 + 60, h * 0.43, 10, 14);
+					ctx.fillRect(w * 0.19 + count * 8.5, h * 0.48, 10, 14);
 				}
-			} else if (eraIndex === 1) {
+			} else if (currentEra === 1) {
 				// Macintosh System 1 (1984)
-				ctx.fillStyle = '#d8dce2';
-				ctx.fillRect(w * 0.15, h * 0.15, w * 0.7, h * 0.7);
+				ctx.fillStyle = '#d4d8de';
+				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
 				ctx.strokeStyle = '#101418';
 				ctx.lineWidth = 2;
-				ctx.strokeRect(w * 0.15, h * 0.15, w * 0.7, h * 0.7);
+				ctx.strokeRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
 
-				// Menu bar
+				// Top Menu bar
 				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(w * 0.15, h * 0.15, w * 0.7, 24);
-				ctx.strokeRect(w * 0.15, h * 0.15, w * 0.7, 24);
+				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, 26);
+				ctx.strokeRect(w * 0.12, h * 0.12, w * 0.76, 26);
 				ctx.fillStyle = '#000000';
-				ctx.font = '12px sans-serif';
-				ctx.fillText('  File  Edit  View  Special', w * 0.18, h * 0.15 + 16);
+				ctx.font = 'bold 12px sans-serif';
+				ctx.fillText('  File  Edit  View  Special', w * 0.15, h * 0.12 + 18);
 
-				// Mac Window
-				const winW = w * 0.45;
-				const winH = h * 0.4;
-				const wx = w * 0.25;
-				const wy = h * 0.32;
+				// Macintosh Window
+				const winW = w * 0.48;
+				const winH = h * 0.42;
+				const wx = w * 0.22 + Math.sin(t * 0.001) * 10;
+				const wy = h * 0.28;
 				ctx.fillStyle = '#ffffff';
 				ctx.fillRect(wx, wy, winW, winH);
 				ctx.strokeRect(wx, wy, winW, winH);
 				ctx.fillStyle = '#000000';
-				ctx.fillRect(wx, wy, winW, 18);
+				ctx.fillRect(wx, wy, winW, 20);
 				ctx.fillStyle = '#ffffff';
-				ctx.fillText('System Folder', wx + 24, wy + 14);
-			} else if (eraIndex === 2) {
-				// Windows 95
-				ctx.fillStyle = '#008080'; // Teal desktop
-				ctx.fillRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76);
+				ctx.fillText('System Folder (1-bit)', wx + 20, wy + 14);
+
+				// Folder icons inside Mac Window
+				for (let fi = 0; fi < 3; fi++) {
+					ctx.fillStyle = '#000000';
+					ctx.fillRect(wx + 30 + fi * 60, wy + 38, 32, 24);
+					ctx.fillStyle = '#ffffff';
+					ctx.fillRect(wx + 32 + fi * 60, wy + 40, 28, 20);
+				}
+			} else if (currentEra === 2) {
+				// Windows 95 (1995) + Interactive Minesweeper
+				ctx.fillStyle = '#008080';
+				ctx.fillRect(w * 0.1, h * 0.1, w * 0.8, h * 0.8);
 
 				// Taskbar
-				const tbY = h * 0.88 - 28;
+				const tbY = h * 0.9 - 28;
 				ctx.fillStyle = '#c0c0c0';
-				ctx.fillRect(w * 0.12, tbY, w * 0.76, 28);
+				ctx.fillRect(w * 0.1, tbY, w * 0.8, 28);
 				ctx.strokeStyle = '#ffffff';
-				ctx.strokeRect(w * 0.12, tbY, w * 0.76, 28);
+				ctx.strokeRect(w * 0.1, tbY, w * 0.8, 28);
 
 				// Start button
 				ctx.fillStyle = '#c0c0c0';
-				ctx.fillRect(w * 0.13, tbY + 3, 70, 22);
+				ctx.fillRect(w * 0.11, tbY + 3, 75, 22);
 				ctx.fillStyle = '#000000';
 				ctx.font = 'bold 11px sans-serif';
-				ctx.fillText('Start', w * 0.13 + 24, tbY + 18);
+				ctx.fillText('Start', w * 0.11 + 24, tbY + 18);
 
 				// Minesweeper window
 				const mX = w * 0.32;
 				const mY = h * 0.22;
+				const mW = w * 0.36;
+				const mH = h * 0.52;
 				ctx.fillStyle = '#c0c0c0';
-				ctx.fillRect(mX, mY, w * 0.36, h * 0.48);
+				ctx.fillRect(mX, mY, mW, mH);
 				ctx.strokeStyle = '#808080';
-				ctx.strokeRect(mX, mY, w * 0.36, h * 0.48);
+				ctx.strokeRect(mX, mY, mW, mH);
 
 				// Title bar
 				ctx.fillStyle = '#000080';
-				ctx.fillRect(mX + 3, mY + 3, w * 0.36 - 6, 20);
+				ctx.fillRect(mX + 3, mY + 3, mW - 6, 22);
 				ctx.fillStyle = '#ffffff';
-				ctx.fillText('Minesweeper', mX + 10, mY + 17);
-			} else {
-				// Winamp 2.0
-				ctx.fillStyle = '#141720';
-				ctx.fillRect(w * 0.2, h * 0.2, w * 0.6, h * 0.6);
-				ctx.strokeStyle = '#3a4252';
-				ctx.strokeRect(w * 0.2, h * 0.2, w * 0.6, h * 0.6);
+				ctx.fillText('Minesweeper — Click Cells!', mX + 10, mY + 18);
 
-				// Equalizer bars
-				const bars = 18;
-				const barW = (w * 0.5) / bars;
-				for (let i = 0; i < bars; i++) {
-					const bh = (Math.sin(t * 0.005 + i * 0.4) * 0.4 + 0.5) * (h * 0.35);
-					ctx.fillStyle = 'rgb(96, 165, 250)';
-					ctx.fillRect(w * 0.24 + i * (barW + 2), h * 0.65 - bh, barW - 2, bh);
-				}
+				// Minesweeper grid (3x3 interactive)
+				const gridX = mX + 24;
+				const gridY = mY + 60;
+				const cellSize = 28;
+				minesGrid.forEach((cell, idx) => {
+					const r = Math.floor(idx / 3);
+					const c = idx % 3;
+					const cx = gridX + c * cellSize;
+					const cy = gridY + r * cellSize;
 
+					ctx.fillStyle = cell.clicked ? '#e0e0e0' : '#c0c0c0';
+					ctx.fillRect(cx, cy, cellSize - 2, cellSize - 2);
+					ctx.strokeStyle = cell.clicked ? '#808080' : '#ffffff';
+					ctx.strokeRect(cx, cy, cellSize - 2, cellSize - 2);
+
+					if (cell.clicked) {
+						ctx.fillStyle = cell.mine ? '#ef4444' : '#0000ff';
+						ctx.font = 'bold 14px monospace';
+						ctx.fillText(cell.mine ? '💣' : String(cell.count), cx + 7, cy + 19);
+					}
+				});
+			} else if (currentEra === 3) {
+				// Winamp 2.0 (1999)
+				ctx.fillStyle = '#12151e';
+				ctx.fillRect(w * 0.18, h * 0.18, w * 0.64, h * 0.64);
+				ctx.strokeStyle = '#353e50';
+				ctx.strokeRect(w * 0.18, h * 0.18, w * 0.64, h * 0.64);
+
+				// Glowing LED Display
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(w * 0.22, h * 0.24, w * 0.56, 32);
 				ctx.fillStyle = '#00ff66';
-				ctx.font = '12px monospace';
-				ctx.fillText('WINAMP - 01. ANYRVAAN AUDIO SYSTEM', w * 0.24, h * 0.28);
+				ctx.font = 'bold 12px monospace';
+				ctx.fillText('WINAMP - 01. ANYRVAAN AUDIO SYSTEM (1999)', w * 0.24, h * 0.24 + 20);
+
+				// Spectrum visualizer bars
+				const bars = 20;
+				const barW = (w * 0.52) / bars;
+				for (let i = 0; i < bars; i++) {
+					const bh = (Math.sin(t * 0.006 + i * 0.35) * 0.45 + 0.55) * (h * 0.32);
+					const colorGrad = ctx.createLinearGradient(0, h * 0.7, 0, h * 0.38);
+					colorGrad.addColorStop(0, '#3b82f6');
+					colorGrad.addColorStop(0.5, '#60a5fa');
+					colorGrad.addColorStop(1, '#00ff66');
+					ctx.fillStyle = colorGrad;
+					ctx.fillRect(w * 0.22 + i * (barW + 2), h * 0.7 - bh, barW - 2, bh);
+				}
+			} else {
+				// iPhone 1st Gen (2007)
+				const phoneW = w * 0.34;
+				const phoneH = h * 0.75;
+				const px = (w - phoneW) / 2;
+				const py = (h - phoneH) / 2;
+
+				ctx.fillStyle = '#1c1c1e';
+				ctx.fillRect(px, py, phoneW, phoneH);
+				ctx.strokeStyle = '#48484a';
+				ctx.strokeRect(px, py, phoneW, phoneH);
+
+				// Screen Glossy App Grid
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(px + 10, py + 24, phoneW - 20, phoneH - 48);
+
+				const icons = ['📱', '✉️', '📷', '🎵', '🌐', '⚙️', '📅', '💡'];
+				icons.forEach((ic, i) => {
+					const r = Math.floor(i / 4);
+					const c = i % 4;
+					const ix = px + 24 + c * (phoneW * 0.2);
+					const iy = py + 50 + r * 50;
+
+					ctx.fillStyle = 'rgba(255,255,255,0.1)';
+					ctx.fillRect(ix, iy, 32, 32);
+					ctx.font = '16px sans-serif';
+					ctx.fillText(ic, ix + 7, iy + 22);
+				});
+
+				// Slide to Unlock
+				const slideX = px + 20 + (Math.sin(t * 0.003) * 0.5 + 0.5) * (phoneW - 100);
+				ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+				ctx.fillRect(px + 20, py + phoneH - 55, phoneW - 40, 24);
+				ctx.fillStyle = '#ffffff';
+				ctx.font = '11px sans-serif';
+				ctx.fillText('slide to unlock >', slideX, py + phoneH - 39);
 			}
-		};
 
-		// -------------------------------------------------------------------------
-		// PRESET 2: UI REPLICAS — Hand-built UI with simulated mouse motion
-		// -------------------------------------------------------------------------
-		const drawUIReplicas = (t: number) => {
-			ctx.fillStyle = '#0a0d14';
-			ctx.fillRect(0, 0, w, h);
-			setActiveLabel('PIXEL-PERFECT UI REPLICATION');
-
-			const appX = w * 0.1;
-			const appY = h * 0.1;
-			const appW = w * 0.8;
-			const appH = h * 0.8;
-
-			ctx.fillStyle = '#121622';
-			ctx.fillRect(appX, appY, appW, appH);
-			ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-			ctx.strokeRect(appX, appY, appW, appH);
-
-			// Sidebar
-			ctx.fillStyle = '#0b0e17';
-			ctx.fillRect(appX, appY, appW * 0.26, appH);
-
-			ctx.fillStyle = 'rgba(255,255,255,0.7)';
-			ctx.font = 'bold 12px sans-serif';
-			ctx.fillText('Anyrvaan Studio', appX + 16, appY + 28);
-
-			const channels = ['# general', '# motion-design', '# code-experiments', '# showcase'];
-			channels.forEach((ch, idx) => {
-				ctx.fillStyle = idx === 1 ? 'rgba(96, 165, 250, 0.2)' : 'transparent';
-				ctx.fillRect(appX + 8, appY + 54 + idx * 28, appW * 0.23, 22);
-				ctx.fillStyle = idx === 1 ? '#60a5fa' : 'rgba(255,255,255,0.5)';
-				ctx.font = '12px sans-serif';
-				ctx.fillText(ch, appX + 16, appY + 70 + idx * 28);
-			});
-
-			const mainX = appX + appW * 0.26 + 20;
-			ctx.fillStyle = '#ffffff';
-			ctx.font = '13px sans-serif';
-			ctx.fillText('rebuilt-component.tsx', mainX, appY + 28);
-
-			const codeLines = [
-				'const button = createHandCraftedUI();',
-				'button.onHover(() => ripple({ color: "#60a5fa" }));',
-				'// Every pixel placed by hand',
-				'return <AppInterface precision="pixel" />;',
-			];
-
-			codeLines.forEach((line, idx) => {
-				ctx.fillStyle = line.startsWith('//') ? 'rgba(255,255,255,0.35)' : 'rgba(245,248,255,0.85)';
-				ctx.font = '12px monospace';
-				ctx.fillText(line, mainX, appY + 70 + idx * 26);
-			});
-
-			// Simulated Mouse Cursor movement
-			const mx = mainX + Math.sin(t * 0.002) * 110 + 90;
-			const my = appY + 110 + Math.cos(t * 0.003) * 35;
-
-			ctx.fillStyle = '#ffffff';
-			ctx.beginPath();
-			ctx.moveTo(mx, my);
-			ctx.lineTo(mx + 11, my + 13);
-			ctx.lineTo(mx + 5, my + 13);
-			ctx.lineTo(mx, my + 18);
-			ctx.closePath();
-			ctx.fill();
-			ctx.strokeStyle = '#000000';
-			ctx.stroke();
-		};
-
-		// -------------------------------------------------------------------------
-		// PRESET 3: DASHBOARD CINEMA — Live status incident recovery
-		// -------------------------------------------------------------------------
-		const drawDashboard = (t: number) => {
-			ctx.fillStyle = '#05070a';
-			ctx.fillRect(0, 0, w, h);
-
-			const p = Math.abs((t * 0.0004) % 1);
-			const isIncident = p > 0.3 && p < 0.7;
-			setActiveLabel(isIncident ? 'STATUS: INCIDENT RECOVERY' : 'STATUS: ALL SYSTEMS OPTIMAL');
-
-			ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-			for (let x = 0; x < w; x += 40) {
+			// Pixel Magnifier Loupe on Mouse Hover
+			if (enableLoupe && isMouseOver) {
+				const loupeRadius = 45;
+				ctx.save();
 				ctx.beginPath();
-				ctx.moveTo(x, 0);
-				ctx.lineTo(x, h);
+				ctx.arc(mouseX, mouseY, loupeRadius, 0, Math.PI * 2);
+				ctx.clip();
+
+				// Zoomed 2.5x rendering
+				ctx.fillStyle = '#000000';
+				ctx.fillRect(mouseX - loupeRadius, mouseY - loupeRadius, loupeRadius * 2, loupeRadius * 2);
+				ctx.drawImage(
+					canvas,
+					(mouseX - 20) * dpr,
+					(mouseY - 20) * dpr,
+					40 * dpr,
+					40 * dpr,
+					mouseX - loupeRadius,
+					mouseY - loupeRadius,
+					loupeRadius * 2,
+					loupeRadius * 2
+				);
+
+				// Pixel Grid lines over Loupe
+				ctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
+				ctx.lineWidth = 1;
 				ctx.stroke();
+
+				ctx.restore();
+
+				// Loupe border ring
+				ctx.strokeStyle = '#60a5fa';
+				ctx.lineWidth = 2;
+				ctx.beginPath();
+				ctx.arc(mouseX, mouseY, loupeRadius, 0, Math.PI * 2);
+				ctx.stroke();
+
+				ctx.fillStyle = '#60a5fa';
+				ctx.font = 'bold 9px monospace';
+				ctx.fillText('2.5x LOUPE', mouseX - 22, mouseY + loupeRadius + 14);
 			}
 
-			const cx = w * 0.15;
-			const cy = h * 0.2;
-			const cw = w * 0.7;
-			const ch = h * 0.6;
-
-			ctx.fillStyle = '#0b0e16';
-			ctx.fillRect(cx, cy, cw, ch);
-			ctx.strokeStyle = isIncident ? 'rgba(239, 68, 68, 0.4)' : 'rgba(96, 165, 250, 0.2)';
-			ctx.strokeRect(cx, cy, cw, ch);
-
-			ctx.fillStyle = isIncident ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)';
-			ctx.fillRect(cx, cy, cw, 34);
-			ctx.fillStyle = isIncident ? '#ef4444' : '#22c55e';
-			ctx.font = 'bold 12px sans-serif';
-			ctx.fillText(isIncident ? '● ALERT: SYSTEM LATENCY SPIKE' : '● ALL SYSTEMS HEALTHY', cx + 16, cy + 22);
-
-			ctx.beginPath();
-			ctx.lineWidth = 2.5;
-			ctx.strokeStyle = isIncident ? '#ef4444' : '#60a5fa';
-			const points = 30;
-			const step = cw / points;
-
-			for (let i = 0; i <= points; i++) {
-				const px = cx + i * step;
-				let py = cy + ch * 0.6;
-				if (isIncident && i > 12 && i < 22) {
-					py -= Math.sin((i - 12) * 0.3) * (ch * 0.4);
-				}
-				if (i === 0) ctx.moveTo(px, py);
-				else ctx.lineTo(px, py);
-			}
-			ctx.stroke();
-		};
-
-		// -------------------------------------------------------------------------
-		// PRESET 4 & DEFAULT: EFFECTS INDEX / SPIRITUAL / ANTI-UI
-		// -------------------------------------------------------------------------
-		const drawEffects = (t: number) => {
-			ctx.fillStyle = '#06080e';
-			ctx.fillRect(0, 0, w, h);
-			setActiveLabel('MICRO-ANIMATION MATRIX');
-
-			const cols = 8;
-			const rows = 4;
-			const cellW = w / cols;
-			const cellH = h / rows;
-
-			for (let r = 0; r < rows; r++) {
-				for (let c = 0; c < cols; c++) {
-					const x = c * cellW + cellW / 2;
-					const y = r * cellH + cellH / 2;
-
-					const dist = Math.hypot(mouseX - x, mouseY - y);
-					const wave = Math.sin(t * 0.003 - (c + r) * 0.4);
-					const size = Math.max(2, 6 + wave * 4 + (dist < 100 ? (100 - dist) * 0.1 : 0));
-
-					ctx.fillStyle = dist < 100 ? '#60a5fa' : 'rgba(255, 255, 255, 0.25)';
-					ctx.beginPath();
-					ctx.arc(x, y, size, 0, Math.PI * 2);
-					ctx.fill();
-				}
+			// Degauss glitch flash effect
+			if (degaussFlash > 0) {
+				ctx.fillStyle = 'rgba(96, 165, 250, 0.3)';
+				ctx.fillRect(0, 0, w, h);
 			}
 		};
 
@@ -368,42 +401,20 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			lastFrameTime = now;
 
 			if (!isPaused && !reduceMotion) {
-				accumulatedTime += delta * speedMultiplier;
+				accumulatedTime += delta;
 			}
 			const totalTime = accumulatedTime + timeOffsetRef.current;
 
 			// Update live film timecode string (HH:MM:SS:FF)
 			const secTotal = Math.floor(totalTime / 1000);
-			const frames = Math.floor((totalTime % 1000) / (1000 / 24));
+			const framesCount = Math.floor((totalTime % 1000) / (1000 / 24));
 			const ss = String(secTotal % 60).padStart(2, '0');
 			const mm = String(Math.floor(secTotal / 60) % 60).padStart(2, '0');
 			const hh = String(Math.floor(secTotal / 3600)).padStart(2, '0');
-			const ff = String(frames).padStart(2, '0');
+			const ff = String(framesCount).padStart(2, '0');
 			setTimecode(`${hh}:${mm}:${ss}:${ff}`);
 
-			switch (preset) {
-				case 'retro':
-					drawRetro(totalTime);
-					break;
-				case 'ui-replicas':
-					drawUIReplicas(totalTime);
-					break;
-				case 'dashboard':
-					drawDashboard(totalTime);
-					break;
-				case 'effects':
-				case 'spiritual':
-				case 'anti-ui':
-				default:
-					drawEffects(totalTime);
-					break;
-			}
-
-			// Render subtle film grain sheen
-			ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
-			for (let i = 0; i < 20; i++) {
-				ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
-			}
+			drawRetro(totalTime);
 
 			if (!reduceMotion) {
 				animId = requestAnimationFrame(render);
@@ -416,57 +427,87 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			cancelAnimationFrame(animId);
 			window.removeEventListener('resize', resize);
 			canvas.removeEventListener('pointerdown', onPointerDown);
+			canvas.removeEventListener('pointerleave', onPointerLeave);
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('pointerup', onPointerUp);
 		};
-	}, [preset, isPaused, speedMultiplier]);
+	}, [preset, isPaused, enableLoupe, degaussFlash, minesGrid]);
 
 	return (
 		<div className="mx-auto max-w-4xl px-6 pb-12">
+			{/* Interactive Era Selector Dial / Tabs */}
+			<div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+				<div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+					{eras.map((era, idx) => (
+						<button
+							key={era.name}
+							type="button"
+							onClick={() => {
+								setSelectedEraIndex(idx);
+								triggerDegauss();
+							}}
+							className={`rounded-full px-3 py-1 text-xs font-mono transition-all duration-300 ${
+								selectedEraIndex === idx
+									? 'border border-blue-400 bg-blue-500/20 text-blue-300 shadow-[0_0_15px_rgba(96,165,250,0.3)]'
+									: 'border border-white/10 bg-black/40 text-neutral-400 hover:border-white/30 hover:text-white'
+							}`}
+						>
+							{era.label}
+						</button>
+					))}
+				</div>
+				<button
+					type="button"
+					onClick={triggerDegauss}
+					className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-mono text-amber-300 hover:bg-amber-500/20 transition-colors"
+				>
+					⚡ Degauss Glitch
+				</button>
+			</div>
+
 			<div className="glow-frame reveal rounded-2xl">
 				<div
 					className={`glow-frame__inner relative overflow-hidden border border-white/10 bg-neutral-950 transition-all duration-500 ${
 						isCinematic ? 'aspect-[2.39/1]' : 'aspect-video'
 					}`}
 				>
-					<canvas ref={canvasRef} className="h-full w-full block cursor-ew-resize" />
+					<canvas ref={canvasRef} className="h-full w-full block cursor-crosshair" />
 
 					{/* Overlay Info Badge */}
 					<div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-3 rounded-full border border-white/15 bg-black/70 px-4 py-1.5 backdrop-blur-md">
 						<span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
 						<span className="text-xs font-mono uppercase tracking-widest text-neutral-200">
-							{activeLabel || title || 'LIVE CONCEPT HERO'}
+							{activeLabel || title || 'LIVE RETRO ENGINE'}
 						</span>
 					</div>
 
-					{/* Film Viewfinder HUD / Timecode */}
+					{/* Viewfinder Timecode */}
 					<div className="pointer-events-none absolute top-4 right-4 flex items-center gap-4 text-xs font-mono text-neutral-400">
-						<span className="hidden sm:inline opacity-70">24 FPS • 4K</span>
+						<span className="hidden sm:inline opacity-70">24 FPS • CRT SCAN</span>
 						<span className="text-blue-400 tabular-nums font-bold tracking-widest">{timecode}</span>
 					</div>
 
-					{/* Drag-to-scrub hint */}
-					<div className="pointer-events-none absolute top-4 left-4 text-[10px] font-mono text-neutral-500 uppercase tracking-widest opacity-80">
-						Drag to scrub timeline
-					</div>
+					{/* Interactive Loupe Toggle Badge */}
+					<button
+						type="button"
+						onClick={() => setEnableLoupe(!enableLoupe)}
+						className={`absolute top-4 left-4 rounded-full border px-3 py-1 text-[11px] font-mono transition-colors backdrop-blur-md ${
+							enableLoupe
+								? 'border-blue-400/40 bg-blue-500/20 text-blue-300'
+								: 'border-white/10 bg-black/50 text-neutral-400 hover:text-white'
+						}`}
+					>
+						🔍 Pixel Loupe {enableLoupe ? 'ON' : 'OFF'}
+					</button>
 
-					{/* Interactive Cinema Control Toolbar */}
+					{/* Interactive Controls Toolbar */}
 					<div className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-white/15 bg-black/70 p-1.5 backdrop-blur-md">
 						<button
 							type="button"
 							onClick={() => setIsPaused(!isPaused)}
 							className="rounded-full px-2.5 py-1 text-[11px] font-mono text-neutral-300 hover:bg-white/10 hover:text-white transition-colors"
-							aria-label="Toggle pause"
 						>
 							{isPaused ? '▶ Play' : '⏸ Pause'}
-						</button>
-						<button
-							type="button"
-							onClick={() => setSpeedMultiplier(speedMultiplier === 1 ? 2 : 1)}
-							className="rounded-full px-2.5 py-1 text-[11px] font-mono text-neutral-300 hover:bg-white/10 hover:text-white transition-colors"
-							aria-label="Toggle speed"
-						>
-							{speedMultiplier}x
 						</button>
 						<button
 							type="button"
@@ -474,7 +515,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 							className={`rounded-full px-2.5 py-1 text-[11px] font-mono transition-colors ${
 								isCinematic ? 'bg-blue-500/30 text-blue-300' : 'text-neutral-300 hover:bg-white/10 hover:text-white'
 							}`}
-							aria-label="Toggle 2.39:1 Cinema mode"
 						>
 							{isCinematic ? '2.39:1 Cinema' : '16:9'}
 						</button>
@@ -484,7 +524,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 							className={`rounded-full px-2.5 py-1 text-[11px] font-mono transition-colors ${
 								isTheater ? 'bg-amber-500/30 text-amber-300' : 'text-neutral-300 hover:bg-white/10 hover:text-white'
 							}`}
-							aria-label="Toggle Theater mode"
 						>
 							{isTheater ? 'Theater ON' : 'Theater'}
 						</button>
