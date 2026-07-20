@@ -6,6 +6,8 @@ import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import WorldBackground, { type World } from '../../components/WorldBackground.tsx';
 
+import ConceptHero, { type ConceptPreset } from '../../components/ConceptHero.tsx';
+
 export async function getStaticPaths() {
 	const projects = await getCollection('work', ({ data }) => !data.draft);
 	return projects.map((project) => ({
@@ -16,6 +18,16 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const { Content } = await render(project);
+
+const PRESETS: Record<string, ConceptPreset> = {
+	'retro-computing': 'retro',
+	'ui-replicas': 'ui-replicas',
+	'dashboard-cinema': 'dashboard',
+	'effects-index': 'effects',
+	'spiritual-series': 'spiritual',
+	'anti-ui-atlas': 'anti-ui',
+};
+const conceptPreset = PRESETS[project.id];
 
 const rawStudies = await getCollection(
 	'studies',
@@ -143,32 +155,36 @@ const world = WORLDS[project.id];
 			}
 
 			{
-				project.data.video && (
-					<div class="mx-auto max-w-4xl px-6 pb-16">
-						<div class="hero-video glow-frame reveal rounded-2xl">
-							<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
-								{youtubeId ? (
-									<iframe
-										class="h-full w-full"
-										src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
-										data-autoplay-src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&autoplay=1&mute=1`}
-										title={project.data.title}
-										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-										allowfullscreen
-									/>
-								) : (
-									<video
-										class="h-full w-full"
-										src={project.data.video}
-										poster={project.data.poster}
-										controls
-										playsinline
-										preload="metadata"
-									/>
-								)}
+				conceptPreset ? (
+					<ConceptHero client:visible preset={conceptPreset} title={project.data.title} />
+				) : (
+					project.data.video && (
+						<div class="mx-auto max-w-4xl px-6 pb-16">
+							<div class="hero-video glow-frame reveal rounded-2xl">
+								<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
+									{youtubeId ? (
+										<iframe
+											class="h-full w-full"
+											src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+											data-autoplay-src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&autoplay=1&mute=1`}
+											title={project.data.title}
+											allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+											allowfullscreen
+										/>
+									) : (
+										<video
+											class="h-full w-full"
+											src={project.data.video}
+											poster={project.data.poster}
+											controls
+											playsinline
+											preload="metadata"
+										/>
+									)}
+								</div>
 							</div>
 						</div>
-					</div>
+					)
 				)
 			}
 
