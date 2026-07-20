@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 6
 title: "Winamp (1999)"
 thread: "Green LED equalizer"

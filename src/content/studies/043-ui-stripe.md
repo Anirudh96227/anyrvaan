@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 5
 title: "Stripe"
 thread: "Payment events & refund ripple"

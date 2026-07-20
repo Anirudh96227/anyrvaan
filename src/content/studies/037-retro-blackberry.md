@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 8
 title: "BlackBerry (2006)"
 thread: "Trackball & notification LED"

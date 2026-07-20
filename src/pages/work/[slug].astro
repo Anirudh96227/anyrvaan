@@ -265,29 +265,39 @@ const world = WORLDS[project.id];
 									"Each clip plays while it's on screen and rests the moment it isn't. Open one for the full concept behind it."}
 							</p>
 							<div class="mt-16 flex flex-col gap-20 sm:gap-28">
-								{studiesWithContent.map(({ study, Content: StudyContent, youtubeId: studyYoutubeId }, i) => (
-									<article
-										class:list={[
-											'reveal grid items-center gap-8 sm:grid-cols-2 sm:gap-12',
-										]}
-									>
-										<div
+								{studiesWithContent.map(({ study, Content: StudyContent, youtubeId: studyYoutubeId }, i) => {
+									const isLandscape =
+										study.data.aspect === 'landscape' ||
+										study.data.aspect === '16/9' ||
+										project.id === 'retro-computing' ||
+										project.id === 'ui-replicas';
+									const aspectClass = study.data.behanceId
+										? 'aspect-[404/316]'
+										: isLandscape
+											? 'aspect-video'
+											: 'aspect-9/16';
+									const widthClass = isLandscape
+										? 'mx-auto w-full max-w-xl sm:mx-0'
+										: 'mx-auto w-full max-w-xs sm:mx-0';
+									return (
+										<article
 											class:list={[
-												'mx-auto w-full max-w-xs sm:mx-0',
-												i % 2 === 1 && 'sm:order-2',
+												'reveal grid items-center gap-8 sm:gap-12',
+												isLandscape ? 'grid-cols-1 md:grid-cols-2' : 'sm:grid-cols-2',
 											]}
 										>
-											<div class="glow-frame rounded-2xl">
-												<div
-													class:list={[
-														'study-reel glow-frame__inner relative border border-white/10 bg-black',
-														study.data.behanceId ? 'aspect-[404/316]' : 'aspect-9/16',
-														study.data.companion && 'flip-card',
-													]}
-												>
-													<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
-														{String(i + 1).padStart(2, '0')}
-													</span>
+											<div class:list={[widthClass, i % 2 === 1 && 'md:order-2']}>
+												<div class="glow-frame rounded-2xl">
+													<div
+														class:list={[
+															'study-reel glow-frame__inner relative border border-white/10 bg-black',
+															aspectClass,
+															study.data.companion && 'flip-card',
+														]}
+													>
+														<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
+															{String(i + 1).padStart(2, '0')}
+														</span>
 													<div class:list={['h-full', study.data.companion && 'flip-card__face flip-card__face--front']}>
 														{study.data.behanceId ? (
 															<iframe
@@ -348,7 +358,7 @@ const world = WORLDS[project.id];
 												</button>
 											)}
 										</div>
-										<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && 'sm:order-1']}>
+										<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && (isLandscape ? 'md:order-1' : 'sm:order-1')]}>
 											<p class="text-eyebrow uppercase text-neutral-400">
 												{study.data.creator ?? project.data.title}
 											</p>
@@ -380,7 +390,8 @@ const world = WORLDS[project.id];
 											)}
 										</div>
 									</article>
-								))}
+									);
+								})}
 							</div>
 						</div>
 					</section>

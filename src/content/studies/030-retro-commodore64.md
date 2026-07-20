@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 1
 title: "Commodore 64 (1982)"
 thread: "BASIC on a cold boot"

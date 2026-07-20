@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 7
 title: "Notion"
 thread: "Database views & checklist ticks"

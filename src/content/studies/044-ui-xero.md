@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 6
 title: "Xero"
 thread: "Bank reconciliation matching"

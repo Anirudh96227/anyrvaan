@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 3
 title: "MS-DOS (1989)"
 thread: "Command line & blue menus"

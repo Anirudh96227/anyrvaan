@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 10
 title: "Trello"
 thread: "Kanban drag, tilt & shadow"

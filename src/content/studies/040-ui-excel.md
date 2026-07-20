@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 2
 title: "Excel"
 thread: "Live chart & cell selection sum"

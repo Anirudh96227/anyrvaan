@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 4
 title: "Gmail"
 thread: "Compose, thread collapse & toast"

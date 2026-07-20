@@ -109,6 +109,7 @@ const studies = defineCollection({
 			// A study is either a video (local file or YouTube URL) or an embedded
 			// Behance project — exactly one of `video` / `behanceId` is set.
 			video: z.string().optional(),
+			aspect: z.enum(['landscape', 'portrait', '16/9', '9/16']).optional(),
 			behanceId: z.string().optional(),
 			poster: z.string().optional(),
 			// A second, graphite-style AI-generated illustration of the same

@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 9
 title: "VS Code"
 thread: "Dark editor & terminal output"

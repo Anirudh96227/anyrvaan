@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 1
 title: "QuickBooks"
 thread: "Accounting flow & transaction clicks"

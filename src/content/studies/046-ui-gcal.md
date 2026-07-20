@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 8
 title: "Google Calendar"
 thread: "Event creation grid"

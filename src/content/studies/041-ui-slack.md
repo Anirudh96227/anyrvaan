@@ -1,6 +1,7 @@
 ---
 project: "ui-replicas"
 draft: false
+aspect: "landscape"
 number: 3
 title: "Slack"
 thread: "Channel messages & live reactions"

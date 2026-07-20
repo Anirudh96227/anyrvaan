@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 4
 title: "Windows 95 (1995)"
 thread: "Start menu & Minesweeper"

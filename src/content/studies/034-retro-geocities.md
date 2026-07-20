@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 5
 title: "GeoCities Web (1997)"
 thread: "Tiled graphics & counters"

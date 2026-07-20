@@ -1,6 +1,7 @@
 ---
 project: "retro-computing"
 draft: false
+aspect: "landscape"
 number: 2
 title: "First Macintosh (1984)"
 thread: "Black & white interface"
