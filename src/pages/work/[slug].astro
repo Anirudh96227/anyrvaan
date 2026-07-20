@@ -178,37 +178,7 @@ const world = WORLDS[project.id];
 				</div>
 			</article>
 
-			{
-				frames.length > 0 && (
-					<section class="mx-auto max-w-5xl border-t border-white/5 px-6 py-16 sm:py-24">
-						<p class="reveal text-eyebrow uppercase text-neutral-400">Stills</p>
-						<div class="mt-10 flex flex-col gap-12 sm:gap-16">
-							{frames.map((f, i) => (
-								<figure class="reveal">
-									<div class="glow-frame rounded-2xl">
-										<div class="glow-frame__inner relative aspect-video overflow-hidden border border-white/10 bg-black">
-											<span class="pointer-events-none absolute left-3 top-3 z-10 text-eyebrow text-neutral-400/80">
-												{String(i + 1).padStart(2, '0')}
-											</span>
-											<Image
-												src={f.src}
-												alt={f.alt}
-												widths={[640, 1024, 1600]}
-												sizes="(max-width: 1024px) 100vw, 1024px"
-												loading="lazy"
-												class="h-full w-full object-cover"
-											/>
-										</div>
-									</div>
-									{f.caption && (
-										<figcaption class="mt-4 text-small text-neutral-400">{f.caption}</figcaption>
-									)}
-								</figure>
-							))}
-						</div>
-					</section>
-				)
-			}
+
 
 			{
 				gallery.length > 0 && (
