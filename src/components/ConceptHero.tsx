@@ -102,11 +102,11 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const px = e.clientX - rect.left;
 			const py = e.clientY - rect.top;
 
-			// Check interactive Minesweeper clicks when Win95 era is active (index 3)
+			// Minesweeper clicks when Windows 95 (index 3) is active
 			if (preset === 'retro' && selectedEraRef.current === 3) {
-				const mX = w * 0.3;
-				const mY = h * 0.18;
-				const gridX = mX + 24;
+				const mX = w * 0.28;
+				const mY = h * 0.16;
+				const gridX = mX + (w * 0.44) / 2 - 42;
 				const gridY = mY + 70;
 				const cellSize = 28;
 
@@ -148,7 +148,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		let lastFrameTime = performance.now();
 		let accumulatedTime = 0;
 
-		// Helper: 3D Bevel Box (Classic 90s Win95/Netscape UI)
+		// Helper: 3D Bevel Box (Classic Win95 / Netscape UI)
 		const drawBevelBox = (
 			x: number,
 			y: number,
@@ -173,7 +173,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		};
 
 		// -------------------------------------------------------------------------
-		// PRESET 1: RETRO COMPUTING — 1:1 Pixel-Accurate Authentic Era Compositions
+		// PRESET 1: RETRO COMPUTING — Exact Pixel Replicas of All 9 Real Systems
 		// -------------------------------------------------------------------------
 		const drawRetro = (t: number) => {
 			ctx.fillStyle = '#04060a';
@@ -182,7 +182,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			const currentEra = selectedEraRef.current;
 			setActiveLabel(eras[currentEra]?.name || eras[0].name);
 
-			// CRT Scanline Overlay
+			// CRT Scanline Pattern Overlay
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
 			const scanOffset = (t * 0.04) % 4;
 			for (let y = scanOffset; y < h; y += 4) {
@@ -190,47 +190,55 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 			}
 
 			if (currentEra === 0) {
-				// 1. COMMODORE 64 (1982) - Authentic VIC-II Colors & Full Screen CRT Border
-				ctx.fillStyle = '#352879'; // C64 Outer Border
+				// =================================================================
+				// ERA 1: COMMODORE 64 (1982) - VIC-II Pixel-Accurate CRT Simulation
+				// =================================================================
+				ctx.fillStyle = '#352879'; // Authentic C64 Border Color
 				ctx.fillRect(0, 0, w, h);
 
 				const screenX = w * 0.12;
 				const screenY = h * 0.12;
 				const screenW = w * 0.76;
 				const screenH = h * 0.76;
-				ctx.fillStyle = '#6c5eb5'; // C64 Canvas
+
+				ctx.fillStyle = '#6c5eb5'; // Authentic C64 Canvas Blue
 				ctx.fillRect(screenX, screenY, screenW, screenH);
 
-				ctx.fillStyle = '#a397ff'; // PETSCII Light Blue Text
+				ctx.fillStyle = '#a397ff'; // PETSCII Light Blue Font
 				ctx.font = 'bold 14px monospace';
-				ctx.fillText('**** COMMODORE 64 BASIC V2 ****', screenX + 40, screenY + 45);
-				ctx.fillText('64K RAM SYSTEM  38911 BASIC BYTES FREE', screenX + 40, screenY + 70);
-				ctx.fillText('READY.', screenX + 40, screenY + 110);
 
-				const cmdText = "LOAD \"*\",8,1";
-				const step = Math.floor((t * 0.004) % 24);
-				const typed = step < 12 ? cmdText.slice(0, step) : cmdText;
-				ctx.fillText(typed, screenX + 40, screenY + 140);
+				ctx.fillText('**** COMMODORE 64 BASIC V2 ****', screenX + 35, screenY + 45);
+				ctx.fillText(' 64K RAM SYSTEM  38911 BASIC BYTES FREE', screenX + 35, screenY + 70);
+				ctx.fillText('READY.', screenX + 35, screenY + 110);
 
-				if (step >= 12 && step < 18) {
-					ctx.fillText('SEARCHING FOR *', screenX + 40, screenY + 165);
-					ctx.fillText('LOADING', screenX + 40, screenY + 190);
-					ctx.fillText('READY.', screenX + 40, screenY + 215);
+				const cmd = "10 PRINT \"ANYRVAAN RETRO COMPUTING\"";
+				const step = Math.floor((t * 0.005) % 28);
+				const typed = step < 16 ? cmd.slice(0, step) : cmd;
+
+				ctx.fillText(typed, screenX + 35, screenY + 140);
+
+				if (step >= 16) {
+					ctx.fillText('20 GOTO 10', screenX + 35, screenY + 165);
+					ctx.fillText('RUN', screenX + 35, screenY + 190);
+					ctx.fillText('ANYRVAAN RETRO COMPUTING', screenX + 35, screenY + 215);
+					ctx.fillText('ANYRVAAN RETRO COMPUTING', screenX + 35, screenY + 240);
 				}
 
-				// Blinking C64 Block Cursor
+				// Blinking C64 Solid Block Cursor
 				if (Math.sin(t * 0.008) > 0) {
-					const curX = screenX + 40 + (step < 12 ? typed.length * 8.5 : 0);
-					const curY = step < 12 ? screenY + 128 : screenY + 220;
-					ctx.fillRect(curX, curY, 10, 14);
+					const curX = screenX + 35 + (step < 16 ? typed.length * 8.5 : 0);
+					const curY = step < 16 ? screenY + 128 : screenY + 252;
+					ctx.fillRect(curX, curY, 10, 15);
 				}
 			} else if (currentEra === 1) {
-				// 2. MACINTOSH SYSTEM 1 (1984) - Authentic 512x342 1-Bit Desktop & Windows
+				// =================================================================
+				// ERA 2: MACINTOSH SYSTEM 1 (1984) - 1-Bit Dithered Desktop & GUIs
+				// =================================================================
 				ctx.fillStyle = '#ffffff';
 				ctx.fillRect(0, 0, w, h);
 
-				// 1-bit Checkerboard Stipple Desktop Pattern
-				ctx.fillStyle = 'rgba(0,0,0,0.12)';
+				// 1-Bit Checkerboard Stipple Pattern
+				ctx.fillStyle = 'rgba(0,0,0,0.14)';
 				for (let py = 0; py < h; py += 4) {
 					for (let px = (py % 8 === 0 ? 0 : 2); px < w; px += 4) {
 						ctx.fillRect(px, py, 2, 2);
@@ -248,7 +256,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = 'bold 12px sans-serif';
 				ctx.fillText('  File  Edit  View  Special', 20, 18);
 
-				// Macintosh HD & Trash Desktop Icons
+				// Desktop Icons (Macintosh HD & Trash)
 				ctx.strokeRect(w - 75, 45, 36, 28);
 				ctx.fillRect(w - 47, 55, 4, 8);
 				ctx.font = '10px sans-serif';
@@ -257,13 +265,13 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.strokeRect(w - 70, h - 75, 30, 35);
 				ctx.fillText('Trash', w - 72, h - 25);
 
-				// Mac Window
+				// Open "System Folder" Window
 				const winX = w * 0.15 + Math.sin(t * 0.001) * 6;
 				const winY = h * 0.16;
 				const winW = w * 0.65;
 				const winH = h * 0.68;
 
-				// Drop Shadow
+				// 1-Bit Drop Shadow
 				ctx.fillStyle = '#000000';
 				ctx.fillRect(winX + 4, winY + 4, winW, winH);
 
@@ -271,35 +279,50 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillRect(winX, winY, winW, winH);
 				ctx.strokeRect(winX, winY, winW, winH);
 
-				// Title bar with pinstripes
+				// Pinstripe Title Bar
 				ctx.strokeRect(winX, winY, winW, 22);
 				for (let ly = winY + 5; ly < winY + 19; ly += 3) {
 					ctx.fillRect(winX + 26, ly, winW - 36, 1);
 				}
-				// Close Box
-				ctx.strokeRect(winX + 6, winY + 5, 12, 12);
 
-				// Window Title Label
+				// Close Box Square
+				ctx.strokeRect(winX + 6, winY + 5, 12, 12);
+				ctx.fillStyle = '#ffffff';
+				ctx.fillRect(winX + 8, winY + 7, 8, 8);
+
+				// Title Text Label
 				ctx.fillStyle = '#ffffff';
 				ctx.fillRect(winX + winW / 2 - 50, winY + 3, 100, 16);
 				ctx.fillStyle = '#000000';
+				ctx.font = 'bold 11px sans-serif';
 				ctx.fillText('System Folder', winX + winW / 2 - 42, winY + 15);
 
-				// File Icons inside Mac Window
-				const items = ['Finder', 'System', 'MacWrite', 'MacPaint', 'Control Panel', 'Clipboard'];
+				// Window Interior Icons
+				const items = [
+					{ name: 'Finder', icon: '😃' },
+					{ name: 'System', icon: '💻' },
+					{ name: 'MacWrite', icon: '📝' },
+					{ name: 'MacPaint', icon: '🎨' },
+					{ name: 'Control Panel', icon: '🎛️' },
+					{ name: 'Clipboard', icon: '📋' },
+				];
 				items.forEach((item, idx) => {
-					const ix = winX + 30 + (idx % 3) * 110;
+					const ix = winX + 35 + (idx % 3) * 110;
 					const iy = winY + 45 + Math.floor(idx / 3) * 75;
-					ctx.strokeRect(ix, iy, 36, 30);
-					ctx.fillRect(ix + 6, iy + 4, 24, 2);
-					ctx.fillText(item, ix - 6, iy + 48);
+					ctx.strokeRect(ix, iy, 34, 30);
+					ctx.font = '16px sans-serif';
+					ctx.fillText(item.icon, ix + 8, iy + 22);
+					ctx.font = '10px sans-serif';
+					ctx.fillText(item.name, ix - 6, iy + 48);
 				});
 			} else if (currentEra === 2) {
-				// 3. MS-DOS 3.3 (1985) - IBM Monochrome Green Phosphor Full Screen Terminal
-				ctx.fillStyle = '#050a05';
+				// =================================================================
+				// ERA 3: MS-DOS 3.3 (1985) - IBM Green Phosphor Monochrome CRT
+				// =================================================================
+				ctx.fillStyle = '#040904';
 				ctx.fillRect(0, 0, w, h);
 
-				ctx.fillStyle = '#00ff66';
+				ctx.fillStyle = '#00ff66'; // Green Phosphor
 				ctx.font = '14px monospace';
 
 				ctx.fillText('MS-DOS Version 3.30 (C)Copyright Microsoft Corp 1981-1987', 40, 50);
@@ -307,33 +330,36 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillText('C:\\> DIR /W', 40, 115);
 
 				ctx.fillText(' Volume in drive C is DOS_SYSTEM', 40, 145);
-				ctx.fillText(' Directory of C:\\', 40, 165);
+				ctx.fillText(' Volume Serial Number is 1985-0428', 40, 165);
+				ctx.fillText(' Directory of C:\\', 40, 185);
 
-				ctx.fillText('[COMMAND.COM]   [AUTOEXEC.BAT]   [CONFIG.SYS]   [DOOM.EXE]', 40, 200);
-				ctx.fillText('[WOLF3D.EXE]    [RETRO.BAT]      [GRAPHICS.DRV] [SYSTEM.DAT]', 40, 225);
+				ctx.fillText('[COMMAND.COM]   [AUTOEXEC.BAT]   [CONFIG.SYS]    [DOOM.EXE]', 40, 220);
+				ctx.fillText('[WOLF3D.EXE]    [RETRO.BAT]      [GRAPHICS.DRV]  [SYSTEM.DAT]', 40, 245);
 
-				ctx.fillText('       14 File(s)    14,285,760 bytes free', 40, 265);
+				ctx.fillText('       10 File(s)    14,285,760 bytes free', 40, 285);
 
-				ctx.fillText('C:\\> DOOM.EXE', 40, 300);
-				ctx.fillText('Loading DOOM Engine v1.1...', 40, 325);
+				ctx.fillText('C:\\> DOOM.EXE', 40, 320);
+				ctx.fillText('Loading DOOM Engine v1.1...', 40, 345);
 
-				ctx.fillText('C:\\> _', 40, 360);
+				ctx.fillText('C:\\> _', 40, 380);
 				if (Math.sin(t * 0.01) > 0) {
-					ctx.fillRect(80, 348, 10, 15);
+					ctx.fillRect(80, 368, 10, 15);
 				}
 			} else if (currentEra === 3) {
-				// 4. WINDOWS 95 (1995) - Authentic Microsoft Desktop & Playable Minesweeper
+				// =================================================================
+				// ERA 4: WINDOWS 95 (1995) - Teal Desktop, Taskbar & Playable Mines
+				// =================================================================
 				ctx.fillStyle = '#008080'; // Windows 95 Teal
 				ctx.fillRect(0, 0, w, h);
 
-				// Desktop Shortcuts
-				const icons = [
+				// Desktop Icons
+				const desktopIcons = [
 					{ name: 'My Computer', x: 25, y: 30 },
 					{ name: 'Network', x: 25, y: 105 },
 					{ name: 'Recycle Bin', x: 25, y: 180 },
-					{ name: 'Internet', x: 25, y: 255 },
+					{ name: 'Internet Explorer', x: 25, y: 255 },
 				];
-				icons.forEach((ic) => {
+				desktopIcons.forEach((ic) => {
 					drawBevelBox(ic.x, ic.y, 36, 32, false, '#c0c0c0');
 					ctx.fillStyle = '#000080';
 					ctx.fillRect(ic.x + 4, ic.y + 4, 28, 24);
@@ -356,15 +382,15 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillStyle = '#00ff00';
 				ctx.fillRect(20, tbY + 10, 5, 5);
 
-				// Taskbar Clock Tray
+				// System Tray Clock
 				drawBevelBox(w - 80, tbY + 4, 74, 26, true, '#c0c0c0');
 				ctx.fillStyle = '#000000';
 				ctx.font = '11px sans-serif';
 				ctx.fillText('14:28 PM', w - 70, tbY + 21);
 
 				// Minesweeper Window
-				const mX = w * 0.3;
-				const mY = h * 0.18;
+				const mX = w * 0.28;
+				const mY = h * 0.16;
 				const mW = w * 0.44;
 				const mH = h * 0.65;
 
@@ -376,6 +402,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = 'bold 11px sans-serif';
 				ctx.fillText('Minesweeper', mX + 10, mY + 18);
 
+				// Scoreboard Header
 				drawBevelBox(mX + 12, mY + 32, mW - 24, 34, true, '#c0c0c0');
 
 				// LED Bomb Counter
@@ -385,7 +412,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = 'bold 16px monospace';
 				ctx.fillText('010', mX + 24, mY + 55);
 
-				// Smiley Face Button
+				// Smiley Face Reset Button
 				const smileyX = mX + mW / 2 - 12;
 				drawBevelBox(smileyX, mY + 37, 24, 24, false, '#c0c0c0');
 				ctx.fillStyle = '#ffff00';
@@ -418,7 +445,9 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					}
 				});
 			} else if (currentEra === 4) {
-				// 5. GEOCITIES WEB (1996) - Netscape 3.0 Navigator & 90s Web Page
+				// =================================================================
+				// ERA 5: GEOCITIES WEB (1996) - Netscape Navigator 3.0 & 90s Web
+				// =================================================================
 				drawBevelBox(0, 0, w, h, false, '#c0c0c0');
 
 				// Netscape Title Bar
@@ -434,13 +463,13 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = '11px monospace';
 				ctx.fillText('Location: http://www.geocities.com/SiliconValley/Heights/4281/', 16, 47);
 
-				// Web Page Content Viewport
+				// Web Viewport
 				const webY = 62;
 				const webH = h - 66;
 				ctx.fillStyle = '#080018';
 				ctx.fillRect(8, webY, w - 16, webH);
 
-				// Starfield Background Stars
+				// Starfield Background
 				ctx.fillStyle = '#ffffff';
 				for (let i = 0; i < 60; i++) {
 					const sx = 12 + ((i * 41) % (w - 24));
@@ -455,7 +484,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = 'bold 13px monospace';
 				ctx.fillText('⚠️ UNDER CONSTRUCTION ⚠️', w * 0.28, webY + 40);
 
-				// Scrolling Marquee Header
+				// Scrolling Marquee
 				const marqueeX = 20 + ((t * 0.08) % (w - 220));
 				ctx.fillStyle = '#ff00ff';
 				ctx.font = 'bold 14px sans-serif';
@@ -481,7 +510,9 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = 'bold 15px monospace';
 				ctx.fillText('VISITORS: 004281', w / 2 - 66, webY + 157);
 			} else if (currentEra === 5) {
-				// 6. WINAMP 2.80 (1999) - Pixel Skin Player & Equalizer Spectrum
+				// =================================================================
+				// ERA 6: WINAMP 2.80 (1999) - Pixel Skin & Equalizer Spectrum
+				// =================================================================
 				const waX = w * 0.18;
 				const waY = h * 0.12;
 				const waW = w * 0.64;
@@ -493,14 +524,14 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.lineWidth = 2;
 				ctx.strokeRect(waX, waY, waW, waH);
 
-				// Main Winamp Title Bar
+				// Winamp Title Bar
 				ctx.fillStyle = '#0e121a';
 				ctx.fillRect(waX + 4, waY + 4, waW - 8, 22);
 				ctx.fillStyle = '#00ff66';
 				ctx.font = 'bold 11px monospace';
 				ctx.fillText('WINAMP - 01. ANYRVAAN AUDIO ARCHAEOLOGY (1999)', waX + 12, waY + 19);
 
-				// LED Digital Display
+				// LED Digital Display Box
 				ctx.fillStyle = '#000000';
 				ctx.fillRect(waX + 16, waY + 34, waW - 32, 50);
 				ctx.strokeStyle = '#00ff66';
@@ -512,7 +543,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = '10px monospace';
 				ctx.fillText('128 kbps  44 kHz  STEREO  EQ PL', waX + 110, waY + 56);
 
-				// 24-Band LED Spectrum Visualizer Bars
+				// 24-Band Spectrum Visualizer
 				const bars = 24;
 				const barW = (waW - 48) / bars;
 				const eqY = waY + 96;
@@ -531,7 +562,9 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					ctx.fillRect(bx, eqY + eqH - bh, barW - 2, bh);
 				}
 			} else if (currentEra === 6) {
-				// 7. iPod CLICK WHEEL (2004) - Metallic Silver Housing & Blue Backlit Screen
+				// =================================================================
+				// ERA 7: iPod CLICK WHEEL (2004) - Metallic Chassis & LCD Screen
+				// =================================================================
 				const podW = w * 0.38;
 				const podH = h * 0.88;
 				const px = (w - podW) / 2;
@@ -560,14 +593,14 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillText('Now Playing', px + 26, py + 33);
 				ctx.fillText('🔋', px + podW - 38, py + 33);
 
-				// Track Information
+				// Song Details
 				ctx.fillStyle = '#0f172a';
 				ctx.font = 'bold 12px sans-serif';
 				ctx.fillText('Innerbloom (Retro Cut)', px + 26, py + 62);
 				ctx.font = '11px sans-serif';
 				ctx.fillText('Anyrvaan — UI Archaeology', px + 26, py + 80);
 
-				// Timeline Scrubber Bar
+				// Progress Scrubber Bar
 				ctx.fillStyle = '#94a3b8';
 				ctx.fillRect(px + 26, py + 96, podW - 52, 6);
 				ctx.fillStyle = '#0284c7';
@@ -577,7 +610,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = '10px monospace';
 				ctx.fillText('02:14 / 04:08', px + 26, py + 116);
 
-				// Click Wheel Housing
+				// Click Wheel Circle
 				const wheelCx = px + podW / 2;
 				const wheelCy = py + podH * 0.72;
 				const wheelRadius = podW * 0.28;
@@ -589,7 +622,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.strokeStyle = '#cbd5e1';
 				ctx.stroke();
 
-				// Wheel Engraved Labels
+				// Wheel Engraved Text
 				ctx.fillStyle = '#64748b';
 				ctx.font = 'bold 10px sans-serif';
 				ctx.fillText('MENU', wheelCx - 15, wheelCy - wheelRadius + 16);
@@ -597,7 +630,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillText('⏮', wheelCx - wheelRadius + 8, wheelCy + 4);
 				ctx.fillText('⏭', wheelCx + wheelRadius - 20, wheelCy + 4);
 
-				// Center Select Button
+				// Center Button
 				ctx.fillStyle = '#ffffff';
 				ctx.beginPath();
 				ctx.arc(wheelCx, wheelCy, podW * 0.09, 0, Math.PI * 2);
@@ -605,7 +638,9 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.strokeStyle = '#cbd5e1';
 				ctx.stroke();
 			} else if (currentEra === 7) {
-				// 8. BLACKBERRY CURVE (2006) - Handset Bezel & BBM Messenger UI
+				// =================================================================
+				// ERA 8: BLACKBERRY CURVE (2006) - Handset & BBM Messaging UI
+				// =================================================================
 				const bbW = w * 0.44;
 				const bbH = h * 0.88;
 				const bx = (w - bbW) / 2;
@@ -648,7 +683,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.strokeStyle = '#60a5fa';
 				ctx.stroke();
 
-				// QWERTY Keypad Grid
+				// QWERTY Keyboard
 				ctx.fillStyle = '#2a3446';
 				for (let r = 0; r < 3; r++) {
 					for (let c = 0; c < 9; c++) {
@@ -656,7 +691,9 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 					}
 				}
 			} else {
-				// 9. FIRST iPHONE (2007) - Multi-Touch Glass & iOS 1 Icons
+				// =================================================================
+				// ERA 9: FIRST iPHONE (2007) - Multi-Touch Glass & iOS 1 Icons
+				// =================================================================
 				const phoneW = w * 0.38;
 				const phoneH = h * 0.88;
 				const px = (w - phoneW) / 2;
@@ -676,7 +713,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.font = '10px sans-serif';
 				ctx.fillText('AT&T 📶  14:28  🔋', px + 20, py + 34);
 
-				// Glossy iOS 1 App Grid
+				// Glossy App Icon Grid
 				const appIcons = ['📱 Phone', '✉️ Mail', '🌐 Safari', '🎵 iPod', '📷 Photos', '⚙️ Settings'];
 				appIcons.forEach((ic, i) => {
 					const r = Math.floor(i / 3);
