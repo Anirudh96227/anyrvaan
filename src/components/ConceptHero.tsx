@@ -538,7 +538,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				}
 			} else if (currentEra === 6) {
 				// 7. iPod CLICK WHEEL (2004)
-				const podW = w * 0.38;
+				const podW = Math.min(w * 0.85, w < 600 ? 300 : 340);
 				const podH = h * 0.88;
 				const px = (w - podW) / 2;
 				const py = (h - podH) / 2;
@@ -604,10 +604,10 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.stroke();
 			} else if (currentEra === 7) {
 				// =================================================================
-				// ERA 8: BLACKBERRY CURVE (2006) - PERFECTLY PROPORTIONED HANDSET
+				// ERA 8: BLACKBERRY CURVE (2006) - MOBILE RESPONSIVE HANDSET
 				// =================================================================
 				const phoneH = h * 0.94;
-				const phoneW = w * 0.44;
+				const phoneW = Math.min(w * 0.85, w < 600 ? 320 : 380);
 				const px = (w - phoneW) / 2;
 				const py = (h - phoneH) / 2;
 
@@ -759,7 +759,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				});
 			} else {
 				// 9. FIRST iPHONE (2007)
-				const phoneW = w * 0.38;
+				const phoneW = Math.min(w * 0.85, w < 600 ? 300 : 340);
 				const phoneH = h * 0.88;
 				const px = (w - phoneW) / 2;
 				const py = (h - phoneH) / 2;
