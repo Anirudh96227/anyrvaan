@@ -241,7 +241,7 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 		};
 
 		// -------------------------------------------------------------------------
-		// 60FPS UNIQUE REACT CANVAS UI ENGINE FOR ALL 4 CASE STUDIES
+		// 60FPS DISTINCT CANVASES FOR EVERY SINGLE TAB
 		// -------------------------------------------------------------------------
 		const drawScene = (t: number) => {
 			ctx.fillStyle = '#04060a';
@@ -258,7 +258,190 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 				ctx.fillRect(0, y, w, 1);
 			}
 
-			if (preset === 'ui-replicas') {
+			if (preset === 'effects') {
+				// =================================================================
+				// PRESET 3: THE EFFECTS INDEX (8 DISTINCT ANIMATIONS)
+				// =================================================================
+				ctx.fillStyle = '#040814';
+				ctx.fillRect(0, 0, w, h);
+
+				if (tabIdx === 0) {
+					// 1. ARRIVALS — Kinetic Quote Text Grid Arrival
+					ctx.fillStyle = '#1e293b';
+					ctx.fillRect(30, 40, w - 60, h - 80);
+					ctx.strokeStyle = '#3b82f6';
+					ctx.strokeRect(30, 40, w - 60, h - 80);
+
+					const words = ['WE', 'SHAPE', 'OUR', 'TOOLS', '—', 'THEREAFTER', 'THEY', 'SHAPE', 'US.'];
+					const step = Math.floor((t * 0.004) % (words.length + 1));
+					ctx.font = 'bold 20px sans-serif';
+
+					words.forEach((word, idx) => {
+						if (idx < step) {
+							const wx = 50 + (idx % 3) * 160;
+							const wy = 90 + Math.floor(idx / 3) * 50;
+							ctx.fillStyle = '#60a5fa';
+							ctx.fillText(word, wx, wy);
+						}
+					});
+				} else if (tabIdx === 1) {
+					// 2. COUNTERS — High-Speed Ticking Number & Progress Stepper
+					const count = Math.floor((t * 0.8) % 1000000);
+					ctx.fillStyle = '#60a5fa';
+					ctx.font = 'bold 48px monospace';
+					ctx.fillText(count.toLocaleString(), 50, h / 2);
+
+					ctx.fillStyle = '#1e293b';
+					ctx.fillRect(50, h / 2 + 20, w - 100, 12);
+					ctx.fillStyle = '#2563eb';
+					ctx.fillRect(50, h / 2 + 20, ((count % 100000) / 100000) * (w - 100), 12);
+				} else if (tabIdx === 2) {
+					// 3. DATA FIELDS — Dense Telemetry Matrix Grid
+					ctx.fillStyle = '#0284c7';
+					ctx.font = '11px monospace';
+					for (let r = 0; r < 8; r++) {
+						for (let c = 0; c < 10; c++) {
+							const val = Math.floor(Math.sin(t * 0.005 + r * c) * 45 + 50);
+							ctx.fillText(`[${val}%]`, 40 + c * 70, 50 + r * 28);
+						}
+					}
+				} else if (tabIdx === 3) {
+					// 4. RESONANCE — Resonant Physics Dot Field Settling
+					const cx = w / 2;
+					const cy = h / 2;
+					for (let i = 0; i < 80; i++) {
+						const angle = i * 0.1 + t * 0.002;
+						const radius = 60 + Math.sin(t * 0.003 + i) * 30;
+						const px = cx + Math.cos(angle) * radius;
+						const py = cy + Math.sin(angle) * radius;
+
+						ctx.fillStyle = '#38bdf8';
+						ctx.beginPath();
+						ctx.arc(px, py, 3, 0, Math.PI * 2);
+						ctx.fill();
+					}
+				} else if (tabIdx === 4) {
+					// 5. PULSE GAUGES — Liquid Pillar Gauges
+					for (let i = 0; i < 3; i++) {
+						const gx = w * 0.3 + i * 85;
+						const gy = h * 0.25;
+						const gh = h * 0.55;
+
+						ctx.fillStyle = '#1e293b';
+						ctx.fillRect(gx, gy, 48, gh);
+
+						const fillH = (Math.sin(t * 0.004 + i * 0.8) * 0.4 + 0.5) * gh;
+						ctx.fillStyle = '#2563eb';
+						ctx.fillRect(gx, gy + gh - fillH, 48, fillH);
+					}
+				} else if (tabIdx === 5) {
+					// 6. RECURSION — Concentric Rotating Polygons
+					const cx = w / 2;
+					const cy = h / 2;
+					ctx.strokeStyle = '#60a5fa';
+					ctx.lineWidth = 2;
+					for (let i = 1; i <= 6; i++) {
+						const size = i * 25;
+						const rot = t * 0.001 * i;
+						ctx.save();
+						ctx.translate(cx, cy);
+						ctx.rotate(rot);
+						ctx.strokeRect(-size / 2, -size / 2, size, size);
+						ctx.restore();
+					}
+				} else if (tabIdx === 6) {
+					// 7. KINETIC TYPE — Kinetic Text Stretch
+					ctx.fillStyle = '#ffffff';
+					ctx.font = 'bold 36px sans-serif';
+					const scale = Math.sin(t * 0.003) * 0.2 + 1;
+					ctx.save();
+					ctx.translate(60, h / 2);
+					ctx.scale(scale, 1);
+					ctx.fillText('KINETIC MOTION', 0, 0);
+					ctx.restore();
+				} else {
+					// 8. SPIROGRAPH — Living Vector Spirograph
+					const cx = w / 2;
+					const cy = h / 2;
+					ctx.strokeStyle = '#38bdf8';
+					ctx.lineWidth = 1.5;
+					ctx.beginPath();
+					for (let theta = 0; theta < Math.PI * 6; theta += 0.05) {
+						const R = 80;
+						const r = 35;
+						const p = 50;
+						const x = (R - r) * Math.cos(theta) + p * Math.cos(((R - r) * theta) / r + t * 0.002);
+						const y = (R - r) * Math.sin(theta) - p * Math.sin(((R - r) * theta) / r + t * 0.002);
+						if (theta === 0) ctx.moveTo(cx + x, cy + y);
+						else ctx.lineTo(cx + x, cy + y);
+					}
+					ctx.stroke();
+				}
+			} else if (preset === 'spiritual') {
+				// =================================================================
+				// PRESET 4: THE SPIRITUAL SERIES (13 DISTINCT SACRED PATTERNS)
+				// =================================================================
+				ctx.fillStyle = '#06050a';
+				ctx.fillRect(0, 0, w, h);
+
+				const cx = w / 2;
+				const cy = h / 2;
+
+				if (tabIdx === 0) {
+					// PHUGTAL MONASTERY — Opening Mandala
+					ctx.strokeStyle = '#f59e0b';
+					ctx.lineWidth = 1.5;
+					for (let r = 20; r < 120; r += 20) {
+						ctx.beginPath();
+						ctx.arc(cx, cy, r + Math.sin(t * 0.002 + r) * 5, 0, Math.PI * 2);
+						ctx.stroke();
+					}
+				} else if (tabIdx === 1) {
+					// VALLEY OF FLOWERS — Golden Ratio Spiral Bloom
+					ctx.strokeStyle = '#ec4899';
+					ctx.lineWidth = 2;
+					ctx.beginPath();
+					for (let i = 0; i < 150; i++) {
+						const a = i * 0.1 + t * 0.001;
+						const r = Math.sqrt(i) * 9;
+						const px = cx + Math.cos(a) * r;
+						const py = cy + Math.sin(a) * r;
+						if (i === 0) ctx.moveTo(px, py);
+						else ctx.lineTo(px, py);
+					}
+					ctx.stroke();
+				} else if (tabIdx === 2) {
+					// LANGZA BUDDHA — Sunburst Light Rays
+					ctx.strokeStyle = '#fbbf24';
+					ctx.lineWidth = 1.5;
+					for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+						const rx = cx + Math.cos(a + t * 0.001) * 120;
+						const ry = cy + Math.sin(a + t * 0.001) * 120;
+						ctx.beginPath();
+						ctx.moveTo(cx, cy);
+						ctx.lineTo(rx, ry);
+						ctx.stroke();
+					}
+				} else if (tabIdx === 3) {
+					// TAJ MAHAL — Symmetrical Reflection Arches
+					ctx.strokeStyle = '#38bdf8';
+					ctx.lineWidth = 2;
+					for (let i = 1; i <= 5; i++) {
+						const size = i * 22;
+						ctx.strokeRect(cx - size, cy - size, size * 2, size * 2);
+					}
+				} else {
+					// SACRED PATTERN GENERIC DEEP GEOMETRY
+					ctx.strokeStyle = '#a855f7';
+					ctx.lineWidth = 1.5;
+					for (let i = 0; i < 8; i++) {
+						const angle = (i * Math.PI) / 4 + t * 0.001;
+						ctx.beginPath();
+						ctx.arc(cx + Math.cos(angle) * 40, cy + Math.sin(angle) * 40, 50, 0, Math.PI * 2);
+						ctx.stroke();
+					}
+				}
+			} else if (preset === 'ui-replicas') {
 				// =================================================================
 				// PRESET 2: TEN APPS REBUILT BY HAND (UI REPLICAS ENGINE)
 				// =================================================================
@@ -517,51 +700,6 @@ export default function ConceptHero({ preset, title, subtitle }: ConceptHeroProp
 						ctx.fillText('Pixel perfect UI rebuild', cx + 16, 80);
 					});
 				}
-			} else if (preset === 'effects') {
-				// =================================================================
-				// PRESET 3: THE EFFECTS INDEX (KINETIC CODE ANIMATION ENGINE)
-				// =================================================================
-				ctx.fillStyle = '#040814';
-				ctx.fillRect(0, 0, w, h);
-
-				for (let i = 0; i < 3; i++) {
-					const gx = w * 0.3 + i * 85;
-					const gy = h * 0.25;
-					const gh = h * 0.55;
-
-					ctx.fillStyle = '#1e293b';
-					ctx.fillRect(gx, gy, 48, gh);
-
-					const fillH = (Math.sin(t * 0.004 + i * 0.8) * 0.4 + 0.5) * gh;
-					ctx.fillStyle = '#2563eb';
-					ctx.fillRect(gx, gy + gh - fillH, 48, fillH);
-				}
-
-				ctx.fillStyle = '#ffffff';
-				ctx.font = 'bold 16px sans-serif';
-				ctx.fillText('THE EFFECTS INDEX — Kinetic Code Animation', 30, 40);
-			} else if (preset === 'spiritual') {
-				// =================================================================
-				// PRESET 4: THE SPIRITUAL SERIES (CONTEMPLATIVE SACRED GEOMETRY)
-				// =================================================================
-				ctx.fillStyle = '#06050a';
-				ctx.fillRect(0, 0, w, h);
-
-				const cx = w / 2;
-				const cy = h / 2;
-
-				ctx.strokeStyle = '#38bdf8';
-				ctx.lineWidth = 1.5;
-
-				for (let r = 20; r < 120; r += 20) {
-					ctx.beginPath();
-					ctx.arc(cx, cy, r + Math.sin(t * 0.002 + r) * 5, 0, Math.PI * 2);
-					ctx.stroke();
-				}
-
-				ctx.fillStyle = '#ffffff';
-				ctx.font = 'bold 15px sans-serif';
-				ctx.fillText('THE SPIRITUAL SERIES — Sacred Geometry', 30, 40);
 			} else {
 				// DEFAULT RETRO COMPUTING PRESET (PRESET 1)
 				drawRetro(t);
