@@ -3,6 +3,7 @@ title: "I Rebuilt Old Computers and Learned My Memory Was Lying"
 description: "I rebuilt ten old computer screens from scratch — the Commodore 64, Windows 95, the first iPhone. The rule that made it work: don't trust your memory of them. Your memory of an old screen is wrong in ways you won't notice until someone who was there does."
 date: 2026-07-17
 tags: ["computer history", "making things", "process"]
+hero: "strata-dig"
 youtube: "https://youtu.be/koKwwvKAbYc"
 ---
 

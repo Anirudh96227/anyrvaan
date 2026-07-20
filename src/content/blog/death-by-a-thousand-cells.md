@@ -3,6 +3,7 @@ title: "Death by a Thousand Cells"
 description: "A spreadsheet doesn't fail because the numbers are wrong. It fails because nothing about it moves — and that's reason enough to rebuild it as a dashboard."
 date: 2026-07-13
 tags: ["data visualization", "react", "process"]
+hero: "cell-flood"
 demo: "sheet-to-dashboard"
 ---
 

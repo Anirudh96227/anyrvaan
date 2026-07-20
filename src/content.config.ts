@@ -12,6 +12,20 @@ const blog = defineCollection({
 		// to a generative canvas renderer (see initPostHero in Layout.astro),
 		// picked to fit the post's theme. Omit for no hero visual.
 		heroMotif: z.enum(['funnel', 'ripple', 'graph']).optional(),
+		// A bespoke, topic-literal, touch-reactive hero (PostHero.tsx React
+		// island). Each value enacts that post's subject and answers to mouse
+		// and touch. Takes precedence over heroMotif when both are set.
+		hero: z
+			.enum([
+				'index-swarm',
+				'cell-flood',
+				'stubborn-path',
+				'two-tempos',
+				'vanishing-ui',
+				'three-throws',
+				'strata-dig',
+			])
+			.optional(),
 		// An interactive code-generated demo rendered above the article, in
 		// place of a hero motif, for posts that embed a live component.
 		demo: z.enum(['sheet-to-dashboard']).optional(),

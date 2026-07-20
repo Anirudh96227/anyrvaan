@@ -1165,6 +1165,12 @@ const ogImageURL = new URL(image, Astro.site);
 			raf = requestAnimationFrame(frame);
 		}
 
+		// Every navigation must show the same flourish regardless of how fast the
+		// next page resolves: a prefetched page can load in under 100ms, which
+		// without this floor would gather-and-release before the eye caught it.
+		// So we hold the gather for at least MIN_GATHER before releasing.
+		const MIN_GATHER = 520;
+
 		document.addEventListener('astro:before-preparation', () => {
 			size();
 			spawn();
@@ -1175,9 +1181,14 @@ const ogImageURL = new URL(image, Astro.site);
 		document.addEventListener('astro:page-load', () => {
 			if (!active) return;
 			active = false;
-			phase = 'release';
-			releaseT = performance.now();
-			if (!running) start();
+			const release = () => {
+				phase = 'release';
+				releaseT = performance.now();
+				if (!running) start();
+			};
+			const elapsed = performance.now() - startT;
+			if (elapsed < MIN_GATHER) window.setTimeout(release, MIN_GATHER - elapsed);
+			else release();
 		});
 	}
 	document.addEventListener('astro:page-load', initNavGather);

@@ -3,7 +3,7 @@ title: "The Best Screen Is One You Barely Notice"
 description: "There's a whole line of thinking that says a good tool should get out of your way and disappear. It sounds soft until you notice the sharp little rule hiding inside it — and how backwards most of our apps are compared to it."
 date: 2026-07-17
 tags: ["calm design", "interfaces", "research"]
-heroMotif: "ripple"
+hero: "vanishing-ui"
 ---
 
 Making [a field guide to quiet apps](/work/anti-ui-atlas/) meant sitting with an idea that's easy to say and hard to take seriously: the best app is often the one you barely notice. Not a minimal one — a quiet one, that does its job and then leaves you alone. It sounds soft and a little precious. But there's a genuinely sharp idea underneath, and I want to lay it out in plain words, including the part where I admit what it isn't.

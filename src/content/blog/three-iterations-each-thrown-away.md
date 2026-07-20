@@ -3,6 +3,7 @@ title: "I Built This Three Times Before It Worked"
 description: "The finished version of a project is the third one I made. The first two weren't practice — they were finished, wrong, and thrown away. Here's what was broken each time, because 'we kept improving it' is what everyone says and nobody shows."
 date: 2026-07-15
 tags: ["process", "animation", "making things"]
+hero: "three-throws"
 youtube: "https://youtu.be/gtVh-acZEIg"
 ---
 

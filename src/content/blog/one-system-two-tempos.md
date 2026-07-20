@@ -3,6 +3,7 @@ title: "I Only Trusted My Method Once It Survived the Opposite"
 description: "I had a way of making animations that I was proud of. But I couldn't tell if it was actually good, or just a lucky fit for one kind of work — so I pointed it at the exact opposite kind and watched what happened."
 date: 2026-07-16
 tags: ["process", "animation", "making things"]
+hero: "two-tempos"
 youtube: "https://youtu.be/vkMxG-ttrVE"
 ---
 

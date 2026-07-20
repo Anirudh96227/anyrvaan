@@ -3,6 +3,7 @@ title: "I Did It the Hard Way on Purpose"
 description: "I rebuilt ten apps the slowest, most tedious way possible — every button placed by hand, nothing reused. That sounds like a waste of time. It's the whole reason they look real instead of like a mockup."
 date: 2026-07-17
 tags: ["making things", "interfaces", "process"]
+hero: "stubborn-path"
 youtube: "https://youtu.be/_iNkm_Lu1ng"
 ---
 

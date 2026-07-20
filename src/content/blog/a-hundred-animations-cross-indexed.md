@@ -3,7 +3,7 @@ title: "I Checked a Hundred Things Everyone Thinks They Remember"
 description: "I made a list of a hundred little app animations and wrote down where each one really came from. The lesson wasn't about animation. It was how much of what we all confidently 'know' about famous app moments turns out to be wrong."
 date: 2026-07-17
 tags: ["research", "animation", "reference"]
-heroMotif: "graph"
+hero: "index-swarm"
 ---
 
 [The field guide to app animations](/work/ui-animation-atlas/) is a list of a hundred small things you see in apps every day — the bounce when you pull a feed to refresh, the heart that bursts when you like a photo, the shimmer of a screen still loading. For each one I wrote down where it really came from and how it actually works. The lesson from making it wasn't about animation at all. It was about how much of what we all confidently "know" about these famous little moments is just wrong.
