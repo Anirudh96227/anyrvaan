@@ -1,0 +1,511 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+// Worlds — a real 3D particle flight that tells a story. Particles live in a 3D
+// volume; a perspective camera weaves forward through them as you scroll. Strung
+// along the flight path are "gates" — each a distinct particle FORMATION (a bare
+// scatter, a swirl, a mandala, a screen grid, a bloom) that the camera flies
+// straight through while that beat of the story surfaces. Read top to bottom,
+// the beats are one narrative: stillness → motion → the maker → the worlds →
+// the thesis. No three.js — plain canvas perspective projection.
+//
+// Progressive: with no JS or reduced motion, the beats fall back to a plain,
+// readable vertical read of the same story.
+
+// The story. `shape` names the particle formation the camera flies through for
+// that beat (built in the script below). Beats without an `href` are pure
+// narrative (no link).
+type Beat = {
+	label: string;
+	title: string;
+	body: string;
+	shape: string;
+	href?: string;
+	cta?: string;
+};
+const STORY: Beat[] = [
+	{
+		label: 'Begin',
+		title: 'It starts in stillness',
+		body: 'A dark field, holding its breath. Nothing moves yet — and that quiet is the whole point.',
+		shape: 'scatter',
+	},
+	{
+		label: 'Then',
+		title: 'Something moves',
+		body: 'One small motion, and the whole field wakes up. Everything here grows out of that first flicker.',
+		shape: 'spiral',
+	},
+	{
+		label: 'Made by',
+		title: 'One pair of hands',
+		body: 'The same person who designs a frame writes the code behind it. A studio of one.',
+		shape: 'doubleRing',
+		href: '/studio/',
+		cta: 'About the studio',
+	},
+	{
+		label: 'A world',
+		title: 'Devotion',
+		body: 'Geometry breathing around a still center — the spiritual films, drawn as circling light.',
+		shape: 'mandala',
+		href: '/work/spiritual-series/',
+		cta: 'The Spiritual Series',
+	},
+	{
+		label: 'A world',
+		title: 'Machines, remembered',
+		body: 'Old screens rebuilt by hand, pixel by pixel — the way you misremember them, corrected.',
+		shape: 'grid',
+		href: '/work/retro-computing/',
+		cta: 'Retro Computing',
+	},
+	{
+		label: 'A world',
+		title: 'Interfaces, rebuilt',
+		body: 'Ten familiar apps taken apart and made again by hand, every button placed on purpose.',
+		shape: 'cells',
+		href: '/work/ui-replicas/',
+		cta: 'Ten Apps, Rebuilt by Hand',
+	},
+	{
+		label: 'All of it',
+		title: 'Motion born from stillness',
+		body: 'One idea running through every world here. You have just flown through the whole of it.',
+		shape: 'bloom',
+		href: '/work/',
+		cta: 'See all the work',
+	},
+];
+---
+
+<Layout
+	title="Worlds — Anyrvaan"
+	description="A 3D particle flight that tells one story — a camera weaves forward through a field of particles, passing through a shaped gate for each beat, from stillness to motion to the worlds of the work."
+>
+	<div class="relative min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav overlay />
+
+		<div class="flight-intro" data-flight-intro aria-hidden="true">
+			<p class="text-eyebrow uppercase tracking-[0.22em] text-neutral-300">A Flight in Seven Beats</p>
+			<h1 class="mt-4 text-display text-neutral-50">Worlds</h1>
+			<p class="mx-auto mt-6 max-w-md text-body-lg text-neutral-300">
+				Scroll, and the camera drifts forward through the field — one story, told as you fly
+				through it.
+			</p>
+			<span class="flight-intro__cue">Scroll to begin &darr;</span>
+		</div>
+
+		<main>
+			<div class="flight" data-flight>
+				<canvas class="flight__canvas" data-flight-canvas aria-hidden="true"></canvas>
+				<div class="flight__gates">
+					{
+						STORY.map((beat, i) => {
+							const Tag = beat.href ? 'a' : 'div';
+							return (
+								<Tag class="gate" data-gate data-shape={beat.shape} href={beat.href}>
+									<span class="gate__index text-eyebrow uppercase tracking-[0.22em]">
+										{String(i + 1).padStart(2, '0')} / {String(STORY.length).padStart(2, '0')} —{' '}
+										{beat.label}
+									</span>
+									<span class="gate__title text-h1">{beat.title}</span>
+									<span class="gate__body text-body-lg">{beat.body}</span>
+									{beat.href && (
+										<span class="gate__enter text-small">
+											{beat.cta}
+											<span aria-hidden="true" class="gate__arrow">
+												&rarr;
+											</span>
+										</span>
+									)}
+								</Tag>
+							);
+						})
+					}
+				</div>
+			</div>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<style>
+	/* --- Static / no-JS fallback: a plain readable read of the story -------- */
+	.flight__canvas {
+		display: block;
+		width: 100%;
+	}
+	.gate {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.9rem;
+		min-height: 52vh;
+		justify-content: center;
+		max-width: 34rem;
+		margin: 0 auto;
+		padding: 2rem 1.5rem;
+		text-align: center;
+		text-decoration: none;
+		text-shadow: 0 2px 30px rgba(0, 0, 0, 0.75);
+	}
+	.gate__index {
+		color: rgb(147, 197, 253);
+	}
+	.gate__title {
+		color: var(--color-neutral-50);
+		line-height: 1.08;
+	}
+	.gate__body {
+		color: var(--color-neutral-300);
+	}
+	.gate__enter {
+		margin-top: 0.6rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--color-neutral-100);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 999px;
+		padding: 0.5rem 1.1rem;
+		transition:
+			border-color 0.2s ease,
+			background 0.2s ease;
+	}
+	.gate:hover .gate__enter {
+		border-color: rgba(96, 165, 250, 0.7);
+		background: rgba(96, 165, 250, 0.12);
+	}
+	.gate__arrow {
+		transition: transform 0.2s ease;
+	}
+	.gate:hover .gate__arrow {
+		transform: translateX(4px);
+	}
+
+	.flight-intro {
+		display: none;
+	}
+
+	/* --- Flight mode: engaged by JS when motion is allowed ------------------- */
+	.flight.is-flying {
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		overflow: hidden;
+	}
+	.flight.is-flying .flight__canvas {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+	.flight.is-flying .flight__gates {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+	.flight.is-flying .gate {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: min(90vw, 36rem);
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+		transform: translate(-50%, -50%);
+		opacity: 0;
+		will-change: opacity, transform;
+	}
+	.flight.is-flying .gate__enter {
+		pointer-events: auto;
+	}
+
+	:global(html.flight-on) .flight-intro {
+		position: fixed;
+		inset: 0;
+		z-index: 3;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 0 1.5rem;
+		pointer-events: none;
+	}
+	.flight-intro__cue {
+		margin-top: 3.5rem;
+		font-size: var(--text-small);
+		letter-spacing: 0.06em;
+		color: var(--color-neutral-400);
+		animation: flight-cue 2.4s ease-in-out infinite;
+	}
+	@keyframes flight-cue {
+		0%,
+		100% {
+			opacity: 0.4;
+			transform: translateY(0);
+		}
+		50% {
+			opacity: 1;
+			transform: translateY(4px);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flight-intro__cue {
+			animation: none;
+		}
+	}
+</style>
+
+<script>
+	// 3D particle flight engine. Particles hold real (x,y,z); the camera advances
+	// in z with scroll while weaving in x/y, and each particle is perspective-
+	// projected. Each gate is a distinct FORMATION of particles centred on the
+	// camera path, so the camera flies straight through a bare scatter, a swirl,
+	// a mandala, a screen grid, a cell field, a bloom — one per story beat.
+	function initFlight() {
+		const flight = document.querySelector<HTMLElement>('[data-flight]:not([data-flight-init])');
+		if (!flight) return;
+		flight.dataset.flightInit = 'true';
+		const canvas = flight.querySelector<HTMLCanvasElement>('[data-flight-canvas]');
+		const ctx = canvas?.getContext('2d');
+		if (!canvas || !ctx) return;
+
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (reduce) return;
+
+		const gateEls = Array.from(flight.querySelectorAll<HTMLElement>('[data-gate]'));
+		const N = gateEls.length;
+		if (N < 2) return;
+		const shapes = gateEls.map((el) => el.dataset.shape || 'scatter');
+		const intro = document.querySelector<HTMLElement>('[data-flight-intro]');
+
+		const coarse = matchMedia('(pointer: coarse)').matches;
+		const lowTier = coarse || (navigator.hardwareConcurrency || 8) <= 4;
+
+		const FOCAL = 620;
+		const NEAR = 40;
+		const FADE_FAR = 3400;
+		const SPREAD_X = 1150;
+		const SPREAD_Y = 720;
+		const GATE0 = 1500;
+		const GATE_SPACING = 1650;
+		const TAIL = 1300;
+		const DEPTH = GATE0 + N * GATE_SPACING + TAIL;
+		const R = 300; // formation radius
+		const GK = lowTier ? 60 : 130; // particles per gate formation
+		const FIELD = lowTier ? 300 : 780; // ambient starfield
+
+		const camXAt = (z: number) => Math.sin(z * 0.0016) * 150;
+		const camYAt = (z: number) => Math.cos(z * 0.0013) * 96;
+		const gateZ = (i: number) => GATE0 + i * GATE_SPACING;
+
+		const TOTAL = FIELD + N * GK;
+		const xs = new Float32Array(TOTAL);
+		const ys = new Float32Array(TOTAL);
+		const zs = new Float32Array(TOTAL);
+		const sz = new Float32Array(TOTAL);
+		const blue = new Uint8Array(TOTAL);
+
+		// ambient starfield spanning the whole flight
+		for (let i = 0; i < FIELD; i++) {
+			xs[i] = (Math.random() * 2 - 1) * SPREAD_X;
+			ys[i] = (Math.random() * 2 - 1) * SPREAD_Y;
+			zs[i] = Math.random() * DEPTH;
+			sz[i] = 1.0 + Math.random() * 2.2;
+			blue[i] = Math.random() < 0.22 ? 1 : 0;
+		}
+
+		// each gate's formation, centred on the camera path so we fly through it
+		for (let g = 0; g < N; g++) {
+			const z0 = gateZ(g);
+			const ox = camXAt(z0);
+			const oy = camYAt(z0);
+			const shape = shapes[g];
+			for (let k = 0; k < GK; k++) {
+				const idx = FIELD + g * GK + k;
+				const t = k / GK;
+				let dx = 0,
+					dy = 0,
+					dz = (Math.random() * 2 - 1) * 55;
+				let s = 1.5 + Math.random() * 1.8;
+				let isBlue = k % 3 === 0;
+				if (shape === 'scatter') {
+					dx = (Math.random() * 2 - 1) * R * 1.5;
+					dy = (Math.random() * 2 - 1) * R * 1.1;
+					s = 0.8 + Math.random() * 1.1; // faint = stillness
+					isBlue = Math.random() < 0.15;
+				} else if (shape === 'spiral') {
+					const a = t * Math.PI * 2 * 3.2;
+					const r = R * t;
+					dx = Math.cos(a) * r;
+					dy = Math.sin(a) * r;
+					s = 1.2 + Math.random() * 1.4;
+					isBlue = t > 0.75; // motion brightens toward the outer edge
+				} else if (shape === 'doubleRing') {
+					const ring = k % 2;
+					const a = t * Math.PI * 2 * 2;
+					const rr = R * (0.62 + ring * 0.32);
+					dx = Math.cos(a) * rr + (ring ? R * 0.34 : -R * 0.34);
+					dy = Math.sin(a) * rr;
+					isBlue = ring === 1; // two crafts, two colours
+				} else if (shape === 'mandala') {
+					const rings = 4;
+					const ri = (k % rings) + 1;
+					const per = Math.ceil(GK / rings);
+					const a = (Math.floor(k / rings) / per) * Math.PI * 2;
+					const r = (ri / rings) * R;
+					dx = Math.cos(a) * r;
+					dy = Math.sin(a) * r;
+					isBlue = ri === 2;
+				} else if (shape === 'grid') {
+					const cols = Math.ceil(Math.sqrt(GK));
+					const gx = k % cols;
+					const gy = Math.floor(k / cols);
+					const cell = (R * 2) / cols;
+					dx = -R + gx * cell + cell / 2;
+					dy = -R * 0.72 + gy * cell;
+					s = 1.5;
+					isBlue = (gx + gy) % 4 === 0;
+				} else if (shape === 'cells') {
+					const cols = 6;
+					const gx = k % cols;
+					const gy = Math.floor(k / cols);
+					dx = -R + (gx / (cols - 1)) * R * 2 + (Math.random() * 2 - 1) * 8;
+					dy = -R * 0.6 + gy * 46;
+					s = 1.6;
+					isBlue = gx === gy;
+				} else {
+					// bloom — a burst radiating outward
+					const a = Math.random() * Math.PI * 2;
+					const r = R * Math.pow(Math.random(), 0.4);
+					dx = Math.cos(a) * r;
+					dy = Math.sin(a) * r;
+					s = 1.0 + Math.random() * 2.4;
+					isBlue = Math.random() < 0.4;
+				}
+				xs[idx] = ox + dx;
+				ys[idx] = oy + dy;
+				zs[idx] = z0 + dz;
+				sz[idx] = s;
+				blue[idx] = isBlue ? 1 : 0;
+			}
+		}
+
+		document.documentElement.classList.add('flight-on');
+		flight.classList.add('is-flying');
+		const runway = document.createElement('div');
+		runway.setAttribute('aria-hidden', 'true');
+		runway.style.height = (N + 2) * 100 + 'vh';
+		flight.insertAdjacentElement('afterend', runway);
+
+		const dpr = Math.min(window.devicePixelRatio || 1, lowTier ? 1 : 2);
+		let vw = 0,
+			vh = 0,
+			cx = 0,
+			cy = 0;
+		function resize() {
+			vw = canvas!.clientWidth;
+			vh = canvas!.clientHeight;
+			canvas!.width = Math.round(vw * dpr);
+			canvas!.height = Math.round(vh * dpr);
+			ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+			cx = vw / 2;
+			cy = vh / 2;
+		}
+		resize();
+
+		let prevCamZ = 0;
+		let raf = 0;
+		function render() {
+			raf = 0;
+			const doc = document.documentElement;
+			const max = doc.scrollHeight - doc.clientHeight;
+			const progress = max > 0 ? Math.min(1, Math.max(0, doc.scrollTop / max)) : 0;
+			const camZ = progress * DEPTH;
+			const camX = camXAt(camZ);
+			const camY = camYAt(camZ);
+			const speed = Math.min(160, Math.abs(camZ - prevCamZ));
+
+			ctx!.clearRect(0, 0, vw, vh);
+			ctx!.globalCompositeOperation = 'lighter';
+			for (let i = 0; i < TOTAL; i++) {
+				const dz = zs[i] - camZ;
+				if (dz < NEAR || dz > FADE_FAR) continue;
+				const inv = FOCAL / dz;
+				const sxp = cx + (xs[i] - camX) * inv;
+				const syp = cy + (ys[i] - camY) * inv;
+				if (sxp < -40 || sxp > vw + 40 || syp < -40 || syp > vh + 40) continue;
+				const fade = 1 - dz / FADE_FAR;
+				const r = Math.min(7, sz[i] * inv);
+				const a = fade * fade * 0.95;
+				if (speed > 6) {
+					const dz0 = zs[i] - prevCamZ;
+					if (dz0 > NEAR) {
+						const inv0 = FOCAL / dz0;
+						const sx0 = cx + (xs[i] - camXAt(prevCamZ)) * inv0;
+						const sy0 = cy + (ys[i] - camYAt(prevCamZ)) * inv0;
+						ctx!.strokeStyle = blue[i]
+							? `rgba(96,165,250,${(a * 0.5).toFixed(3)})`
+							: `rgba(210,224,255,${(a * 0.4).toFixed(3)})`;
+						ctx!.lineWidth = Math.max(0.6, r * 0.7);
+						ctx!.beginPath();
+						ctx!.moveTo(sx0, sy0);
+						ctx!.lineTo(sxp, syp);
+						ctx!.stroke();
+					}
+				}
+				ctx!.fillStyle = blue[i]
+					? `rgba(120,178,255,${a.toFixed(3)})`
+					: `rgba(236,240,252,${a.toFixed(3)})`;
+				ctx!.beginPath();
+				ctx!.arc(sxp, syp, r, 0, Math.PI * 2);
+				ctx!.fill();
+			}
+			ctx!.globalCompositeOperation = 'source-over';
+			prevCamZ = camZ;
+
+			for (let g = 0; g < N; g++) {
+				const rel = camZ - gateZ(g);
+				let o = 0;
+				if (rel > -1050 && rel < 560) {
+					if (rel < -180) o = (rel + 1050) / 870;
+					else if (rel <= 200) o = 1;
+					else o = 1 - (rel - 200) / 360;
+				}
+				o = Math.max(0, Math.min(1, o));
+				const el = gateEls[g];
+				el.style.opacity = o.toFixed(3);
+				el.style.transform = `translate(-50%, calc(-50% + ${(rel * 0.02).toFixed(1)}px))`;
+				el.style.pointerEvents = o > 0.6 ? 'auto' : 'none';
+			}
+
+			if (intro) intro.style.opacity = String(Math.max(0, 1 - progress * 12));
+		}
+		const onScroll = () => {
+			if (!raf) raf = requestAnimationFrame(render);
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', () => {
+			resize();
+			onScroll();
+		});
+		render();
+
+		const cleanup = () => {
+			if (raf) cancelAnimationFrame(raf);
+			window.removeEventListener('scroll', onScroll);
+			document.documentElement.classList.remove('flight-on');
+			document.removeEventListener('astro:before-swap', cleanup);
+		};
+		document.addEventListener('astro:before-swap', cleanup);
+	}
+	document.addEventListener('astro:page-load', initFlight);
+	initFlight();
+</script>
