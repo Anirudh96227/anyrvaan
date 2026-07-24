@@ -22,7 +22,7 @@ poster: "/images/retro-computing-poster.jpg"
 studiesEyebrow: "The Eras"
 studiesHeading: "Ten machines, rebuilt from scratch."
 studiesIntro: "From the Commodore 64 in 1982 to the first iPhone in 2007 — each machine gets its own short film, screen colors, fonts, and all the little quirks you'd only remember if you were there. Each one hands off to the next."
-draft: false
+draft: true
 ---
 
 This is ten short films, and each one rebuilds an old computer exactly as it looked on screen — the Commodore 64, MS-DOS, Windows 95, the first iPhone, and six more in between. Here's the part that matters: none of it is a screenshot or an old recording. Every pixel was drawn again from scratch, to match what these machines really looked like when they were new.

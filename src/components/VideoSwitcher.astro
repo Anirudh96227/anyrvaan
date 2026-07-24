@@ -1,0 +1,78 @@
+---
+// One player per collection, with a button for every film. The full reel leads;
+// each film is a tab that swaps the single stage iframe (autoplaying on click)
+// and updates the caption. Only one iframe loads per section, so a page of
+// collections stays light instead of stacking a dozen players.
+interface Chapter {
+	id: string;
+	number: number;
+	title: string;
+	thread: string | null;
+}
+interface Props {
+	title: string;
+	reel?: string | null;
+	chapters?: Chapter[];
+}
+const { title, reel, chapters = [] } = Astro.props;
+
+// Only offer a "Full film" tab when the reel is a genuine compilation — i.e.
+// not just one of the chapters wearing a reel's hat (some collections set their
+// `video` to Chapter 01 rather than a separate montage).
+const chapterIds = new Set(chapters.map((c) => c.id));
+const showReel = Boolean(reel) && !chapterIds.has(reel as string);
+const tabs = [
+	...(showReel
+		? [{ id: reel as string, label: 'Full film', sub: 'The whole collection, start to finish', num: null as number | null }]
+		: []),
+	...chapters.map((c) => ({ id: c.id, label: c.title, sub: c.thread, num: c.number })),
+];
+const first = tabs[0];
+const embed = 'https://www.youtube-nocookie.com/embed/';
+---
+
+{
+	first && (
+		<div class="video-switcher reveal mt-10" data-video-switcher>
+			<div class="glow-frame rounded-2xl">
+				<div class="glow-frame__inner aspect-video border border-white/10 bg-black">
+					<iframe
+						class="video-switcher__stage h-full w-full"
+						src={`${embed}${first.id}?rel=0&modestbranding=1`}
+						title={`${title} — ${first.label}`}
+						loading="lazy"
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+						allowfullscreen
+					/>
+				</div>
+			</div>
+
+			<p class="video-switcher__caption mt-4 text-small text-neutral-400">
+				<span class="video-switcher__caption-title text-neutral-200">{first.label}</span>
+				<span class="video-switcher__caption-sub">{first.sub ? ` — ${first.sub}` : ''}</span>
+			</p>
+
+			{tabs.length > 1 && (
+				<div
+					class="video-switcher__tabs mt-5 flex flex-wrap gap-2"
+					role="tablist"
+					aria-label={`${title} films`}
+				>
+					{tabs.map((t, i) => (
+						<button
+							type="button"
+							role="tab"
+							class="video-switcher__tab shrink-0 rounded-full border border-white/15 px-4 py-1.5 text-small text-neutral-400 transition-colors hover:border-white/40 hover:text-neutral-100 aria-selected:border-blue-400 aria-selected:bg-white/5 aria-selected:text-neutral-50"
+							aria-selected={i === 0 ? 'true' : 'false'}
+							data-video-id={t.id}
+							data-video-label={t.label}
+							data-video-sub={t.sub ?? ''}
+						>
+							{t.num ? `${String(t.num).padStart(2, '0')} · ${t.label}` : t.label}
+						</button>
+					))}
+				</div>
+			)}
+		</div>
+	)
+}

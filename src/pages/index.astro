@@ -22,8 +22,7 @@ const formatDate = (d: Date) =>
 const FEATURED: Record<string, string> = {
 	'miniature-india': 'India rebuilt at the scale of a keepsake — thirteen places, hand-lit.',
 	'rough-cut-divinity': 'Eight films that stay one breath before the finish.',
-	'effects-index': 'Hundreds of small animations, filed into ten short films.',
-	'retro-computing': '1982–2007, ten screens redrawn by hand. Not a single screenshot.',
+	'motion-made-with-code': 'Four collections made with code — counters, mandalas, old machines, faked apps.',
 };
 const allWork = await getCollection('work', ({ data }) => !data.draft);
 const featuredWork = Object.keys(FEATURED)

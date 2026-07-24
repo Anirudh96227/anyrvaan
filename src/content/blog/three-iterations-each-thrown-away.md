@@ -7,7 +7,7 @@ hero: "three-throws"
 youtube: "https://youtu.be/gtVh-acZEIg"
 ---
 
-The version of [the Effects Index](/work/effects-index/) that I kept is the third one I built. The first two weren't sketches or warm-ups. They were finished — built, watched, and then deliberately thrown out. Each one failed for a reason the next one could only learn by watching it fail. That's the part worth writing down, because "we kept improving it" is the kind of thing everyone says and almost nobody actually shows you.
+The version of [the Effects Index](/work/motion-made-with-code/#effects-index) that I kept is the third one I built. The first two weren't sketches or warm-ups. They were finished — built, watched, and then deliberately thrown out. Each one failed for a reason the next one could only learn by watching it fail. That's the part worth writing down, because "we kept improving it" is the kind of thing everyone says and almost nobody actually shows you.
 
 ## The first try explained too much
 
@@ -29,7 +29,7 @@ I chose careful repetition — the way a book's index lists the same idea under 
 
 ## What throwing two away was actually for
 
-None of this could have been worked out in advance. The first version had to exist before I could feel that the explaining was smothering everything. The second had to exist before "too thin" became a fact instead of a worry. The two I threw away weren't wasted — they were the only way to turn a vague sense of *this isn't right* into a specific problem I could actually aim at. Where it all landed is [the Effects Index](/work/effects-index/).
+None of this could have been worked out in advance. The first version had to exist before I could feel that the explaining was smothering everything. The second had to exist before "too thin" became a fact instead of a worry. The two I threw away weren't wasted — they were the only way to turn a vague sense of *this isn't right* into a specific problem I could actually aim at. Where it all landed is [the Effects Index](/work/motion-made-with-code/#effects-index).
 
 ## Watch all ten
 

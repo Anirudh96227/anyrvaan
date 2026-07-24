@@ -1,0 +1,54 @@
+---
+// A lightweight YouTube facade: a static poster with a real <button> play
+// control. The heavy iframe is never in the page on load — the shared
+// `initYoutubeFacades` script (in the work template) swaps this button for an
+// autoplaying iframe only when the visitor clicks. Keeps a page of videos fast.
+interface Props {
+	youtube: string;
+	poster: string;
+	posterAlt: string;
+	title: string;
+	aspect?: string;
+	loading?: 'lazy' | 'eager';
+}
+const { youtube, poster, posterAlt, title, aspect = 'aspect-video', loading = 'lazy' } = Astro.props;
+
+// Accept either a full YouTube URL or a bare 11-char id, and hand the shared
+// facade script exactly the id it expects to drop into an /embed/ URL.
+function getYouTubeId(url: string): string {
+	const match = url.match(
+		/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+	);
+	return match ? match[1] : url;
+}
+const videoId = getYouTubeId(youtube);
+---
+
+<div class="glow-frame rounded-2xl">
+	<div class:list={['glow-frame__inner relative border border-white/10 bg-black', aspect]}>
+		<button
+			type="button"
+			class="study-youtube-facade group relative block h-full w-full"
+			data-youtube-id={videoId}
+			data-title={title}
+			aria-label={`Play video: ${title}`}
+		>
+			<img
+				src={poster}
+				alt={posterAlt}
+				loading={loading}
+				class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+			/>
+			<span
+				class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/40 via-transparent to-transparent"
+				aria-hidden="true"
+			>
+				<span
+					class="flex h-16 w-16 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/40 backdrop-blur-sm transition duration-300 group-hover:scale-105 group-hover:bg-black/70 group-hover:ring-white/70"
+				>
+					<svg viewBox="0 0 24 24" class="ml-1 h-7 w-7 fill-white"><path d="M8 5v14l11-7z" /></svg>
+				</span>
+			</span>
+		</button>
+	</div>
+</div>

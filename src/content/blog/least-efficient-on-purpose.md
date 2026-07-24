@@ -7,7 +7,7 @@ hero: "stubborn-path"
 youtube: "https://youtu.be/_iNkm_Lu1ng"
 ---
 
-The rule I set for [rebuilding ten apps by hand](/work/ui-replicas/) was a strange one: do it the slowest, most tedious way possible. No shortcuts. Nothing reused between apps. Every row, every button, every little badge placed by hand, one at a time. That's the opposite of how you're supposed to build things. It's also exactly why the results look like the real apps instead of like someone's rough impression of them.
+The rule I set for [rebuilding ten apps by hand](/work/motion-made-with-code/#ui-replicas) was a strange one: do it the slowest, most tedious way possible. No shortcuts. Nothing reused between apps. Every row, every button, every little badge placed by hand, one at a time. That's the opposite of how you're supposed to build things. It's also exactly why the results look like the real apps instead of like someone's rough impression of them.
 
 ## Doing it fast and doing it real pull against each other
 
@@ -19,7 +19,7 @@ The realness hides in things you'd never consciously watch. Drag across some cel
 
 ## Real in the corners you'd never think about
 
-The lesson I keep from it is that believability isn't spread evenly — some tiny details carry far more of it than others. A real-looking web address sitting quietly at the top of a fake browser sells the whole thing harder than anything in the middle of the screen. And one click making several things change at once — a badge, a number, a banner all updating together — reads as real because that's how real software actually reacts. There's a quiet pride in choosing the hard road on purpose, and it pays off in a way the easy road simply can't. That same idea — one action rippling out into many — is exactly what makes the ten apps feel alive; they're [here](/work/ui-replicas/).
+The lesson I keep from it is that believability isn't spread evenly — some tiny details carry far more of it than others. A real-looking web address sitting quietly at the top of a fake browser sells the whole thing harder than anything in the middle of the screen. And one click making several things change at once — a badge, a number, a banner all updating together — reads as real because that's how real software actually reacts. There's a quiet pride in choosing the hard road on purpose, and it pays off in a way the easy road simply can't. That same idea — one action rippling out into many — is exactly what makes the ten apps feel alive; they're [here](/work/motion-made-with-code/#ui-replicas).
 
 ## Watch all ten
 

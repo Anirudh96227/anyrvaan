@@ -9,7 +9,7 @@ youtube: "https://youtu.be/vkMxG-ttrVE"
 
 I'd worked out a way of making animations that I liked — a consistent set of choices about color, pace, and restraint that made a whole batch of them feel like they belonged together. The trouble with liking your own way of doing something is you can't tell whether it's actually good or whether it just happens to suit the thing you've been making. So I ran a test. I took that exact way of working and pointed it at the most different subject I could think of.
 
-The stuff I'd built it on was fast and busy — charts, counters, moving numbers, the kind of thing you'd see in [the Effects Index](/work/effects-index/). The opposite was [slow, quiet, sacred patterns](/work/spiritual-series/): a mandala, a knot with no end, a circle drawn in one brushstroke. If my way of working only held together for the busy stuff, then it was never really a method. It was just a lucky fit, and it would fall apart the first time I asked it to do something new.
+The stuff I'd built it on was fast and busy — charts, counters, moving numbers, the kind of thing you'd see in [the Effects Index](/work/motion-made-with-code/#effects-index). The opposite was [slow, quiet, sacred patterns](/work/motion-made-with-code/#spiritual-series): a mandala, a knot with no end, a circle drawn in one brushstroke. If my way of working only held together for the busy stuff, then it was never really a method. It was just a lucky fit, and it would fall apart the first time I asked it to do something new.
 
 ## The only real change was speed
 
@@ -23,7 +23,7 @@ The tempting mistake would be to think "calm" means fewer things moving. It does
 
 ## Knowing which rule to break
 
-The one place I overrode my own method was by hand. The busy version spreads its repeated animations around evenly, by a simple rule, which is the right call for a big collection. But for the quiet patterns, spreading them evenly would drop things where they don't belong, so I placed every one of those by hand instead — flowing things in the water piece, cell-like things in the stained-glass piece. Knowing which rule to keep and which to override yourself is the actual skill. A method gives you a sensible default. It doesn't get you off the hook for judgment. Both, and the way of working they share, are [the Effects Index](/work/effects-index/).
+The one place I overrode my own method was by hand. The busy version spreads its repeated animations around evenly, by a simple rule, which is the right call for a big collection. But for the quiet patterns, spreading them evenly would drop things where they don't belong, so I placed every one of those by hand instead — flowing things in the water piece, cell-like things in the stained-glass piece. Knowing which rule to keep and which to override yourself is the actual skill. A method gives you a sensible default. It doesn't get you off the hook for judgment. Both, and the way of working they share, are [the Effects Index](/work/motion-made-with-code/#effects-index).
 
 ## The two tempos, side by side
 

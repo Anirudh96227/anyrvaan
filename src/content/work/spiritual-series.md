@@ -21,10 +21,10 @@ video: "https://youtu.be/8cKdoxP5HD0"
 studiesEyebrow: "The Patterns"
 studiesHeading: "Ten traditions, drawn in light."
 studiesIntro: "A mandala, a knot with no end, a single unbroken brush circle — one contemplative pattern per film, drawn slowly in line and light. Each plays through once, then again, slower."
-draft: false
+draft: true
 ---
 
-This is the same kind of work as [the Effects Index](/work/effects-index/) — small animations made with code — but pointed somewhere completely different, and slowed almost to stillness. Instead of counters and charts, it draws old contemplative patterns: a mandala opening from its center, a knot that never ends, a circle painted in one unbroken stroke. Ten short films, one pattern each, from traditions around the world.
+This is the same kind of work as [the Effects Index](#effects-index) — small animations made with code — but pointed somewhere completely different, and slowed almost to stillness. Instead of counters and charts, it draws old contemplative patterns: a mandala opening from its center, a knot that never ends, a circle painted in one unbroken stroke. Ten short films, one pattern each, from traditions around the world.
 
 I made it on purpose using the exact same setup as the fast, busy Index, because I wanted to know something. It's easy to build a way of working that only holds together for one kind of thing. The real test is whether it survives being pointed at the opposite kind. If the calm way I make a business chart also works for a mandala, then it's actually a way of working — not just a lucky fit for one subject.
 

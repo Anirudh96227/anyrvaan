@@ -89,6 +89,39 @@ const work = defineCollection({
 			studiesEyebrow: z.string().optional(),
 			studiesHeading: z.string().optional(),
 			studiesIntro: z.string().optional(),
+			// A "hub" case study that gathers several other work entries into one
+			// page: the ids of its member projects, rendered in order as collections
+			// (each with its own reel, prose, and studies grid). Members are kept as
+			// draft entries — sourced here, not shown as separate cards or pages.
+			collections: z.array(z.string()).optional(),
+			// A "facade video" case study: a hero film plus N library variants, each
+			// shown as a poster + play button whose YouTube iframe loads only on
+			// click. Posters are plain public/ paths (like `poster` above), so the
+			// build never depends on files still being supplied.
+			facade: z
+				.object({
+					hero: z.object({
+						youtube: z.string(),
+						poster: z.string(),
+						posterAlt: z.string(),
+						caption: z.string().optional(),
+					}),
+					librariesEyebrow: z.string().optional(),
+					librariesHeading: z.string().optional(),
+					librariesIntro: z.string().optional(),
+					libraries: z
+						.array(
+							z.object({
+								youtube: z.string(),
+								poster: z.string(),
+								posterAlt: z.string(),
+								caption: z.string().optional(),
+								label: z.string().optional(),
+							})
+						)
+						.default([]),
+				})
+				.optional(),
 			gallery: z
 				.array(
 					z.object({

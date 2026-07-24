@@ -1,0 +1,187 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+
+// The multi-video "studies" grid for one project — its chapters rendered as an
+// alternating film/text sequence. Extracted from the work case-study template so
+// both a single project page and the combined "collections" hub can render it.
+interface Props {
+	projectId: string;
+	// Fallback creator label on each tile when a study sets no `creator`.
+	title: string;
+	eyebrow?: string;
+	heading?: string;
+	intro?: string;
+}
+const { projectId, title, eyebrow, heading, intro } = Astro.props;
+
+function getYouTubeId(url: string): string | null {
+	const match = url.match(
+		/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+	);
+	return match ? match[1] : null;
+}
+
+const rawStudies = await getCollection(
+	'studies',
+	(s) => s.data.project === projectId && !s.data.draft
+);
+
+// Render each study's prose up front so the markup only ever reveals
+// pre-rendered HTML, never parses markdown client-side.
+const studiesWithContent = await Promise.all(
+	rawStudies
+		.sort((a, b) => a.data.number - b.data.number)
+		.map(async (study) => ({
+			study,
+			Content: (await render(study)).Content,
+			youtubeId: study.data.video ? getYouTubeId(study.data.video) : null,
+		}))
+);
+
+// Retro/UI films are captured landscape; the rest are portrait reels.
+const isLandscapeProject = projectId === 'retro-computing' || projectId === 'ui-replicas';
+---
+
+{
+	studiesWithContent.length > 0 && (
+		<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+			<div class="mx-auto max-w-5xl">
+				<p class="reveal text-eyebrow uppercase text-neutral-400">
+					{eyebrow ?? 'The Studies'}
+				</p>
+				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
+					{heading ?? 'Eight short studies, one rhythm.'}
+				</h2>
+				<p class="reveal mt-6 max-w-2xl text-body text-neutral-400">
+					{intro ??
+						"Each clip plays while it's on screen and rests the moment it isn't. Open one for the full concept behind it."}
+				</p>
+				<div class="mt-16 flex flex-col gap-20 sm:gap-28">
+					{studiesWithContent.map(({ study, Content: StudyContent, youtubeId: studyYoutubeId }, i) => {
+						const isLandscape =
+							study.data.aspect === 'landscape' ||
+							study.data.aspect === '16/9' ||
+							isLandscapeProject;
+						const aspectClass = study.data.behanceId
+							? 'aspect-[404/316]'
+							: isLandscape
+								? 'aspect-video'
+								: 'aspect-9/16';
+						const widthClass = isLandscape
+							? 'mx-auto w-full max-w-xl sm:mx-0'
+							: 'mx-auto w-full max-w-xs sm:mx-0';
+						return (
+							<article
+								class:list={[
+									'reveal grid items-center gap-8 sm:gap-12',
+									isLandscape ? 'grid-cols-1 md:grid-cols-2' : 'sm:grid-cols-2',
+								]}
+							>
+								<div class:list={[widthClass, i % 2 === 1 && 'md:order-2']}>
+									<div class="glow-frame rounded-2xl">
+										<div
+											class:list={[
+												'study-reel glow-frame__inner relative border border-white/10 bg-black',
+												aspectClass,
+												study.data.companion && 'flip-card',
+											]}
+										>
+											<div class:list={['h-full', study.data.companion && 'flip-card__face flip-card__face--front']}>
+											{study.data.behanceId ? (
+												<iframe
+													class="h-full w-full"
+													src=""
+													data-lazy-src={`https://www.behance.net/embed/project/${study.data.behanceId}?ilo0=1`}
+													title={study.data.title}
+													loading="lazy"
+													allow="clipboard-write"
+													allowfullscreen
+													referrerpolicy="strict-origin-when-cross-origin"
+												/>
+											) : studyYoutubeId ? (
+												<iframe
+													class="h-full w-full border-0"
+													src={`https://www.youtube-nocookie.com/embed/${studyYoutubeId}?rel=0&modestbranding=1`}
+													title={study.data.title}
+													loading="lazy"
+													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+													allowfullscreen
+												/>
+											) : (
+												<video
+													class="h-full w-full object-cover"
+													src={study.data.video}
+													poster={study.data.poster}
+													controls
+													playsinline
+													preload="none"
+												/>
+											)}
+										</div>
+										{study.data.companion && (
+											<div class="flip-card__face flip-card__face--back">
+												<Image
+													src={study.data.companion}
+													alt={study.data.companionLabel ?? 'A companion illustration of the same scene'}
+													loading="lazy"
+													class="h-full w-full object-cover"
+												/>
+												<span class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 pt-10">
+													<span class="block text-small text-neutral-200">
+														{study.data.companionLabel ?? 'A companion illustration of the same scene'}
+													</span>
+												</span>
+											</div>
+										)}
+									</div>
+								</div>
+								{study.data.companion && (
+									<button
+										type="button"
+										class="flip-card__toggle mt-3 inline-flex items-center rounded-full border border-white/15 px-4 py-1.5 text-small text-neutral-400 transition-colors hover:border-white/40 hover:text-neutral-100"
+										aria-label={`Flip to see the companion illustration for ${study.data.title}`}
+									>
+										Flip the frame
+									</button>
+								)}
+							</div>
+							<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && (isLandscape ? 'md:order-1' : 'sm:order-1')]}>
+								<p class="text-eyebrow uppercase text-neutral-400">
+									{study.data.creator ?? title}
+								</p>
+								<h3 class="mt-4 text-h3 text-neutral-50">{study.data.title}</h3>
+								{study.data.thread && (
+									<p class="mt-2 text-small text-neutral-400">{study.data.thread}</p>
+								)}
+								<div class="prose prose--study mt-6">
+									<StudyContent />
+								</div>
+								{study.data.toolChain && study.data.toolChain.length > 0 && (
+									<div class="tool-chain mt-8">
+										<p class="text-eyebrow uppercase text-neutral-400">How It Was Made</p>
+										<ol class="tool-chain__list mt-4">
+											{study.data.toolChain.map((entry, stepIndex) => (
+												<li class="tool-chain__item">
+													<button type="button" class="tool-chain__trigger" aria-expanded="false">
+														<span class="tool-chain__index">{String(stepIndex + 1).padStart(2, '0')}</span>
+														<span class="tool-chain__step">{entry.step}</span>
+														<span class="tool-chain__chevron" aria-hidden="true">⌄</span>
+													</button>
+													<div class="tool-chain__detail">
+														<p>{entry.detail}</p>
+													</div>
+												</li>
+											))}
+										</ol>
+									</div>
+								)}
+							</div>
+						</article>
+						);
+					})}
+				</div>
+			</div>
+		</section>
+	)
+}

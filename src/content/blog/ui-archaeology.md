@@ -7,7 +7,7 @@ hero: "strata-dig"
 youtube: "https://youtu.be/koKwwvKAbYc"
 ---
 
-For [Retro Computing](/work/retro-computing/) I rebuilt old computers from scratch — 1982 to 2007, one short film each — with one strict rule: no screenshots, nothing copied, all of it drawn again by hand. That sounds like a rule you'd set just to make it harder on yourself. It's actually the only way the films come out right, and here's why.
+For [Retro Computing](/work/motion-made-with-code/#retro-computing) I rebuilt old computers from scratch — 1982 to 2007, one short film each — with one strict rule: no screenshots, nothing copied, all of it drawn again by hand. That sounds like a rule you'd set just to make it harder on yourself. It's actually the only way the films come out right, and here's why.
 
 ## Your memory of an old screen is a forgery
 
@@ -23,7 +23,7 @@ A lot of the work was avoiding the tells. The biggest one is smoothness. Old mac
 
 ## Being able to check it is the point
 
-What holds it all together is that every single thing in every film can be looked up. The colors, the fonts, the startup messages — all found and checked, not remembered. That's the line between nostalgia that just flatters you and a rebuild that actually respects the thing it's copying. And there's a real, warm payoff in getting it right: the little jolt of *oh, that's exactly what it looked like* only happens when the details are honest. The wider collection of screen looks I drew on is [a field guide to app animations](/work/ui-animation-atlas/), and the films are [Retro Computing](/work/retro-computing/).
+What holds it all together is that every single thing in every film can be looked up. The colors, the fonts, the startup messages — all found and checked, not remembered. That's the line between nostalgia that just flatters you and a rebuild that actually respects the thing it's copying. And there's a real, warm payoff in getting it right: the little jolt of *oh, that's exactly what it looked like* only happens when the details are honest. The wider collection of screen looks I drew on is [a field guide to app animations](/work/ui-animation-atlas/), and the films are [Retro Computing](/work/motion-made-with-code/#retro-computing).
 
 ## Watch the series
 

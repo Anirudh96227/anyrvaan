@@ -22,7 +22,7 @@ poster: "/images/ui-replicas-poster.jpg"
 studiesEyebrow: "The Ten"
 studiesHeading: "Ten apps, faked to the pixel."
 studiesIntro: "QuickBooks, Excel, Slack, Gmail, Stripe, Xero, Notion, Google Calendar, VS Code, Trello — each rebuilt from nothing, with a fake mouse that clicks, types and drags while the app reacts just like the real one."
-draft: false
+draft: true
 ---
 
 I took ten apps you probably use — Excel, Gmail, Slack, Stripe, Trello, and a few more — and rebuilt each one from scratch. Then I set a fake mouse pointer loose inside them: it moves, clicks, types, drags things around, and the app responds exactly like the real thing. Watch any of them and it looks like an ordinary screen recording. It isn't. Nothing real is running. Every button and every reaction was hand-made.

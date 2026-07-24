@@ -1,9 +1,12 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
+import StudiesSection from '../../components/StudiesSection.astro';
+import VideoSwitcher from '../../components/VideoSwitcher.astro';
+import YouTubeFacade from '../../components/YouTubeFacade.astro';
 import WorldBackground, { type World } from '../../components/WorldBackground.tsx';
 
 import ConceptHero, { type ConceptPreset } from '../../components/ConceptHero.tsx';
@@ -29,11 +32,6 @@ const PRESETS: Record<string, ConceptPreset> = {
 };
 const conceptPreset = PRESETS[project.id];
 
-const rawStudies = await getCollection(
-	'studies',
-	(s) => s.data.project === project.id && !s.data.draft
-);
-
 // A project's or study's `video` can be a local file (starts with "/") or a
 // YouTube URL — extract the video ID so we know which player to render.
 function getYouTubeId(url: string): string | null {
@@ -44,25 +42,41 @@ function getYouTubeId(url: string): string | null {
 }
 const youtubeId = project.data.video ? getYouTubeId(project.data.video) : null;
 
-// Render each study's prose up front so the lightbox only ever has to reveal
-// pre-rendered HTML, never parse markdown client-side. Also resolve each
-// study's own video source: a YouTube study renders a thumbnail image on its
-// grid tile (an <iframe> can't silently autoplay/loop the way a local
-// <video> does) and opens as an embed in the lightbox instead of a <video>.
-const studiesWithContent = await Promise.all(
-	rawStudies
-		.sort((a, b) => a.data.number - b.data.number)
-		.map(async (study) => {
-			const studyYoutubeId = study.data.video ? getYouTubeId(study.data.video) : null;
-			return {
-				study,
-				Content: (await render(study)).Content,
-				youtubeId: studyYoutubeId,
-				thumb: studyYoutubeId
-					? `https://i.ytimg.com/vi/${studyYoutubeId}/hqdefault.jpg`
-					: (study.data.poster ?? ''),
-			};
-		})
+// A "hub" case study gathers several other work entries (kept as drafts, so
+// they don't appear as separate cards or pages) into one page — each rendered
+// in order as its own collection: a lead reel, its prose, then its studies grid.
+const memberSlugs = project.data.collections ?? [];
+const isHub = memberSlugs.length > 0;
+
+// A facade-video case study (hero film + library variants, poster-first).
+const facade = project.data.facade;
+const members = await Promise.all(
+	memberSlugs.map(async (slug) => {
+		const entry = await getEntry('work', slug);
+		if (!entry) throw new Error(`collections: work entry "${slug}" not found`);
+		// Each collection's individual films become the switcher's chapters —
+		// one button per film, all sharing a single player.
+		const chapters = (
+			await getCollection('studies', (s) => s.data.project === slug && !s.data.draft)
+		)
+			.sort((a, b) => a.data.number - b.data.number)
+			.map((s) => ({
+				id: s.data.video ? getYouTubeId(s.data.video) : null,
+				number: s.data.number,
+				title: s.data.title,
+				thread: s.data.thread ?? null,
+			}))
+			.filter((c): c is { id: string; number: number; title: string; thread: string | null } =>
+				Boolean(c.id)
+			);
+		return {
+			slug,
+			entry,
+			Content: (await render(entry)).Content,
+			reelId: entry.data.video ? getYouTubeId(entry.data.video) : null,
+			chapters,
+		};
+	})
 );
 
 // An image-plate project's gallery renders as a sequential, alternating
@@ -157,6 +171,21 @@ const world = WORLDS[project.id];
 			{
 				conceptPreset ? (
 					<ConceptHero client:visible preset={conceptPreset} title={project.data.title} />
+				) : facade ? (
+					<div class="mx-auto max-w-4xl px-6 pb-16">
+						<figure class="reveal">
+							<YouTubeFacade
+								youtube={facade.hero.youtube}
+								poster={facade.hero.poster}
+								posterAlt={facade.hero.posterAlt}
+								title={project.data.title}
+								loading="eager"
+							/>
+							{facade.hero.caption && (
+								<figcaption class="mt-4 text-small text-neutral-400">{facade.hero.caption}</figcaption>
+							)}
+						</figure>
+					</div>
 				) : (
 					project.data.video && (
 						<div class="mx-auto max-w-4xl px-6 pb-16">
@@ -194,7 +223,38 @@ const world = WORLDS[project.id];
 				</div>
 			</article>
 
-
+			{
+				facade && facade.libraries.length > 0 && (
+					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+						<div class="mx-auto max-w-5xl">
+							<p class="reveal text-eyebrow uppercase text-neutral-400">
+								{facade.librariesEyebrow ?? 'The Library'}
+							</p>
+							<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
+								{facade.librariesHeading ?? 'Same pipeline, rebuilt.'}
+							</h2>
+							{facade.librariesIntro && (
+								<p class="reveal mt-6 max-w-2xl text-body text-neutral-400">{facade.librariesIntro}</p>
+							)}
+							<div class="mt-16 grid gap-10 sm:gap-12 md:grid-cols-2">
+								{facade.libraries.map((lib) => (
+									<figure class="reveal">
+										<YouTubeFacade
+											youtube={lib.youtube}
+											poster={lib.poster}
+											posterAlt={lib.posterAlt}
+											title={lib.label ?? project.data.title}
+										/>
+										{lib.caption && (
+											<figcaption class="mt-4 text-small text-neutral-400">{lib.caption}</figcaption>
+										)}
+									</figure>
+								))}
+							</div>
+						</div>
+					</section>
+				)
+			}
 
 			{
 				gallery.length > 0 && (
@@ -237,146 +297,33 @@ const world = WORLDS[project.id];
 			}
 
 			{
-				rawStudies.length > 0 && (
-					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
-						<div class="mx-auto max-w-5xl">
-							<p class="reveal text-eyebrow uppercase text-neutral-400">
-								{project.data.studiesEyebrow ?? 'The Studies'}
-							</p>
-							<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
-								{project.data.studiesHeading ?? 'Eight short studies, one rhythm.'}
-							</h2>
-							<p class="reveal mt-6 max-w-2xl text-body text-neutral-400">
-								{project.data.studiesIntro ??
-									"Each clip plays while it's on screen and rests the moment it isn't. Open one for the full concept behind it."}
-							</p>
-							<div class="mt-16 flex flex-col gap-20 sm:gap-28">
-								{studiesWithContent.map(({ study, Content: StudyContent, youtubeId: studyYoutubeId }, i) => {
-									const isLandscape =
-										study.data.aspect === 'landscape' ||
-										study.data.aspect === '16/9' ||
-										project.id === 'retro-computing' ||
-										project.id === 'ui-replicas';
-									const aspectClass = study.data.behanceId
-										? 'aspect-[404/316]'
-										: isLandscape
-											? 'aspect-video'
-											: 'aspect-9/16';
-									const widthClass = isLandscape
-										? 'mx-auto w-full max-w-xl sm:mx-0'
-										: 'mx-auto w-full max-w-xs sm:mx-0';
-									return (
-										<article
-											class:list={[
-												'reveal grid items-center gap-8 sm:gap-12',
-												isLandscape ? 'grid-cols-1 md:grid-cols-2' : 'sm:grid-cols-2',
-											]}
-										>
-											<div class:list={[widthClass, i % 2 === 1 && 'md:order-2']}>
-												<div class="glow-frame rounded-2xl">
-													<div
-														class:list={[
-															'study-reel glow-frame__inner relative border border-white/10 bg-black',
-															aspectClass,
-															study.data.companion && 'flip-card',
-														]}
-													>
-														<div class:list={['h-full', study.data.companion && 'flip-card__face flip-card__face--front']}>
-														{study.data.behanceId ? (
-															<iframe
-																class="h-full w-full"
-																src=""
-																data-lazy-src={`https://www.behance.net/embed/project/${study.data.behanceId}?ilo0=1`}
-																title={study.data.title}
-																loading="lazy"
-																allow="clipboard-write"
-																allowfullscreen
-																referrerpolicy="strict-origin-when-cross-origin"
-															/>
-														) : studyYoutubeId ? (
-															<iframe
-																class="h-full w-full border-0"
-																src={`https://www.youtube-nocookie.com/embed/${studyYoutubeId}?rel=0&modestbranding=1`}
-																title={study.data.title}
-																loading="lazy"
-																allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-																allowfullscreen
-															/>
-														) : (
-															<video
-																class="h-full w-full object-cover"
-																src={study.data.video}
-																poster={study.data.poster}
-																controls
-																playsinline
-																preload="none"
-															/>
-														)}
-													</div>
-													{study.data.companion && (
-														<div class="flip-card__face flip-card__face--back">
-															<Image
-																src={study.data.companion}
-																alt={study.data.companionLabel ?? 'A companion illustration of the same scene'}
-																loading="lazy"
-																class="h-full w-full object-cover"
-															/>
-															<span class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 pt-10">
-																<span class="block text-small text-neutral-200">
-																	{study.data.companionLabel ?? 'A companion illustration of the same scene'}
-																</span>
-															</span>
-														</div>
-													)}
-												</div>
-											</div>
-											{study.data.companion && (
-												<button
-													type="button"
-													class="flip-card__toggle mt-3 inline-flex items-center rounded-full border border-white/15 px-4 py-1.5 text-small text-neutral-400 transition-colors hover:border-white/40 hover:text-neutral-100"
-													aria-label={`Flip to see the companion illustration for ${study.data.title}`}
-												>
-													Flip the frame
-												</button>
-											)}
-										</div>
-										<div class:list={['mx-auto w-full max-w-md sm:mx-0', i % 2 === 1 && (isLandscape ? 'md:order-1' : 'sm:order-1')]}>
-											<p class="text-eyebrow uppercase text-neutral-400">
-												{study.data.creator ?? project.data.title}
-											</p>
-											<h3 class="mt-4 text-h3 text-neutral-50">{study.data.title}</h3>
-											{study.data.thread && (
-												<p class="mt-2 text-small text-neutral-400">{study.data.thread}</p>
-											)}
-											<div class="prose prose--study mt-6">
-												<StudyContent />
-											</div>
-											{study.data.toolChain && study.data.toolChain.length > 0 && (
-												<div class="tool-chain mt-8">
-													<p class="text-eyebrow uppercase text-neutral-400">How It Was Made</p>
-													<ol class="tool-chain__list mt-4">
-														{study.data.toolChain.map((entry, stepIndex) => (
-															<li class="tool-chain__item">
-																<button type="button" class="tool-chain__trigger" aria-expanded="false">
-																	<span class="tool-chain__index">{String(stepIndex + 1).padStart(2, '0')}</span>
-																	<span class="tool-chain__step">{entry.step}</span>
-																	<span class="tool-chain__chevron" aria-hidden="true">⌄</span>
-																</button>
-																<div class="tool-chain__detail">
-																	<p>{entry.detail}</p>
-																</div>
-															</li>
-														))}
-													</ol>
-												</div>
-											)}
-										</div>
-									</article>
-									);
-								})}
+				isHub ? (
+					members.map(({ slug, entry, Content: MemberContent, reelId, chapters }, i) => (
+						<section id={slug} class="scroll-mt-24 border-t border-white/5 px-6 py-20 sm:py-28">
+							<div class="mx-auto max-w-5xl">
+								<p class="reveal text-eyebrow uppercase text-neutral-400">
+									Collection {String(i + 1).padStart(2, '0')} — {entry.data.title}
+								</p>
+								<h2 class="reveal mt-4 text-h2 text-neutral-50">{entry.data.title}</h2>
+								<p class="reveal mt-6 max-w-2xl text-body-lg text-neutral-300">{entry.data.summary}</p>
+								{entry.data.thesis && (
+									<p class="thesis-sweep reveal mt-8 max-w-3xl text-h3 text-neutral-100">{entry.data.thesis}</p>
+								)}
+								<VideoSwitcher title={entry.data.title} reel={reelId} chapters={chapters} />
+								<div class="prose mt-12 max-w-3xl">
+									<MemberContent />
+								</div>
 							</div>
-						</div>
-					</section>
+						</section>
+					))
+				) : (
+					<StudiesSection
+						projectId={project.id}
+						title={project.data.title}
+						eyebrow={project.data.studiesEyebrow}
+						heading={project.data.studiesHeading}
+						intro={project.data.studiesIntro}
+					/>
 				)
 			}
 
@@ -427,6 +374,38 @@ const world = WORLDS[project.id];
 	}
 	document.addEventListener('astro:page-load', initHeroVideo);
 	initHeroVideo();
+
+	// Video switcher: one player per collection, a button per film. Clicking a
+	// tab swaps the single stage iframe (autoplaying, since it's a user gesture)
+	// and updates the caption — so all the films are one click apart without a
+	// page full of separate players.
+	function initVideoSwitchers() {
+		document
+			.querySelectorAll<HTMLElement>('[data-video-switcher]:not([data-vs-init])')
+			.forEach((sw) => {
+				sw.dataset.vsInit = 'true';
+				const stage = sw.querySelector<HTMLIFrameElement>('.video-switcher__stage');
+				const capTitle = sw.querySelector<HTMLElement>('.video-switcher__caption-title');
+				const capSub = sw.querySelector<HTMLElement>('.video-switcher__caption-sub');
+				const tabs = sw.querySelectorAll<HTMLButtonElement>('.video-switcher__tab');
+				if (!stage) return;
+				tabs.forEach((tab) => {
+					tab.addEventListener('click', () => {
+						const id = tab.dataset.videoId;
+						if (!id) return;
+						tabs.forEach((t) => t.setAttribute('aria-selected', 'false'));
+						tab.setAttribute('aria-selected', 'true');
+						stage.src = `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&autoplay=1`;
+						const label = tab.dataset.videoLabel ?? '';
+						const sub = tab.dataset.videoSub ?? '';
+						if (capTitle) capTitle.textContent = label;
+						if (capSub) capSub.textContent = sub ? ` — ${sub}` : '';
+					});
+				});
+			});
+	}
+	document.addEventListener('astro:page-load', initVideoSwitchers);
+	initVideoSwitchers();
 
 	// Each study's reel is a real embed, sitting inline in the page — no
 	// lightbox. Its iframe only gets a `src` once it scrolls near view (via
