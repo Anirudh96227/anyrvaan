@@ -5,6 +5,7 @@ import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import SheetToDashboard from '../../components/SheetToDashboard.tsx';
 import PostHero from '../../components/PostHero.tsx';
+import WorldBackground, { type World } from '../../components/WorldBackground.tsx';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -39,6 +40,20 @@ const heroCaption = post.data.heroMotif ? heroCaptions[post.data.heroMotif] : nu
 const ogImage = postYoutubeId
 	? `https://i.ytimg.com/vi/${postYoutubeId}/maxresdefault.jpg`
 	: undefined;
+
+// Each post gets the same ambient world as the case study it's a companion
+// to (or the closest thematic match), so the two read as one piece told
+// twice. Posts without a clear companion keep the plain dark ground.
+const WORLDS: Record<string, World> = {
+	'death-by-a-thousand-cells': 'dashboard',
+	'least-efficient-on-purpose': 'ui',
+	'one-system-two-tempos': 'grid-swarm',
+	'the-best-interface-is-no-interface': 'almost-nothing',
+	'three-iterations-each-thrown-away': 'effects',
+	'a-hundred-animations-cross-indexed': 'ui',
+	'ui-archaeology': 'retro',
+};
+const world = WORLDS[post.id];
 ---
 
 <Layout
@@ -52,9 +67,11 @@ const ogImage = postYoutubeId
 	<div class="read-progress" aria-hidden="true"><span class="read-progress__fill"></span></div>
 	<!-- Cursor spotlight: a soft blue light that tints the text it passes over. -->
 	<div class="spotlight" aria-hidden="true"></div>
-	<div class="min-h-screen bg-neutral-950 text-neutral-50">
-		<Nav />
-		<main>
+	<div class:list={['relative min-h-screen text-neutral-50', !world && 'bg-neutral-950']}>
+		{world && <WorldBackground client:visible theme={world} />}
+		<div class="relative z-10">
+			<Nav />
+			<main>
 			<header class="mx-auto max-w-3xl px-6 pt-40 pb-16">
 				{
 					post.data.hero ? (
@@ -143,5 +160,6 @@ const ogImage = postYoutubeId
 			</footer>
 		</main>
 		<Footer />
+	</div>
 	</div>
 </Layout>

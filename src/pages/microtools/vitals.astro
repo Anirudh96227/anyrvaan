@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+import Vitals from '../../components/Vitals.tsx';
+---
+
+<Layout
+	title="Vitals — Anyrvaan Microtools"
+	description="Enter your height and weight, build a figure, then watch ten real physiological approximations happen to it — pulse, breath, body clock, caffeine, and more."
+>
+	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Vitals"
+				intro="One figure, ten things it does without asking you. Tell it your height and weight, watch it build itself, then hand it a pulse, a breath rate, a coffee, a meal — and see where each one actually goes instead of just believing the number."
+			/>
+			<div class="mx-auto max-w-4xl px-6 pb-32">
+				<Vitals client:visible />
+			</div>
+			<div class="mx-auto max-w-4xl border-t border-white/5 px-6 py-16">
+				<a
+					href="/microtools"
+					class="group inline-flex items-center gap-2 text-small text-neutral-400 transition-colors hover:text-neutral-50"
+				>
+					<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+					Back to Microtools
+				</a>
+			</div>
+		</main>
+		<Footer />
+	</div>
+</Layout>

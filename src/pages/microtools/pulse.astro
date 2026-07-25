@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+import Pulse from '../../components/Pulse.tsx';
+---
+
+<Layout
+	title="Pulse — Anyrvaan Microtools"
+	description="Type a heart rate, or tap along to your own, and watch it drawn live as an ECG-style trace. No account, nothing saved."
+>
+	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Pulse"
+				intro="Enter a heart rate — yours, or one you're curious about — and watch it drawn as a live trace. Or tap along to your own pulse and let it read the rate back to you."
+			/>
+			<div class="mx-auto max-w-3xl px-6 pb-32">
+				<Pulse client:visible />
+			</div>
+			<div class="mx-auto max-w-3xl border-t border-white/5 px-6 py-16">
+				<a
+					href="/microtools"
+					class="group inline-flex items-center gap-2 text-small text-neutral-400 transition-colors hover:text-neutral-50"
+				>
+					<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+					Back to Microtools
+				</a>
+			</div>
+		</main>
+		<Footer />
+	</div>
+</Layout>

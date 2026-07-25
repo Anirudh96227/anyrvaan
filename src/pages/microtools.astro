@@ -1,0 +1,83 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Footer from '../components/Footer.astro';
+
+// Small, single-purpose tools — each one coded, not assembled from a
+// component kit. Each entry below is a real, live tool — no
+// placeholders standing in for work that doesn't exist yet.
+const tools: { name: string; description: string; href: string }[] = [
+	{
+		name: 'Vitals',
+		description:
+			'Enter your height and weight, build a figure, then hand it a pulse, a breath, a coffee, a meal — ten readings, one body.',
+		href: '/microtools/vitals',
+	},
+	{
+		name: 'Pulse',
+		description: 'Type a heart rate, or tap along to your own, and watch it drawn live as an ECG-style trace.',
+		href: '/microtools/pulse',
+	},
+];
+---
+
+<Layout
+	title="Microtools — Anyrvaan"
+	description="Small, single-purpose tools built and shipped one at a time — each one coded from scratch, not assembled from a kit."
+>
+	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Build"
+				title="Microtools"
+				intro="Small tools, one purpose each, built the same way as everything else here — designed and coded by the same pair of hands. This section fills in as each one ships, not before."
+			/>
+
+			{
+				tools.length > 0 ? (
+					<section class="mx-auto max-w-4xl px-6 pb-32">
+						<div class="grid gap-6 sm:grid-cols-2">
+							{tools.map((t) => (
+								<a
+									href={t.href}
+									class="reveal group block rounded-2xl border border-white/5 p-8 transition-colors hover:border-white/15"
+								>
+									<h2 class="text-h3 text-neutral-50">{t.name}</h2>
+									<p class="mt-3 text-body text-neutral-400">{t.description}</p>
+									<span
+										aria-hidden="true"
+										class="mt-6 inline-block text-small text-neutral-500 transition-transform group-hover:translate-x-1"
+										>Open &rarr;</span
+									>
+								</a>
+							))}
+						</div>
+					</section>
+				) : (
+					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+						<div class="mx-auto max-w-4xl">
+							<p class="reveal text-eyebrow uppercase text-neutral-400">Status</p>
+							<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
+								Nothing live here yet. The first one is picked, not placeholder-named — I'd
+								rather this stay empty than fill it with tools that don't exist.
+							</p>
+							<p class="reveal mt-6 max-w-2xl text-body text-neutral-500">
+								If there's a small, specific tool you wish existed, that's a good reason to write
+								in.
+							</p>
+							<a
+								href="/contact"
+								class="reveal mt-8 inline-block text-body text-neutral-300 transition-colors hover:text-neutral-50"
+							>
+								Suggest one &nearr;
+							</a>
+						</div>
+					</section>
+				)
+			}
+		</main>
+		<Footer />
+	</div>
+</Layout>
