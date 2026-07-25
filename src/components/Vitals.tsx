@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import BodyFigure, { ANCHORS, type Glow } from './BodyFigure.tsx';
+import BodyFigure3D, { type Body3DState, type Organ } from './BodyFigure3D.tsx';
 
 /**
  * Vitals — one figure, ten readings. You tell it your height and weight, it
@@ -128,81 +128,57 @@ export default function Vitals() {
 		return () => cancelAnimationFrame(raf);
 	}, []);
 
-	// ——— derived visuals per tab ———
-	const figureProps = useMemo(() => {
-		const base = { heightScale, widthScale, reveal: revealT };
+	// ——— derived 3D state per tab ———
+	// The body is always alive: the heart beats and the lungs move on every
+	// tab, because they do. A tab only decides what gets *lit*.
+	const body3D = useMemo<Body3DState>(() => {
+		const heartPeriod = 60000 / bpm;
+		const breathRate = tab === 'altitude' ? breathingRateForAltitude(altitude) : breaths;
+		const lungPeriod = 60000 / breathRate;
 
-		if (tab === 'pulse') {
-			const period = 60000 / bpm;
-			const phase = (t % period) / period;
-			const thump = phase < 0.12 ? 1 - phase / 0.12 : 0;
-			const glows: Glow[] = [
-				{ ...ANCHORS.heart, r: 10 + thump * 22, color: 'rgba(45,212,191,0.55)', opacity: thump * 0.8 },
-				{ ...ANCHORS.heart, r: 5, color: 'rgba(45,212,191,0.9)', opacity: 0.9 },
-			];
-			return { ...base, glows };
-		}
-		if (tab === 'breath') {
-			const period = 60000 / breaths;
-			const phase = (t % period) / period;
-			const scale = 1 + 0.09 * Math.sin(phase * Math.PI * 2);
-			return { ...base, breathScale: scale };
-		}
+		const litOrgans: Partial<Record<Organ, number>> = {};
+		let fillLevel: number | null = null;
+		let nerve: number | null = null;
+		let surface: 'none' | 'cold' | 'hot' = 'none';
+
+		if (tab === 'pulse') litOrgans.heart = 1;
+		if (tab === 'breath' || tab === 'altitude') litOrgans.lungs = 1;
 		if (tab === 'clock') {
+			// the brain runs the clock — bright when the curve says you're up
 			const ring = circadianCurve(wake, sleep);
-			return { ...base, ringHours: ring, nowHour };
+			litOrgans.brain = ring[Math.floor(nowHour) % 24];
 		}
 		if (tab === 'caffeine') {
 			const hoursSince = ((nowHour - caffAt + 24) % 24) || 0.01;
-			const remaining = caffMg * Math.pow(0.5, hoursSince / 5);
-			const frac = clamp(remaining / caffMg, 0, 1);
-			const glows: Glow[] = [
-				{ x: ANCHORS.head.x, y: ANCHORS.head.y, r: 20 + frac * 20, color: 'rgba(240,190,120,0.6)', opacity: frac * 0.7 },
-			];
-			return { ...base, glows };
+			litOrgans.brain = clamp(Math.pow(0.5, hoursSince / 5), 0, 1);
 		}
-		if (tab === 'hydration') {
-			return { ...base, fillLevel: clamp(glasses / 8, 0, 1) };
-		}
-		if (tab === 'reflex') {
-			if (reflexState === 'go' || reflexState === 'done') {
-				const dur = reflexMs ? clamp(reflexMs, 150, 500) * 4 : 800;
-				const started = reflexGoAt.current;
-				const p = clamp((t - started) / dur, 0, 1);
-				const pts = [ANCHORS.rightHand, ANCHORS.rightShoulder, ANCHORS.neck, ANCHORS.head];
-				const seg = Math.min(pts.length - 2, Math.floor(p * (pts.length - 1)));
-				const segP = p * (pts.length - 1) - seg;
-				const x = lerp(pts[seg].x, pts[seg + 1].x, segP);
-				const y = lerp(pts[seg].y, pts[seg + 1].y, segP);
-				return { ...base, pathDot: { x, y, opacity: p < 1 ? 1 : 0, color: '#2dd4bf' } };
-			}
-			return base;
-		}
-		if (tab === 'temperature') {
-			return { ...base, tint: outsideTemp <= 14 ? ('cold' as const) : outsideTemp >= 30 ? ('hot' as const) : ('none' as const) };
-		}
-		if (tab === 'altitude') {
-			const period = 60000 / breathingRateForAltitude(altitude);
-			const phase = (t % period) / period;
-			const scale = 1 + 0.11 * Math.sin(phase * Math.PI * 2);
-			return { ...base, breathScale: scale };
+		if (tab === 'hydration') fillLevel = clamp(glasses / 8, 0, 1);
+		if (tab === 'temperature') surface = outsideTemp <= 14 ? 'cold' : outsideTemp >= 30 ? 'hot' : 'none';
+		if (tab === 'reflex' && (reflexState === 'go' || reflexState === 'done')) {
+			const dur = reflexMs ? clamp(reflexMs, 150, 500) * 4 : 800;
+			const p = clamp((t - reflexGoAt.current) / dur, 0, 1);
+			nerve = p;
+			litOrgans.brain = p >= 0.98 ? 1 : 0;
 		}
 		if (tab === 'digestion') {
 			const hoursSince = ((nowHour - mealAt + 24) % 24) || 0.01;
-			const marker =
-				hoursSince < 2
-					? ANCHORS.stomach
-					: hoursSince < 6
-					? ANCHORS.smallIntestine
-					: hoursSince < 30
-					? ANCHORS.largeIntestine
-					: null;
-			const glows: Glow[] = marker
-				? [{ x: marker.x, y: marker.y, r: 14, color: 'rgba(240,190,120,0.7)', opacity: 0.75 }]
-				: [];
-			return { ...base, glows };
+			if (hoursSince < 2) litOrgans.stomach = 1;
+			else if (hoursSince < 6) litOrgans.smallIntestine = 1;
+			else if (hoursSince < 30) litOrgans.largeIntestine = 1;
 		}
-		return base;
+
+		return {
+			heightScale,
+			widthScale,
+			reveal: revealT,
+			heartPulse: (t % heartPeriod) / heartPeriod,
+			lungPhase: (t % lungPeriod) / lungPeriod,
+			litOrgans,
+			fillLevel,
+			surface,
+			nerve,
+			autoTurn: true,
+		};
 	}, [
 		tab,
 		t,
@@ -300,14 +276,14 @@ export default function Vitals() {
 	return (
 		<div className="not-prose">
 			<div className="grid gap-6 sm:grid-cols-[minmax(0,220px)_1fr]">
-				{/* On a phone this column is full-width, and the figure's natural
-				    240:460 ratio would make it ~700px tall — taller than the screen.
-				    Cap the height on small screens and let the SVG letterbox itself
-				    inside; the aspect ratio only takes over once there's a column. */}
-				<div className="rounded-2xl border border-white/10 bg-black p-4">
-					<div className="mx-auto aspect-[240/460] w-[150px] sm:w-full">
-						<BodyFigure {...figureProps} />
+				{/* The 3D canvas needs a real height, and on a phone this column is
+				    full-width — so cap it there and let it grow only once there's an
+				    actual side column at sm:. */}
+				<div className="rounded-2xl border border-white/10 bg-black p-2">
+					<div className="h-[300px] w-full sm:h-[440px]">
+						<BodyFigure3D state={body3D} />
 					</div>
+					<p className="px-2 pb-1 text-center text-small text-neutral-600">Drag to turn</p>
 				</div>
 
 				<div className="rounded-2xl border border-white/10 bg-black p-6 sm:p-8">
