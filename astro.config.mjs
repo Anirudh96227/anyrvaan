@@ -12,6 +12,12 @@ const SITE_URL = 'https://anyrvaan.com';
 // https://astro.build/config
 export default defineConfig({
   site: SITE_URL,
+  // /studio was folded into /contact — one page now covers who I am and how
+  // to reach me. Kept as a redirect so old links and anything already indexed
+  // still land somewhere real.
+  redirects: {
+    '/studio': '/contact',
+  },
   integrations: [sitemap(), react()],
   vite: {
     plugins: [tailwindcss()]
