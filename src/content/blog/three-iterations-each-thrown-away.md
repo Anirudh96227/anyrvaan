@@ -19,7 +19,7 @@ On paper, thorough. On screen, exhausting. You'd sit through a wall of explanati
 
 So the next version cut nearly all of it. Same idea, much shorter, just the animation and its name and nothing else crowding the screen. This one actually worked well enough to show people. The pace was finally right — each animation had room to just breathe.
 
-The problem was bigger than any single piece. Each film was so short it only held a handful of animations, so it skimmed the surface of its own subject and stopped. Ten films that each barely scratch their topic don't add up to a proper collection. They add up to a trailer. And the whole point was to go deep. The second version was honest enough to make its own shallowness impossible to ignore.
+The problem was bigger than any single piece. Each film was so short it only held a handful of animations, so it skimmed the surface of its own subject and stopped. Ten films that each barely scratch their topic don't add up to a proper collection. They add up to a trailer. And the whole point was to go deep. The second version made its own shallowness impossible to ignore.
 
 ## The third try faced the real problem
 

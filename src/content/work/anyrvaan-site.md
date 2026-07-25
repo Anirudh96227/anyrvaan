@@ -8,10 +8,10 @@ coverAlt: "The Anyrvaan wordmark glowing over a field of particles on the site i
 draft: true
 ---
 
-The brief was self-issued: build a studio site that doesn't just describe the practice, but behaves like it. If the studio's position is that motion should be earned, not assumed, the site had to prove that in its own code before it could ask anyone to believe it.
+I built this site as its own case study. The idea I kept in front of me was to make it behave like the work instead of just talking about the work. If I'm going to say motion should be earned, the site had to earn its own first, in its own code, before I could ask anyone to believe me.
 
-That constraint shaped everything. The homepage hero runs on a particle field that renders zero frames when nobody's near it — not throttled, actually stopped — and wakes only when a cursor comes close enough to matter. The wordmark breathes on a variable font axis instead of crossfading between static weights. Type is set across eight fluid, `clamp()`-based steps in a single self-hosted variable face, so the whole site scales continuously between a phone and a wide desktop instead of jumping at fixed breakpoints.
+That shaped everything. The homepage hero runs a particle field that renders zero frames when nobody's near it — actually stopped — and wakes only when a cursor comes close enough to matter. The wordmark breathes along a variable-font axis. Type is set in eight fluid, `clamp()`-based steps in one self-hosted variable face, so the whole site scales smoothly between a phone and a wide desktop.
 
-Underneath, the site is fully static — Astro, Tailwind, and a content-collection architecture that treats case studies and journal entries as structured data instead of one-off pages. Adding a new case study, like this one, means writing a Markdown file and a video folder, not touching a template.
+Underneath, it's fully static — Astro, Tailwind, and a content-collection setup that treats case studies and journal entries as structured data. Adding a new case study, like this one, is writing a Markdown file and dropping in a video folder. No template surgery.
 
-The outcome is the studio's most literal case study: not a description of the philosophy, but the philosophy, running in a browser.
+So this is the studio's most literal piece of work: the philosophy, running in a browser, where you can right-click and check it against what I claimed.

@@ -8,7 +8,7 @@ hero: "index-swarm"
 
 [The field guide to app animations](/work/ui-animation-atlas/) is a list of a hundred small things you see in apps every day — the bounce when you pull a feed to refresh, the heart that bursts when you like a photo, the shimmer of a screen still loading. For each one I wrote down where it really came from and how it actually works. The lesson from making it wasn't about animation at all. It was about how much of what we all confidently "know" about these famous little moments is just wrong.
 
-## Look it up before you build it, not after
+## Look it up before you build it
 
 The rule was simple: nothing goes on the list from memory. For each animation I found the real facts — the actual speed, the real bounce, the true story of who made it and when. You can't convincingly copy one of these from a vague feeling. You need the real number, and the real number is almost never the one you'd have guessed.
 

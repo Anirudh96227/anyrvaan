@@ -12,7 +12,7 @@ const numbers = [
 	{ value: '41', label: 'short films, all rendered from code', href: '/work' },
 	{ value: '110', label: 'motion effects, catalogued and cross-indexed', href: '/work/motion-made-with-code/#effects-index' },
 	{ value: '24', label: 'live interaction prototypes in the lab', href: '/experiments' },
-	{ value: '1', label: 'pair of hands — design and code', href: '/contact' },
+	{ value: '1', label: 'person — I do the design and the code', href: '/contact' },
 ];
 
 // Concrete offerings, derived from the case studies rather than aspiration.
@@ -34,16 +34,17 @@ const services = [
 	},
 ];
 
-const principles = [
-	'Nothing moves without intention.',
-	'Stillness is a decision, not an absence.',
-	'Detail is not decoration — it’s evidence of care.',
+// Not a mission statement — the actual rules I catch myself working by.
+const workNotes = [
+	'I place things by hand, one at a time. Let a tool auto-arrange a layout and it comes out even — and even reads as nobody. The small irregularities are how you can tell a person was here.',
+	'I keep the drafts I threw away, and I’ll show them to you. When I don’t know why something works, I say so instead of reaching for a reason that sounds right.',
+	'Subtraction first. There’s an old idea I keep using — neti-neti, “not this, not this” — where you find the thing by removing everything it isn’t. That’s genuinely how I get to a frame.',
 ];
 ---
 
 <Layout
 	title="Studio — Anyrvaan"
-	description="The one-person studio of Anirudh — films, interfaces, and tools, designed and coded by the same pair of hands."
+	description="The studio behind Anyrvaan — one person, Delhi-based, making quiet motion work and the interfaces around it."
 >
 	<div class="min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
@@ -51,7 +52,7 @@ const principles = [
 			<PageHeader
 				eyebrow="About"
 				title="Studio"
-				intro="My name's Anirudh. I design and build things that move — Anyrvaan is the name those things ship under. There's no team behind the word: every film, interface, and experiment here was designed and coded by the same pair of hands."
+				intro="I'm Anirudh. I design and build things that move, and Anyrvaan is the name they ship under — no team behind the word, just me doing both the design and the code. I spend about four hours a day on the Delhi Metro, packed in, in motion I didn't choose. Almost everything I make is about stillness. I've stopped thinking that's a coincidence."
 			/>
 
 			<!-- Portfolio reel: a click-to-play facade. The frame stays on-brand
@@ -137,14 +138,14 @@ const principles = [
 				</div>
 			</section>
 
-			<!-- Principles -->
+			<!-- How I work: concrete rules, not a mission block -->
 			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
 				<div class="mx-auto max-w-4xl">
-					<p class="reveal text-eyebrow uppercase text-neutral-400">Principles</p>
-					<ul class="mt-10 flex flex-col gap-6">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">How I work</p>
+					<ul class="mt-10 flex flex-col gap-8">
 						{
-							principles.map((line) => (
-								<li class="reveal max-w-2xl text-h3 text-neutral-200">{line}</li>
+							workNotes.map((line) => (
+								<li class="reveal max-w-2xl text-body-lg text-neutral-300">{line}</li>
 							))
 						}
 					</ul>

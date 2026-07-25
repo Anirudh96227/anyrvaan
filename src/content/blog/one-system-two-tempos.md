@@ -19,7 +19,7 @@ But that one change ripples outward. When something plays slowly, the quick reca
 
 ## Slow doesn't mean nothing's moving
 
-The tempting mistake would be to think "calm" means fewer things moving. It doesn't. Everything is still in motion the whole time — lines drawing themselves, a slow drift, a gentle breathing. What changes is how often something *new* happens, not whether anything happens at all. A held musical note is still a note. Silence is just silence, and your ear knows the difference the instant it hears it. Your eye is exactly the same.
+It's tempting to think "calm" means fewer things moving. It doesn't. Everything is still in motion the whole time — lines drawing themselves, a slow drift, a gentle breathing. What changes is how often something *new* happens. A held musical note is still a sound; only silence is nothing, and you can hear that difference the instant it lands. Watching these works the same way.
 
 ## Knowing which rule to break
 

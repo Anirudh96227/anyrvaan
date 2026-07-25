@@ -35,6 +35,7 @@ pnpm-debug.log*
 # Downloaded render bundles and loose desk files — not site source.
 /2026-*_ANYRVAAN-*/
 /2026-*_remotion-casebook/
+/remotion-lab/
 /logo.png
 /black_logo.png
 /plain-real-explanation*.md

@@ -1,6 +1,6 @@
 ---
 title: "Automating devotion"
-summary: "300 devotional songs that each needed their own visual treatment — so I taught code to render them."
+summary: "Three hundred devotional songs, each needing its own visual treatment — too many to animate by hand, so I built a system that renders them from code."
 year: "2026"
 order: 0
 tags: ["Animation", "Made with Code", "Remotion"]
@@ -15,7 +15,7 @@ facade:
     caption: "The composed piece — library effects sequenced and scored into a single film."
   librariesEyebrow: "The Library, Two Ways"
   librariesHeading: "Same pipeline, rebuilt."
-  librariesIntro: "Two generations of the same system, side by side. The point isn't twice the volume — it's the jump from the first pass to the second: same pipeline, better output."
+  librariesIntro: "Two passes at the same system. What matters is the jump from the first to the second: same pipeline, better output."
   libraries:
     - youtube: "https://youtu.be/6ny3rT3843I"
       poster: "/images/effects-library/lib01.jpg"
@@ -30,6 +30,6 @@ facade:
 draft: false
 ---
 
-Every effect is generated from code, not keyframed by hand — parameters in, rendered frames out. Because the pipeline is parametric (built in Remotion), the whole library is re-renderable, tweakable, and expandable without redoing anything by hand. That's exactly why a better 300 was even possible: I improved the code and re-ran it, instead of remaking three hundred clips one at a time.
+Three hundred devotional songs, each one wanting its own visual treatment. By hand, that's a year of work I didn't have — so I built the treatment as a system instead. Every effect is generated from code: parameters in, rendered frames out. Because the pipeline is parametric (built in Remotion), the whole library re-renders, tweaks, and expands without redoing anything by hand. That's the only reason a better three hundred was even possible — I improved the code and re-ran it, instead of remaking three hundred clips one at a time.
 
-And the film at the top isn't a separate project sitting beside the libraries — it's the library put to use. The same effects you see as raw vocabulary in v1 and v2 are the ones sequenced, timed, and scored into the finished piece. Library is the raw material; the film is that material composed.
+The film at the top isn't a separate thing sitting beside the libraries — it's the library put to use. The same effects you see as raw vocabulary in v1 and v2 are the ones sequenced, timed, and scored into the finished piece. The library is the raw material; the film is that material composed.

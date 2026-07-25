@@ -8,7 +8,7 @@ hero: "vanishing-ui"
 
 Making [a field guide to quiet apps](/work/anti-ui-atlas/) meant sitting with an idea that's easy to say and hard to take seriously: the best app is often the one you barely notice. Not a minimal one — a quiet one, that does its job and then leaves you alone. It sounds soft and a little precious. But there's a genuinely sharp idea underneath, and I want to lay it out in plain words, including the part where I admit what it isn't.
 
-## First, the honest bit
+## First, the caveat
 
 This isn't an established science. There's no textbook, no settled field, no authority to point at. I say that up front because dressing a personal collection of ideas up as proven fact is exactly the move that makes design writing untrustworthy. What it actually is: a stitching-together of things that *are* real. A researcher back in 1991 wrote that the deepest technologies are the ones that disappear into everyday life until you stop noticing them. Others built on that — the idea that a tool should sit in the background, ask for as little of your attention as it can, and still work even when it fails.
 

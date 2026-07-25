@@ -7,19 +7,19 @@ hero: "stubborn-path"
 youtube: "https://youtu.be/_iNkm_Lu1ng"
 ---
 
-The rule I set for [rebuilding ten apps by hand](/work/motion-made-with-code/#ui-replicas) was a strange one: do it the slowest, most tedious way possible. No shortcuts. Nothing reused between apps. Every row, every button, every little badge placed by hand, one at a time. That's the opposite of how you're supposed to build things. It's also exactly why the results look like the real apps instead of like someone's rough impression of them.
+The rule I set for [rebuilding ten apps by hand](/work/motion-made-with-code/#ui-replicas) was a strange one: do it the slowest, most tedious way possible. No shortcuts. Nothing reused between apps. Every row, every button, every little badge placed by hand, one at a time. That's the opposite of how you're supposed to build software, and it's the whole reason the results look like the real apps instead of a rough impression of them.
 
-## Doing it fast and doing it real pull against each other
+## Fast and real pull against each other
 
-When you build something the fast way, you make one piece and reuse it everywhere. And things built that way come out even, tidy, and a little generic — you can feel that a machine spaced everything perfectly. Real apps aren't like that. Real apps are a pile of specific little decisions made by specific teams over years, full of small inconsistencies your eye has quietly memorized without ever being told to. The only way to copy that lived-in messiness is to copy each decision by hand. Doing it the hard way isn't stubbornness here. It's the only way that works.
+Build the fast way and you make one component and reuse it everywhere, and every screen comes out tidy and interchangeable — you can feel that a machine spaced it all perfectly. Real apps aren't like that. They're a pile of specific little decisions made by specific teams over years, full of small inconsistencies you've quietly memorized without ever being told to. The only way to copy that lived-in mess is to copy each decision by hand. Here, the slow road is the only one that arrives.
 
-## The parts nobody looks at are doing the work
+## Believability isn't spread evenly
 
-The realness hides in things you'd never consciously watch. Drag across some cells in the spreadsheet and the little running total updates at the bottom, right where it belongs. A reaction on a chat message ticks from one to two, as if a coworker just added theirs. Reply to an email and the conversation folds up and a small "message sent" note slides in at the corner. None of those are the point of what you're watching. All of them are what your eye secretly checks to decide if it's looking at the real thing. Miss them, and it lands in almost-real, which somehow feels worse than obviously fake.
+The thing I keep from it is that realness doesn't sit uniformly across a screen — a few small things carry most of it, and they're rarely the ones you'd guess. A plausible web address resting quietly at the top of a fake browser sells the illusion harder than anything happening in the center of the frame. So does one click setting several things in motion at once — a badge, a number, a banner all updating together — because that's how real software actually answers you. Get those right and the eye mostly stops interrogating the rest. The smaller giveaways I chased are in the films themselves: [Ten Apps, Rebuilt by Hand](/work/motion-made-with-code/#ui-replicas).
 
-## Real in the corners you'd never think about
+## There's a pride in the hard road
 
-The lesson I keep from it is that believability isn't spread evenly — some tiny details carry far more of it than others. A real-looking web address sitting quietly at the top of a fake browser sells the whole thing harder than anything in the middle of the screen. And one click making several things change at once — a badge, a number, a banner all updating together — reads as real because that's how real software actually reacts. There's a quiet pride in choosing the hard road on purpose, and it pays off in a way the easy road simply can't. That same idea — one action rippling out into many — is exactly what makes the ten apps feel alive; they're [here](/work/motion-made-with-code/#ui-replicas).
+I won't pretend the tedium was fun. But there's a specific, stubborn satisfaction in doing something the slow way on purpose and watching it land in a way the fast way never could. It's the same instinct behind placing every element by hand: the little irregularities are what make a thing read as something a person built, not something a machine arranged.
 
 ## Watch all ten
 
@@ -35,4 +35,3 @@ Here are the ten rebuilt apps, in order:
 - [Ch. 08 — Google Calendar](https://youtu.be/KH8EjT2fmLo): event creation grid
 - [Ch. 09 — VS Code](https://youtu.be/-BDITjM5RMg): dark code editor & terminal output
 - [Ch. 10 — Trello](https://youtu.be/P93oIhtsrXQ): kanban board card drag & tilt
-

@@ -1,18 +1,17 @@
 ---
 title: "Lord Shiva and Sati"
-summary: "A single devotional short built around one held breath — the world gone still around Shiva, right before his eyes open and his resolve returns to everything around him."
+summary: "A devotional short built around one held breath — the world gone still around Shiva, right before his eyes open."
 year: "2026"
 order: 3
 tags: ["Motion Design", "AI Art Direction", "Devotional Animation"]
 cover: "../../assets/work/awakening-of-mahakal.jpg"
 coverAlt: "Shiva with a raised palm, third eye glowing, lightning tracing his skin"
 video: "https://youtu.be/vgE63bTzK04"
-thesis: "Power doesn't announce itself the moment it arrives. It gathers first, in a stillness so complete the whole world seems to be listening for it."
 draft: false
 ---
 
-Some stories about Shiva are really stories about Sati, and about what a bond like that does to stillness itself — how it can hold a whole universe quiet, waiting on one person to decide to move again.
+Before Mahadev opens his eyes, everything around him has already gone quiet — no wind, no motion, the whole world holding still and waiting on one person to move again. That waiting is the film. Not the moment his resolve returns; the held breath just before it.
 
-This piece stays inside that waiting. Before Mahadev's eyes open, everything around him has already gone silent — no wind, no motion, nothing but reverence. The piece isn't really about the moment his resolve breaks loose. It's about everything that goes quiet just before it does, and what that quiet is actually made of.
+I keep making versions of this same moment, in different clothes, and by now I know why. The stillness before something moves is the part I actually believe in — where the thing is gathered but not yet spent, still entirely possible. Some stories about Shiva are really stories about Sati, about what a bond like that does to stillness itself: how it can hold a universe quiet, listening.
 
-There's something worth sitting with in that structure, on its own terms, apart from the mythology. The stillest moments in a life are rarely empty. More often they're the ones doing the most work — gathering whatever comes next, quietly, before anyone can see it arriving.
+I stayed inside that quiet on purpose and didn't hurry it toward the payoff. The stillest stretch of a story is usually the one doing the most work — gathering, out of sight, right before anyone can see it arrive.

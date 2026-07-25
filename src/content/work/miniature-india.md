@@ -1,20 +1,19 @@
 ---
 title: "Miniature Magical India"
-summary: "Thirteen places across India, each rebuilt as a hand-lit diorama the size of a palm — the country reimagined at the scale of a keepsake, one landmark at a time."
+summary: "Thirteen places across India, each rebuilt as a hand-lit diorama the size of a palm — one landmark at a time, the whole country at the scale of a keepsake."
 year: "2025"
 order: 1
 tags: ["Miniature Art", "AI Art Direction", "Environment Design"]
 cover: "../../assets/work/miniature-india.jpg"
 coverAlt: "Monks holding candles at the mouth of a cave below Phugtal Monastery, rebuilt as a hand-lit miniature"
-thesis: "Make a place small enough to hold, and you look at it like you've never seen it before."
 studiesEyebrow: "The Set"
 studiesHeading: "Thirteen dioramas, one country."
-studiesIntro: "Each piece takes one real place and rebuilds it as a lit, tilt-shifted miniature — same country, thirteen different scales of wonder."
+studiesIntro: "Each piece takes one real place and rebuilds it as a lit, tilt-shifted miniature — thirteen of them, region by region."
 draft: false
 ---
 
-The miniature trick is an old one: shrink something monumental down to a size your hands could plausibly hold, and its scale stops being a fact you know and becomes a feeling you have. A fort the size of a shoebox reads as more astonishing than the real fort ever does from the ground, because your eye now has something to measure it against — you.
+Shrink something monumental to the size of a palm and you finally feel how big it was. It's an old trick. A fort the size of a shoebox lands harder than the real fort does from the ground, because now there's something to measure it against — a hand, a candle, someone standing over it like a giant.
 
-This series applies that trick across India, place after place, each one built as its own tiny, glowing world: a cave monastery lit by a handful of candles, a hill town on a fold of painted cloth, a temple town after dark. Different regions, different architectures, one constant rule — everything is staged and lit as though a giant could pick it up.
+I rebuilt thirteen places across India this way, each as its own lit diorama: a cave monastery under a handful of candles, a hill town folded onto painted cloth, a temple town after dark. I didn't travel to all of them — I built them from references, at a desk. What I was after was the version small enough to actually look at. A place I'm told to be awed by keeps its distance; one I could hold, I finally see.
 
-Thirteen places, one country, seen at the scale of a diorama instead of a destination.
+Different regions, different architecture, one rule underneath: everything staged and lit as though something enormous could reach down and lift it.
