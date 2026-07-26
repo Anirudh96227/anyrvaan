@@ -4,36 +4,89 @@
  * Each extension's effect, running for real on a canvas, on a loop. Not a
  * recording — the same maths the extension uses, driven by one clock.
  *
- * The loop tells a small story rather than just toggling: a browser window,
- * a search typed into it letter by letter, results landing, and then the
- * effect arriving on the page you just watched get built. Each extension
- * searches for something to do with its own subject.
+ * The loop tells a small story rather than just toggling: a browser window, a
+ * search typed into it, results springing in, and then the effect arriving on
+ * the page you just watched get built. It then holds still for four seconds,
+ * because the held frame is the thing worth looking at, and lifts.
  *
- * The page underneath is a dark-mode search-results layout, because that is
- * where anyone actually installs one of these and clicks it for the first
- * time — and because an effect about light reads for more against a dark
- * page than a white one.
+ * The page underneath is deliberately NOT a replica of anyone's search engine.
+ * A near-miss copy of a familiar interface reads as a cheap imitation of it —
+ * the wrong wordmark, the wrong grey. So it is a clean, neutral results page
+ * set in Space Grotesk, the same face as the rest of the site, which also
+ * gives an effect that moves type or colour something honest to move.
+ *
+ * Authored at 1120×630 and displayed around 900, so hairlines stay hairlines
+ * and text has enough pixels to hold an edge.
  */
 
 import React, { useEffect, useRef } from 'react';
 
 export type PreviewKind = 'colourway' | 'typeset' | 'by-hand';
 
-const W = 560;
-const H = 315;
+const W = 1120;
+const H = 630;
 const LOOP = 11000;
 
-const TYPE_A = 300, TYPE_B = 1750;   // the query being typed
-const RES_A = 1900, RES_B = 2700;    // results landing
-const ON_A = 3100, ON_B = 4500;      // the effect arriving
-const OFF_A = 9400, OFF_B = 10200;   // and lifting
+/** The window sits inset, with room around it for its own shadow. */
+const WIN = { x: 48, y: 34, w: 1024, h: 562, r: 14 };
+const CHROME_H = 58;
+const PAGE = { x: WIN.x, y: WIN.y + CHROME_H, w: WIN.w, h: WIN.h - CHROME_H };
+const GUT = 56;
+
+// Beats. The setup is brisk, the payoff is long: 1.2s typing, 0.7s of results
+// landing, 1.8s for the effect to arrive, then 4.2s of holding still.
+const TYPE_A = 260, TYPE_B = 1500;
+const RES_A = 1560, RES_B = 2260;
+const ON_A = 2560, ON_B = 4360;
+const OFF_A = 8600, OFF_B = 9520;
+
+const UI = '"Space Grotesk", ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+const HAND = '"Segoe Print", "Bradley Hand", "Comic Sans MS", cursive';
 
 const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);
 const ramp = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
 const easeOut = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
+const easeInOut = (t: number) => {
+	const x = clamp01(t);
+	return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+};
+
+/**
+ * A damped harmonic oscillator, sampled at `t` seconds — the same solver
+ * Remotion's spring() uses, ported so the previews move in the same
+ * vocabulary as the films without pulling in Remotion to do it.
+ */
+function spring(t: number, stiffness = 170, damping = 22, mass = 1) {
+	if (t <= 0) return 0;
+	const w0 = Math.sqrt(stiffness / mass);
+	const zeta = damping / (2 * Math.sqrt(stiffness * mass));
+	if (zeta < 1) {
+		const wd = w0 * Math.sqrt(1 - zeta * zeta);
+		return 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + ((zeta * w0) / wd) * Math.sin(wd * t));
+	}
+	return 1 - (1 + w0 * t) * Math.exp(-w0 * t);
+}
+
 const hash = (i: number, s = 0) => {
 	const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453;
 	return v - Math.floor(v);
+};
+
+// ---- a clean dark interface ----------------------------------------------
+// Every token is a hex string so Colourway can put all of them through the
+// same remap. Alpha is applied separately, never baked into the colour.
+
+const D = {
+	void: '#0a0b0d',
+	chrome: '#1b1d21',
+	bg: '#131518',
+	pill: '#1f2227',
+	ink: '#eef0f3',
+	sub: '#9aa2ac',
+	faint: '#6d757f',
+	link: '#9db8ff',
+	line: '#25282d',
+	accent: '#8ba6ff',
 };
 
 // ---- what each one is looking up -----------------------------------------
@@ -41,21 +94,21 @@ const hash = (i: number, s = 0) => {
 type Result = { site: string; url: string; title: string; snip: string[]; dot: string };
 
 const PAGES: Record<PreviewKind, { query: string; results: Result[] }> = {
-	'colourway': {
+	colourway: {
 		query: 'dark mode that does not wreck the colours',
 		results: [
 			{
-				site: 'Colour Notes', url: 'https://colournotes.example › oklch › mapping', dot: '#4b7bec',
+				site: 'Colour Notes', url: 'colournotes.example › oklch › mapping', dot: '#4b7bec',
 				title: 'Why inverting a page ruins it, and what to do instead',
-				snip: ['In HSL, fifty per cent lightness means something different for', 'yellow than for blue. In OKLCH it does not.'],
+				snip: ['In HSL, fifty per cent lightness means something different', 'for yellow than it does for blue. In OKLCH it does not.'],
 			},
 			{
-				site: 'Contrast', url: 'https://contrast.example › apca › dark', dot: '#e8564a',
+				site: 'Contrast', url: 'contrast.example › apca › dark', dot: '#e8564a',
 				title: 'APCA, and why the old ratio misjudges dark backgrounds',
-				snip: ['A pair that passes the 2.1 ratio can still be unreadable when', 'the background is dark.'],
+				snip: ['A pair that passes the 2.1 ratio can still be unreadable', 'when the background is the dark one.'],
 			},
 			{
-				site: 'Schemes', url: 'https://schemes.example › complementary', dot: '#f2b53c',
+				site: 'Schemes', url: 'schemes.example › complementary', dot: '#f2b53c',
 				title: 'A scheme is a relationship, not a single colour',
 				snip: ['Tint the neutrals. Leave the colours their own hue.'],
 			},
@@ -65,19 +118,19 @@ const PAGES: Record<PreviewKind, { query: string; results: Result[] }> = {
 		query: 'best font pairing for long reading',
 		results: [
 			{
-				site: 'Type Works', url: 'https://typeworks.example › pairing › reading', dot: '#4b7bec',
+				site: 'Type Works', url: 'typeworks.example › pairing › reading', dot: '#4b7bec',
 				title: 'Pairing a display face with something you can read',
 				snip: ['The two faces should disagree about one thing and agree', 'about everything else.'],
 			},
 			{
-				site: 'Measure', url: 'https://measure.example › line-length', dot: '#3fa96a',
+				site: 'Measure', url: 'measure.example › line-length', dot: '#3fa96a',
 				title: 'Sixty-six characters, and why the number keeps coming back',
-				snip: ['Past about seventy the eye starts losing its place on the', 'return sweep.'],
+				snip: ['Past about seventy the eye starts losing its place on', 'the return sweep.'],
 			},
 			{
-				site: 'Practical Typography', url: 'https://practicaltype.example › leading', dot: '#e8564a',
+				site: 'Practical Typography', url: 'practicaltype.example › leading', dot: '#e8564a',
 				title: 'Line height is set by the face, not by the rule',
-				snip: ['A tall x-height wants more leading than the same size in a', 'face with a small one.'],
+				snip: ['A tall x-height wants more leading than the same size', 'in a face with a small one.'],
 			},
 		],
 	},
@@ -85,66 +138,87 @@ const PAGES: Record<PreviewKind, { query: string; results: Result[] }> = {
 		query: 'why does handwriting look human',
 		results: [
 			{
-				site: 'Drawing Notes', url: 'https://drawingnotes.example › line › tremor', dot: '#f2b53c',
+				site: 'Drawing Notes', url: 'drawingnotes.example › line › tremor', dot: '#f2b53c',
 				title: 'Nobody draws a straight line, and that is the point',
-				snip: ['The wobble is not error. It is the record of a hand that had', 'to make decisions on the way.'],
+				snip: ['The wobble is not error. It is the record of a hand that', 'had to make decisions on the way.'],
 			},
 			{
-				site: 'Letterform', url: 'https://letterform.example › script › hand', dot: '#4b7bec',
+				site: 'Letterform', url: 'letterform.example › script › hand', dot: '#4b7bec',
 				title: 'Why a font of your handwriting still looks like a font',
 				snip: ['Every a is identical. That is the only tell anyone needs.'],
 			},
 			{
-				site: 'Sketching', url: 'https://sketching.example › ink › pressure', dot: '#3fa96a',
+				site: 'Sketching', url: 'sketching.example › ink › pressure', dot: '#3fa96a',
 				title: 'Pressure, speed, and the weight of a pen stroke',
-				snip: ['A line drawn quickly is thin at both ends and heavy through', 'the middle.'],
+				snip: ['A line drawn quickly is thin at both ends and heavy', 'through the middle.'],
 			},
 		],
 	},
 };
 
 // ---- layout --------------------------------------------------------------
+// One list of boxes, carrying its own text and tone. Both By Hand and Typeset
+// address this list, so there is no second copy of the layout to fall out of
+// step with the first. `kind` is a union rather than a string, which is what
+// caught the last round of typos here.
 
-const CHROME_H = 30;
-const PAGE_Y = CHROME_H;
+type RectKind =
+	| 'mark' | 'field' | 'avatar' | 'tabs' | 'divider'
+	| 'favicon' | 'site' | 'url' | 'title' | 'snip';
 
-type Rect = { x: number; y: number; w: number; h: number; depth: number; kind: string; text?: string };
+type Tone = 'ink' | 'sub' | 'faint' | 'link';
 
-/** Every box the effects can address. Depth stands in for DOM nesting. */
-function layout(): Rect[] {
+type Rect = {
+	kind: RectKind;
+	x: number; y: number; w: number; h: number;
+	radius?: number;
+	text?: string;
+	size?: number;
+	weight?: number;
+	tone?: Tone;
+	fill?: string;
+	group?: number; // which result it belongs to, for staggering
+};
+
+function layout(kind: PreviewKind): Rect[] {
+	const p = PAGES[kind];
+	const L = PAGE.x + GUT;
 	const r: Rect[] = [];
-	r.push({ x: 0, y: PAGE_Y, w: W, h: 46, depth: 1, kind: 'header' });
-	r.push({ x: 22, y: PAGE_Y + 14, w: 62, h: 18, depth: 3, kind: 'logo' });
-	r.push({ x: 100, y: PAGE_Y + 11, w: 300, h: 24, depth: 3, kind: 'searchbar' });
-	r.push({ x: 100, y: PAGE_Y + 54, w: 190, h: 12, depth: 2, kind: 'tabs' });
 
-	let y = PAGE_Y + 84;
-	for (let i = 0; i < 3; i++) {
-		r.push({ x: 100, y, w: 24, h: 24, depth: 4, kind: 'favicon' });
-		r.push({ x: 132, y: y + 1, w: 240, h: 9, depth: 4, kind: 'site' });
-		r.push({ x: 132, y: y + 13, w: 240, h: 8, depth: 4, kind: 'url' });
-		r.push({ x: 100, y: y + 30, w: 340, h: 16, depth: 4, kind: 'title' });
-		r.push({ x: 100, y: y + 52, w: 350, h: 9, depth: 5, kind: 'snip0' });
-		r.push({ x: 100, y: y + 64, w: 300, h: 9, depth: 5, kind: 'snip1' });
-		y += 92;
-	}
+	r.push({ kind: 'mark', x: L, y: PAGE.y + 32, w: 28, h: 28, radius: 9 });
+	r.push({
+		kind: 'field', x: L + 50, y: PAGE.y + 26, w: 620, h: 44, radius: 22,
+		text: p.query, size: 16.5, weight: 400, tone: 'ink',
+	});
+	r.push({ kind: 'avatar', x: PAGE.x + PAGE.w - GUT - 32, y: PAGE.y + 32, w: 32, h: 32, radius: 16 });
+
+	r.push({ kind: 'tabs', x: L, y: PAGE.y + 98, w: 300, h: 16 });
+	r.push({ kind: 'divider', x: PAGE.x, y: PAGE.y + 126, w: PAGE.w, h: 1 });
+
+	p.results.forEach((res, i) => {
+		const y = PAGE.y + 150 + i * 112;
+		const g = i;
+		r.push({ kind: 'favicon', x: L, y, w: 30, h: 30, radius: 10, fill: res.dot, text: res.site[0], group: g });
+		r.push({ kind: 'site', x: L + 42, y: y + 1, w: 260, h: 16, text: res.site, size: 13.5, weight: 500, tone: 'ink', group: g });
+		r.push({ kind: 'url', x: L + 42, y: y + 18, w: 300, h: 14, text: res.url, size: 12, weight: 400, tone: 'faint', group: g });
+		r.push({ kind: 'title', x: L, y: y + 42, w: 660, h: 24, text: res.title, size: 19.5, weight: 400, tone: 'link', group: g });
+		res.snip.forEach((s, j) => {
+			r.push({
+				kind: 'snip', x: L, y: y + 74 + j * 19, w: 620, h: 15,
+				text: s, size: 13.5, weight: 400, tone: 'sub', group: g,
+			});
+		});
+	});
 	return r;
 }
 
-const RECTS = layout();
-
-// Google's dark surface, near enough that it reads as the real thing.
-const D = {
-	bg: '#202124',
-	chrome: '#35373b',
-	chromeTab: '#202124',
-	pill: '#303134',
-	pillEdge: '#5f6368',
-	ink: '#e8eaed',
-	sub: '#bdc1c6',
-	link: '#99c3ff',
-	line: '#3c4043',
+const RECTS: Record<PreviewKind, Rect[]> = {
+	colourway: layout('colourway'),
+	typeset: layout('typeset'),
+	'by-hand': layout('by-hand'),
 };
+
+// ---- component -----------------------------------------------------------
 
 export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; atMs?: number }) {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -157,17 +231,21 @@ export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; at
 		if (!ctx) return;
 
 		const dpr = Math.min(devicePixelRatio || 1, 2);
-		cv.width = W * dpr;
-		cv.height = H * dpr;
+		cv.width = Math.round(W * dpr);
+		cv.height = Math.round(H * dpr);
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 		const pinned = typeof atMs === 'number';
 		let raf = 0;
 		let started = 0;
+		let alive = true;
 
 		function frame(now: number) {
 			if (!started) started = now;
-			draw(ctx!, kind, (now - started) % LOOP);
+			const elapsed = now - started;
+			// The mote seed advances every loop, so no two passes take the
+			// same path — which is the claim the page makes about them.
+			draw(ctx!, kind, elapsed % LOOP, Math.floor(elapsed / LOOP));
 			raf = requestAnimationFrame(frame);
 		}
 
@@ -182,13 +260,36 @@ export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; at
 			},
 			{ threshold: 0.05 }
 		);
-		io.observe(cv);
 
-		if (pinned) draw(ctx, kind, atMs! % LOOP);
-		else if (mq.matches) draw(ctx, kind, 6000);
-		else raf = requestAnimationFrame(frame);
+		/**
+		 * Canvas takes no part in font-display: swap — whatever is loaded at
+		 * the moment of the fillText call is what gets drawn, permanently. So
+		 * wait for Space Grotesk before the first frame, or the held frame is
+		 * set in a fallback face.
+		 */
+		function begin() {
+			if (!alive) return;
+			io.observe(cv!);
+			if (pinned) draw(ctx!, kind, atMs! % LOOP, 0);
+			else if (mq.matches) draw(ctx!, kind, HERO[kind], 0);
+			else raf = requestAnimationFrame(frame);
+		}
+
+		const fonts = (document as Document).fonts;
+		if (fonts) {
+			Promise.all([
+				fonts.load(`400 17px ${UI}`),
+				fonts.load(`500 17px ${UI}`),
+				fonts.load(`600 17px ${UI}`),
+			])
+				.then(begin)
+				.catch(begin);
+		} else {
+			begin();
+		}
 
 		return () => {
+			alive = false;
 			io.disconnect();
 			if (raf) cancelAnimationFrame(raf);
 		};
@@ -200,13 +301,20 @@ export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; at
 			className="block aspect-video w-full"
 			role="img"
 			aria-label={LABELS[kind]}
-			style={{ background: '#07080a' }}
+			style={{ background: D.void }}
 		/>
 	);
 }
 
+/** The one frame worth holding, per effect, for anyone who has asked for no motion. */
+const HERO: Record<PreviewKind, number> = {
+	colourway: 6200,
+	typeset: 6200,
+	'by-hand': 6600,
+};
+
 const LABELS: Record<PreviewKind, string> = {
-	'colourway':
+	colourway:
 		'A search is typed into a browser, results appear, and then the whole page is re-coloured into a different scheme as the new palette spreads out from the cursor.',
 	typeset:
 		'A search is typed into a browser, results appear, and then the page is re-set in a different typeface as a wave passes down it.',
@@ -216,290 +324,424 @@ const LABELS: Record<PreviewKind, string> = {
 
 // ---------------------------------------------------------------------------
 
-function draw(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number) {
+function draw(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number, seed: number) {
 	ctx.clearRect(0, 0, W, H);
+	ctx.textBaseline = 'top';
+
 	const typed = ramp(t, TYPE_A, TYPE_B);
 	const results = easeOut(ramp(t, RES_A, RES_B));
-	const on = ramp(t, ON_A, ON_B) * (1 - ramp(t, OFF_A, OFF_B));
+	const rise = ramp(t, ON_A, ON_B);
+	const fall = ramp(t, OFF_A, OFF_B);
+	const on = rise * (1 - fall);
 
-	if (kind === 'colourway') drawColourway(ctx, t, on, typed, results, kind);
-	else if (kind === 'typeset') drawTypeset(ctx, t, on, typed, results, kind);
-	else drawByHand(ctx, t, on, typed, results, kind);
+	drawBackdrop(ctx);
+
+	// A slow push-in that returns to where it started, so the loop closes
+	// without a jump. Enough to feel alive, not enough to notice.
+	const phase = (t / LOOP) * Math.PI * 2;
+	const z = 1 + 0.02 * (0.5 - 0.5 * Math.cos(phase));
+	const dy = -5 * Math.sin(phase);
+	ctx.save();
+	ctx.translate(W / 2, H / 2);
+	ctx.scale(z, z);
+	ctx.translate(-W / 2, -H / 2 + dy);
+
+	// The window, its shadow, and everything clipped inside it.
+	ctx.save();
+	ctx.shadowColor = 'rgba(0,0,0,0.6)';
+	ctx.shadowBlur = 54;
+	ctx.shadowOffsetY = 20;
+	ctx.fillStyle = D.chrome;
+	roundRect(ctx, WIN.x, WIN.y, WIN.w, WIN.h, WIN.r);
+	ctx.fill();
+	ctx.restore();
+
+	ctx.save();
+	roundRect(ctx, WIN.x, WIN.y, WIN.w, WIN.h, WIN.r);
+	ctx.clip();
+
+	if (kind === 'colourway') drawColourway(ctx, t, on, typed, results);
+	else if (kind === 'typeset') drawTypeset(ctx, t, rise, fall, on, typed, results);
+	else drawByHand(ctx, t, on, typed, results);
 
 	drawChrome(ctx, kind, typed, on);
-	drawMotes(ctx, kind, t, on);
-}
+	ctx.restore();
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-	ctx.beginPath();
-	ctx.moveTo(x + r, y);
-	ctx.arcTo(x + w, y, x + w, y + h, r);
-	ctx.arcTo(x + w, y + h, x, y + h, r);
-	ctx.arcTo(x, y + h, x, y, r);
-	ctx.arcTo(x, y, x + w, y, r);
-	ctx.closePath();
-}
-
-/** Browser furniture: a tab strip and an address bar, dark like the rest. */
-function drawChrome(ctx: CanvasRenderingContext2D, kind: PreviewKind, typed: number, on: number) {
-	const q = PAGES[kind].query;
-	ctx.fillStyle = D.chrome;
-	ctx.fillRect(0, 0, W, CHROME_H);
-
-	// active tab
-	ctx.fillStyle = D.chromeTab;
-	roundRect(ctx, 8, 3, 132, CHROME_H - 3, 7);
-	ctx.fill();
-	ctx.fillStyle = '#8ab4f8';
-	ctx.beginPath();
-	ctx.arc(20, 15, 4, 0, Math.PI * 2);
-	ctx.fill();
-	ctx.fillStyle = D.sub;
-	ctx.font = '8px system-ui, "Segoe UI", sans-serif';
-	const shown = q.slice(0, Math.round(q.length * typed));
-	ctx.fillText((typed < 1 ? 'New tab' : shown).slice(0, 20), 30, 18);
-
-	// address pill
-	ctx.fillStyle = '#292a2d';
-	roundRect(ctx, 150, 6, W - 210, 18, 9);
-	ctx.fill();
-	ctx.fillStyle = '#9aa0a6';
-	ctx.font = '7.5px ui-monospace, monospace';
-	ctx.fillText(
-		typed < 1 ? 'google.com' : `google.com/search?q=${shown.replace(/ /g, '+')}`.slice(0, 58),
-		160,
-		18.5
-	);
-
-	// the extension's button, lit once it has been used
-	ctx.fillStyle = on > 0.02 ? 'rgba(138,180,248,0.95)' : 'rgba(138,180,248,0.35)';
-	roundRect(ctx, W - 48, 8, 15, 15, 4);
-	ctx.fill();
-	if (on > 0.02) {
-		ctx.strokeStyle = 'rgba(138,180,248,0.5)';
-		ctx.lineWidth = 1;
-		roundRect(ctx, W - 51, 5, 21, 21, 6);
-		ctx.stroke();
-	}
-}
-
-/**
- * The results page. `headFont`/`bodyFont` let Typeset swap faces mid-page;
- * `noBg` lets One Sun lay down shadows before the page is painted over them.
- */
-function paintSearch(
-	ctx: CanvasRenderingContext2D,
-	kind: PreviewKind,
-	opts: {
-		typed: number;
-		results: number;
-		headFont?: (r: Rect) => string;
-		bodyFont?: (r: Rect) => string;
-		leading?: (r: Rect) => number;
-		noBg?: boolean;
-	}
-) {
-	const page = PAGES[kind];
-	const head = opts.headFont || (() => 'system-ui, "Segoe UI", Arial, sans-serif');
-	const body = opts.bodyFont || (() => 'system-ui, "Segoe UI", Arial, sans-serif');
-	const P = { ...D, ...(opts.palette || {}) };
-
-	if (!opts.noBg) {
-		ctx.fillStyle = P.bg;
-		ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
-	}
-
-	// wordmark
-	const lg = RECTS.find((r) => r.kind === 'logo')!;
-	ctx.font = '400 21px "Product Sans", system-ui, Arial, sans-serif';
-	const letters = 'Google'.split('');
-	const cols = ['#4285f4', '#ea4335', '#fbbc05', '#4285f4', '#34a853', '#ea4335'];
-	let lx = lg.x;
-	letters.forEach((ch, i) => {
-		ctx.fillStyle = cols[i];
-		ctx.fillText(ch, lx, lg.y + 15);
-		lx += ctx.measureText(ch).width;
-	});
-
-	// search pill
-	const sb = RECTS.find((r) => r.kind === 'searchbar')!;
-	ctx.fillStyle = D.pill;
-	roundRect(ctx, sb.x, sb.y, sb.w, sb.h, sb.h / 2);
-	ctx.fill();
-	const shown = page.query.slice(0, Math.round(page.query.length * opts.typed));
-	ctx.fillStyle = P.ink;
-	ctx.font = `11.5px ${body(sb)}`;
-	ctx.fillText(shown, sb.x + 16, sb.y + 16);
-	if (opts.typed < 1 && Math.floor(Date.now() / 400) % 2 === 0) {
-		ctx.fillStyle = '#8ab4f8';
-		ctx.fillRect(sb.x + 17 + ctx.measureText(shown).width, sb.y + 5, 1.2, 14);
-	}
-	// clear · mic · lens · search, as on the real thing
-	ctx.strokeStyle = P.sub;
-	ctx.lineWidth = 1.2;
-	const icx = sb.x + sb.w - 62;
-	ctx.beginPath();
-	ctx.moveTo(icx - 4, sb.y + 8); ctx.lineTo(icx + 4, sb.y + 16);
-	ctx.moveTo(icx + 4, sb.y + 8); ctx.lineTo(icx - 4, sb.y + 16);
-	ctx.stroke();
-	ctx.fillStyle = '#8ab4f8';
-	roundRect(ctx, icx + 16, sb.y + 7, 5, 10, 2.5);
-	ctx.fill();
-	ctx.strokeStyle = '#8ab4f8';
-	ctx.strokeRect(icx + 34, sb.y + 8, 9, 9);
-	ctx.beginPath();
-	ctx.arc(icx + 57, sb.y + 11, 4, 0, Math.PI * 2);
-	ctx.stroke();
-	ctx.beginPath();
-	ctx.moveTo(icx + 60, sb.y + 14); ctx.lineTo(icx + 63, sb.y + 17);
+	// A one-pixel lit edge along the top of the glass, which is most of what
+	// makes a flat rectangle read as a pane of something.
+	ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+	ctx.lineWidth = 1;
+	roundRect(ctx, WIN.x + 0.5, WIN.y + 0.5, WIN.w - 1, WIN.h - 1, WIN.r);
 	ctx.stroke();
 
-	// apps grid + avatar
-	ctx.fillStyle = P.sub;
-	for (let a = 0; a < 9; a++) {
-		ctx.beginPath();
-		ctx.arc(W - 62 + (a % 3) * 5, PAGE_Y + 18 + Math.floor(a / 3) * 5, 1.1, 0, Math.PI * 2);
-		ctx.fill();
-	}
-	ctx.fillStyle = '#e8a33c';
-	ctx.beginPath();
-	ctx.arc(W - 34, PAGE_Y + 23, 8, 0, Math.PI * 2);
-	ctx.fill();
-
-	if (opts.results <= 0.01) return;
-	ctx.save();
-	ctx.globalAlpha = opts.results;
-	const rise = (1 - opts.results) * 10;
-
-	// tabs
-	const tabs = ['All', 'Images', 'Videos', 'News', 'Web'];
-	ctx.font = `9px ${body(RECTS[3])}`;
-	let tx = 100;
-	tabs.forEach((tb, i) => {
-		ctx.fillStyle = i === 0 ? '#8ab4f8' : P.sub;
-		ctx.fillText(tb, tx, PAGE_Y + 62 + rise);
-		if (i === 0) {
-			ctx.fillRect(tx - 2, PAGE_Y + 68 + rise, ctx.measureText(tb).width + 4, 2);
-		}
-		tx += ctx.measureText(tb).width + 16;
-	});
-	ctx.fillStyle = P.line;
-	ctx.fillRect(0, PAGE_Y + 70 + rise, W, 1);
-
-	// results
-	page.results.forEach((res, i) => {
-		const fav = RECTS.filter((r) => r.kind === 'favicon')[i];
-		const site = RECTS.filter((r) => r.kind === 'site')[i];
-		const url = RECTS.filter((r) => r.kind === 'url')[i];
-		const title = RECTS.filter((r) => r.kind === 'title')[i];
-		const s0 = RECTS.filter((r) => r.kind === 'snip0')[i];
-		const s1 = RECTS.filter((r) => r.kind === 'snip1')[i];
-		const lead = opts.leading ? opts.leading(s0) : 0;
-
-		ctx.fillStyle = res.dot;
-		ctx.beginPath();
-		ctx.arc(fav.x + 12, fav.y + 12 + rise, 11, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.fillStyle = 'rgba(255,255,255,0.9)';
-		ctx.font = `bold 10px ${body(fav)}`;
-		ctx.fillText(res.site[0], fav.x + 8.5, fav.y + 16 + rise);
-
-		ctx.fillStyle = P.ink;
-		ctx.font = `9px ${body(site)}`;
-		ctx.fillText(res.site, site.x, site.y + 8 + rise);
-		ctx.fillStyle = P.sub;
-		ctx.font = `8px ${body(url)}`;
-		ctx.fillText(res.url, url.x, url.y + 7 + rise);
-
-		ctx.fillStyle = P.link;
-		ctx.font = `14px ${head(title)}`;
-		ctx.fillText(res.title, title.x, title.y + 12 + rise);
-
-		ctx.fillStyle = P.sub;
-		ctx.font = `9px ${body(s0)}`;
-		ctx.fillText(res.snip[0], s0.x, s0.y + 8 + rise + lead);
-		if (res.snip[1]) ctx.fillText(res.snip[1], s1.x, s1.y + 8 + rise + lead * 2);
-	});
+	// Motes live outside the window — they arrive from the edges of the
+	// screen, not from inside the page.
+	drawMotes(ctx, kind, t, on, seed);
 	ctx.restore();
 }
 
-// ---- One Sun ---------------------------------------------------------------
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+	const rr = Math.min(r, w / 2, h / 2);
+	ctx.beginPath();
+	ctx.moveTo(x + rr, y);
+	ctx.arcTo(x + w, y, x + w, y + h, rr);
+	ctx.arcTo(x + w, y + h, x, y + h, rr);
+	ctx.arcTo(x, y + h, x, y, rr);
+	ctx.arcTo(x, y, x + w, y, rr);
+	ctx.closePath();
+}
 
-function drawColourway(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'colourway') {
-	// The same maths the extension uses, cut down to what a preview needs:
-	// the page's own lightness axis mapped onto the scheme's, neutrals taking
-	// the scheme's hue, and colours keeping theirs.
-	const THEME = { groundL: 0.19, groundC: 0.055, groundH: 275, inkL: 0.94, accentH: 75 };
-	const pageG = 0.248; // the dark page's own ground lightness
-	const pageI = 0.936; // and its text
+/** Depth behind the window: a lifted centre falling off to the corners. */
+function drawBackdrop(ctx: CanvasRenderingContext2D) {
+	ctx.fillStyle = D.void;
+	ctx.fillRect(0, 0, W, H);
+	const g = ctx.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, W * 0.72);
+	g.addColorStop(0, 'rgba(255,255,255,0.055)');
+	g.addColorStop(0.55, 'rgba(255,255,255,0.015)');
+	g.addColorStop(1, 'rgba(0,0,0,0.35)');
+	ctx.fillStyle = g;
+	ctx.fillRect(0, 0, W, H);
+}
 
-	const remap = (hex: string) => {
-		const [r, g, b] = hexToRgb(hex);
-		const { L, C, H } = rgbToOklch(r, g, b);
-		const n = Math.max(-0.2, Math.min(1.2, (L - pageG) / (pageI - pageG)));
-		const outL = THEME.groundL + n * (THEME.inkL - THEME.groundL);
-		const neutral = 1 - Math.min(1, C / 0.045);
-		const outC = C * (1 - neutral) + (THEME.groundC + n * (0.02 - THEME.groundC)) * neutral;
-		const outH = neutral > 0.5 ? THEME.groundH : H;
-		return rgbToCss(oklchToRgb(outL, outC, outH));
+// ---- chrome --------------------------------------------------------------
+
+/**
+ * Browser furniture, kept to what a preview needs: three neutral dots, an
+ * address pill, and the extension's own button lighting up once it has been
+ * used. No tab strip — it was noise at this size.
+ */
+function drawChrome(ctx: CanvasRenderingContext2D, kind: PreviewKind, typed: number, on: number) {
+	const q = PAGES[kind].query;
+	ctx.fillStyle = D.chrome;
+	ctx.fillRect(WIN.x, WIN.y, WIN.w, CHROME_H);
+	ctx.fillStyle = D.line;
+	ctx.fillRect(WIN.x, WIN.y + CHROME_H - 1, WIN.w, 1);
+
+	for (let i = 0; i < 3; i++) {
+		ctx.fillStyle = 'rgba(255,255,255,0.13)';
+		ctx.beginPath();
+		ctx.arc(WIN.x + 26 + i * 17, WIN.y + CHROME_H / 2, 4.5, 0, Math.PI * 2);
+		ctx.fill();
+	}
+
+	const px = WIN.x + 98;
+	const pw = WIN.w - 98 - 86;
+	ctx.fillStyle = '#15171a';
+	roundRect(ctx, px, WIN.y + 14, pw, 30, 15);
+	ctx.fill();
+	ctx.strokeStyle = 'rgba(255,255,255,0.055)';
+	ctx.lineWidth = 1;
+	roundRect(ctx, px + 0.5, WIN.y + 14.5, pw - 1, 29, 15);
+	ctx.stroke();
+
+	// a padlock, because an address bar without one looks wrong
+	ctx.strokeStyle = D.faint;
+	ctx.lineWidth = 1.3;
+	ctx.beginPath();
+	ctx.arc(px + 20, WIN.y + 27, 3.4, Math.PI, 0);
+	ctx.stroke();
+	ctx.fillStyle = D.faint;
+	roundRect(ctx, px + 16, WIN.y + 27, 8, 7, 1.6);
+	ctx.fill();
+
+	const shown = q.slice(0, Math.round(q.length * typed));
+	ctx.fillStyle = D.sub;
+	ctx.font = `400 12.5px ${UI}`;
+	ctx.fillText(
+		typed < 1 ? 'search.example' : `search.example/?q=${shown.replace(/ /g, '+')}`,
+		px + 34,
+		WIN.y + 22
+	);
+
+	// the extension's button
+	const bx = WIN.x + WIN.w - 58;
+	const by = WIN.y + 17;
+	const lit = clamp01(on * 3);
+	if (lit > 0.02) {
+		ctx.save();
+		ctx.globalAlpha = lit * 0.5;
+		ctx.fillStyle = D.accent;
+		ctx.beginPath();
+		ctx.arc(bx + 12, by + 12, 20, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.restore();
+	}
+	ctx.fillStyle = lit > 0.02 ? D.accent : 'rgba(255,255,255,0.16)';
+	roundRect(ctx, bx, by, 24, 24, 7);
+	ctx.fill();
+	ctx.fillStyle = lit > 0.02 ? 'rgba(10,12,18,0.85)' : 'rgba(255,255,255,0.35)';
+	roundRect(ctx, bx + 7, by + 7, 10, 10, 3);
+	ctx.fill();
+}
+
+// ---- the page ------------------------------------------------------------
+
+type PaintOpts = {
+	typed: number;
+	results: number;
+	t: number;
+	/** Colourway routes every colour on the page through this. */
+	map?: (hex: string) => string;
+	/** Typeset swaps the family, and corrects the leading, per box. */
+	faceFor?: (r: Rect) => string | null;
+	leadFor?: (r: Rect) => number;
+	noBg?: boolean;
+};
+
+const TONE: Record<Tone, string> = { ink: D.ink, sub: D.sub, faint: D.faint, link: D.link };
+
+function paintPage(ctx: CanvasRenderingContext2D, kind: PreviewKind, o: PaintOpts) {
+	const page = PAGES[kind];
+	const rects = RECTS[kind];
+	const C = o.map ? o.map : (h: string) => h;
+
+	if (!o.noBg) {
+		ctx.fillStyle = C(D.bg);
+		ctx.fillRect(PAGE.x, PAGE.y, PAGE.w, PAGE.h);
+	}
+
+	/** Each result block springs in on its own beat, 90ms apart. */
+	const groupSpring = (g: number | undefined) => {
+		if (g === undefined) return { a: 1, dy: 0 };
+		const sp = spring((o.t - RES_A - g * 90) / 1000);
+		return { a: clamp01(sp * 1.25), dy: (1 - sp) * 16 };
 	};
 
-	// Everything gets its new colour at once; the arrival is sold by the wash.
-	const P = on > 0.5;
-	paintSearch(ctx, kind, {
-		typed,
-		results,
-		palette: P
-			? {
-					bg: remap(D.bg),
-					ink: remap(D.ink),
-					sub: remap(D.sub),
-					link: remap(D.link),
-					line: remap(D.line),
-			  }
-			: undefined,
-	});
+	for (const r of rects) {
+		const { a, dy } = groupSpring(r.group);
+		if (a <= 0.01) continue;
+		const y = r.y + dy;
+		const family = o.faceFor?.(r) ?? null;
+		const face = family || UI;
+		const lead = o.leadFor?.(r) ?? 0;
 
-	// the wash: the new palette spreading out from the cursor
-	if (on > 0.02 && on < 1) {
-		const c = cursorAt('colourway', t);
-		const p = ramp(on, 0.02, 1);
-		const max = Math.hypot(W, H);
-		const r = p * max * 1.05;
-		const soft = Math.max(28, r * 0.32);
-		const accent = rgbToCss(oklchToRgb(0.62, 0.16, THEME.accentH));
-		const ground = rgbToCss(oklchToRgb(THEME.groundL, THEME.groundC, THEME.groundH));
-		const g = ctx.createRadialGradient(c.x, c.y, Math.max(0, r - soft), c.x, c.y, r);
-		g.addColorStop(0, 'rgba(0,0,0,0)');
-		g.addColorStop(0.6, accent);
-		g.addColorStop(1, ground);
 		ctx.save();
-		ctx.globalAlpha = 0.85 * (1 - Math.pow(p, 2.4));
-		ctx.fillStyle = g;
+		ctx.globalAlpha = a;
+
+		switch (r.kind) {
+			case 'mark': {
+				ctx.fillStyle = C(D.accent);
+				roundRect(ctx, r.x, y, r.w, r.h, r.radius!);
+				ctx.fill();
+				ctx.fillStyle = C(D.bg);
+				ctx.beginPath();
+				ctx.arc(r.x + r.w / 2, y + r.h / 2, 5.5, 0, Math.PI * 2);
+				ctx.fill();
+				break;
+			}
+			case 'field': {
+				ctx.fillStyle = C(D.pill);
+				roundRect(ctx, r.x, y, r.w, r.h, r.radius!);
+				ctx.fill();
+				ctx.strokeStyle = C(D.line);
+				ctx.lineWidth = 1;
+				roundRect(ctx, r.x + 0.5, y + 0.5, r.w - 1, r.h - 1, r.radius!);
+				ctx.stroke();
+
+				const shown = r.text!.slice(0, Math.round(r.text!.length * o.typed));
+				ctx.fillStyle = C(TONE[r.tone!]);
+				ctx.font = `${r.weight} ${r.size}px ${face}`;
+				const ty = y + (r.h - r.size!) / 2 - 1;
+				ctx.fillText(shown, r.x + 22, ty);
+				if (o.typed < 1 && Math.floor(o.t / 420) % 2 === 0) {
+					ctx.fillStyle = C(D.accent);
+					ctx.fillRect(r.x + 23 + ctx.measureText(shown).width, ty - 1, 1.5, r.size! + 3);
+				}
+				// a divider and a search glyph, and nothing else
+				ctx.strokeStyle = C(D.line);
+				ctx.lineWidth = 1;
+				ctx.beginPath();
+				ctx.moveTo(r.x + r.w - 56, y + 12);
+				ctx.lineTo(r.x + r.w - 56, y + r.h - 12);
+				ctx.stroke();
+				ctx.strokeStyle = C(D.accent);
+				ctx.lineWidth = 1.6;
+				ctx.beginPath();
+				ctx.arc(r.x + r.w - 33, y + r.h / 2 - 2, 5.5, 0, Math.PI * 2);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(r.x + r.w - 29, y + r.h / 2 + 2.5);
+				ctx.lineTo(r.x + r.w - 25, y + r.h / 2 + 7);
+				ctx.stroke();
+				break;
+			}
+			case 'avatar': {
+				ctx.fillStyle = C('#e8a33c');
+				ctx.beginPath();
+				ctx.arc(r.x + r.w / 2, y + r.h / 2, r.w / 2, 0, Math.PI * 2);
+				ctx.fill();
+				break;
+			}
+			case 'tabs': {
+				const labels = ['All', 'Images', 'Videos', 'News'];
+				ctx.font = `500 13px ${face}`;
+				let tx = r.x;
+				labels.forEach((lb, i) => {
+					ctx.fillStyle = i === 0 ? C(D.accent) : C(D.faint);
+					ctx.fillText(lb, tx, y);
+					if (i === 0) {
+						ctx.fillStyle = C(D.accent);
+						ctx.fillRect(tx - 1, y + 21, ctx.measureText(lb).width + 2, 2);
+					}
+					tx += ctx.measureText(lb).width + 26;
+				});
+				break;
+			}
+			case 'divider': {
+				ctx.fillStyle = C(D.line);
+				ctx.fillRect(r.x, y, r.w, 1);
+				break;
+			}
+			case 'favicon': {
+				ctx.fillStyle = C(r.fill!);
+				roundRect(ctx, r.x, y, r.w, r.h, r.radius!);
+				ctx.fill();
+				ctx.fillStyle = 'rgba(255,255,255,0.92)';
+				ctx.font = `600 14px ${face}`;
+				const tw = ctx.measureText(r.text!).width;
+				ctx.fillText(r.text!, r.x + (r.w - tw) / 2, y + 7);
+				break;
+			}
+			default: {
+				ctx.fillStyle = C(TONE[r.tone!]);
+				ctx.font = `${r.weight} ${r.size}px ${face}`;
+				ctx.fillText(r.text!, r.x, y + lead);
+			}
+		}
+		ctx.restore();
+	}
+
+	void page;
+}
+
+// ---- Colourway -----------------------------------------------------------
+
+const THEME = { groundL: 0.19, groundC: 0.055, groundH: 275, inkL: 0.94, accentH: 75 };
+const mapCache = new Map<string, string>();
+
+/**
+ * The same maths the extension uses, cut down to what a preview needs: the
+ * page's own lightness axis mapped onto the scheme's, neutrals taking the
+ * scheme's hue, and anything that already has colour keeping its own.
+ */
+function remap(hex: string): string {
+	const hit = mapCache.get(hex);
+	if (hit) return hit;
+	const pageG = 0.19, pageI = 0.94;
+	const [r, g, b] = hexToRgb(hex);
+	const { L, C, H } = rgbToOklch(r, g, b);
+	const n = Math.max(-0.2, Math.min(1.2, (L - pageG) / (pageI - pageG)));
+	const outL = THEME.groundL + n * (THEME.inkL - THEME.groundL);
+	const neutral = 1 - Math.min(1, C / 0.045);
+	const outC = C * (1 - neutral) + (THEME.groundC + n * (0.02 - THEME.groundC)) * neutral;
+	const outH = neutral > 0.5 ? THEME.groundH : H;
+	const out = rgbToCss(oklchToRgb(outL, outC, outH));
+	mapCache.set(hex, out);
+	return out;
+}
+
+function drawColourway(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number) {
+	// The page as the site shipped it.
+	paintPage(ctx, 'colourway', { typed, results, t });
+
+	const c = cursorAt('colourway', t);
+	// Far enough to reach the furthest corner of the window and no further, so
+	// half the effect really is half the page — the frame where you can see
+	// the old scheme and the new one at once is the one worth having.
+	const spread = easeInOut(on) * cornerReach(c);
+
+	// And the same page in the new scheme, clipped to how far the wash has
+	// got. The front is a hard clip rather than a cross-fade, so the colour
+	// change is CAUSED by the thing sweeping across it — which is the whole
+	// point of the effect and the one thing the old preview didn't do.
+	if (spread > 1) {
+		ctx.save();
 		ctx.beginPath();
-		ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
-		ctx.fill();
+		ctx.arc(c.x, c.y, spread, 0, Math.PI * 2);
+		ctx.clip();
+		paintPage(ctx, 'colourway', { typed, results, t, map: remap });
+
+		// a lit rim on the leading edge, and nothing more — no glowing ring
+		if (on > 0.01 && on < 0.995) {
+			const rim = ctx.createRadialGradient(c.x, c.y, Math.max(0, spread - 44), c.x, c.y, spread);
+			rim.addColorStop(0, 'rgba(0,0,0,0)');
+			rim.addColorStop(0.6, `rgba(${accentRgb()},0.10)`);
+			rim.addColorStop(1, `rgba(${accentRgb()},0.42)`);
+			ctx.fillStyle = rim;
+			ctx.fillRect(PAGE.x, PAGE.y, PAGE.w, PAGE.h);
+		}
 		ctx.restore();
 	}
 
 	// the readout the extension actually shows
-	if (on > 0.6) {
-		const a2 = ramp(on, 0.6, 0.85);
-		ctx.save();
-		ctx.globalAlpha = a2;
-		ctx.fillStyle = 'rgba(10,12,30,0.92)';
-		ctx.fillRect(14, H - 52, 208, 38);
-		ctx.strokeStyle = 'rgba(190,180,255,0.35)';
-		ctx.lineWidth = 1;
-		ctx.strokeRect(14.5, H - 51.5, 207, 37);
-		ctx.fillStyle = rgbToCss(oklchToRgb(0.75, 0.15, THEME.accentH));
-		ctx.font = '8px ui-monospace, monospace';
-		ctx.fillText('Indigo — complementary, amber accent', 22, H - 38);
-		ctx.fillStyle = 'rgba(225,228,245,0.85)';
-		ctx.fillText('34 colours remapped', 22, H - 28);
-		ctx.fillText('25 pairs repaired to APCA Lc 60', 22, H - 19);
-		ctx.restore();
-	}
+	readout(ctx, on, 'rgba(18,17,32,0.95)', 'rgba(190,180,255,0.24)', (bx, by) => {
+		// three swatches of the scheme it landed on
+		[
+			[THEME.groundL, THEME.groundC, THEME.groundH],
+			[0.62, 0.16, THEME.accentH],
+			[THEME.inkL, 0.02, THEME.groundH],
+		].forEach((s, i) => {
+			ctx.fillStyle = rgbToCss(oklchToRgb(s[0], s[1], s[2]));
+			roundRect(ctx, bx + 18 + i * 19, by + 16, 14, 14, 4);
+			ctx.fill();
+		});
+		ctx.fillStyle = rgbToCss(oklchToRgb(0.82, 0.13, THEME.accentH));
+		ctx.font = `500 12.5px ${UI}`;
+		ctx.fillText('Indigo — complementary', bx + 18, by + 42);
+		ctx.fillStyle = 'rgba(225,228,245,0.6)';
+		ctx.font = `400 11.5px ${UI}`;
+		ctx.fillText('34 colours · 25 pairs repaired', bx + 18, by + 62);
+	});
+}
+
+const accentRgb = () => oklchToRgb(0.62, 0.16, THEME.accentH).join(',');
+
+/** Distance from a point to the furthest corner of the window. */
+function cornerReach(p: { x: number; y: number }) {
+	const cs = [
+		[WIN.x, WIN.y], [WIN.x + WIN.w, WIN.y],
+		[WIN.x, WIN.y + WIN.h], [WIN.x + WIN.w, WIN.y + WIN.h],
+	];
+	return Math.max(...cs.map(([x, y]) => Math.hypot(x - p.x, y - p.y)));
+}
+
+const PANEL = { w: 260, h: 88 };
+
+/**
+ * Both effects put up a small panel saying what they found and what they did.
+ * It lives in the empty right-hand column — the result text stops at x 764,
+ * so nothing has to be covered up to make room for it.
+ */
+function readout(
+	ctx: CanvasRenderingContext2D,
+	on: number,
+	fill: string,
+	edge: string,
+	body: (bx: number, by: number) => void
+) {
+	const p = clamp01((on - 0.55) / 0.25);
+	if (p <= 0.01) return;
+	const bx = PAGE.x + PAGE.w - PANEL.w - 24;
+	const by = PAGE.y + 150 + (1 - easeOut(p)) * 14;
+
+	ctx.save();
+	ctx.globalAlpha = p;
+	ctx.shadowColor = 'rgba(0,0,0,0.55)';
+	ctx.shadowBlur = 26;
+	ctx.shadowOffsetY = 10;
+	ctx.fillStyle = fill;
+	roundRect(ctx, bx, by, PANEL.w, PANEL.h, 12);
+	ctx.fill();
+	ctx.restore();
+
+	ctx.save();
+	ctx.globalAlpha = p;
+	ctx.strokeStyle = edge;
+	ctx.lineWidth = 1;
+	roundRect(ctx, bx + 0.5, by + 0.5, PANEL.w - 1, PANEL.h - 1, 12);
+	ctx.stroke();
+	body(bx, by);
+	ctx.restore();
 }
 
 // --- the colour maths, shared with the extension -------------------------
@@ -538,56 +780,152 @@ function oklchToRgb(L: number, C: number, H: number): number[] {
 	];
 }
 
-// ---- Typeset ---------------------------------------------------------------
+// ---- Typeset -------------------------------------------------------------
 
-function drawTypeset(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'typeset') {
-	const sweep = easeOut(ramp(t, ON_A, ON_B + 900));
-	const band = PAGE_Y + sweep * (H - PAGE_Y + 70) - 35;
-	const done = (r: Rect) => on > 0.02 && r.y + r.h < band;
+const SERIF_DISPLAY = '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif';
+const SERIF_BODY = 'Charter, Cambria, Georgia, serif';
 
-	paintSearch(ctx, kind, {
+function drawTypeset(
+	ctx: CanvasRenderingContext2D,
+	t: number,
+	rise: number,
+	fall: number,
+	on: number,
+	typed: number,
+	results: number
+) {
+	const top = PAGE.y - 40;
+	const span = PAGE.h + 80;
+	// Two sweeps in the same direction: one lays the pairing on, one takes it
+	// off again. Reverting by sweeping backwards would read as a rewind.
+	const bandOn = top + easeInOut(rise) * span;
+	const bandOff = top + easeInOut(fall) * span;
+
+	const set = (r: Rect) => r.y + r.h < bandOn && !(r.y + r.h < bandOff);
+
+	paintPage(ctx, 'typeset', {
 		typed,
 		results,
-		headFont: (r) => (done(r) ? '"Iowan Old Style", Palatino, Georgia, serif' : 'system-ui, "Segoe UI", sans-serif'),
-		bodyFont: (r) => (done(r) ? 'Charter, Cambria, Georgia, serif' : 'system-ui, "Segoe UI", sans-serif'),
-		leading: (r) => (done(r) ? 2.5 : 0),
+		t,
+		faceFor: (r) => (set(r) ? (r.kind === 'title' ? SERIF_DISPLAY : SERIF_BODY) : null),
+		leadFor: (r) => (set(r) ? (r.kind === 'snip' ? 3 : 1.5) : 0),
 	});
 
-	if (on > 0.02 && band > PAGE_Y - 30 && band < H + 30) {
-		// the wave itself, and a shimmer of loose letters riding its edge
-		const g = ctx.createLinearGradient(0, band - 46, 0, band);
-		g.addColorStop(0, 'rgba(233,167,60,0)');
-		g.addColorStop(1, 'rgba(233,167,60,0.2)');
-		ctx.fillStyle = g;
-		ctx.fillRect(0, band - 46, W, 46);
-		ctx.fillStyle = 'rgba(233,167,60,0.9)';
-		ctx.fillRect(0, band, W, 1.4);
-
+	const band = fall > 0.001 ? bandOff : bandOn;
+	const active = fall > 0.001 ? fall : rise;
+	if (active > 0.001 && active < 0.999) {
 		ctx.save();
-		ctx.font = '9px "Iowan Old Style", Palatino, Georgia, serif';
-		for (let i = 0; i < 12; i++) {
-			const x = ((i * 71 + Math.floor(t / 40)) % W);
-			const dy2 = Math.sin(t / 300 + i) * 5;
-			ctx.fillStyle = `rgba(255,236,200,${(0.5 + 0.4 * hash(i, 2)).toFixed(2)})`;
-			ctx.fillText('aegQ&¶'[i % 6], x, band - 6 + dy2);
+		ctx.beginPath();
+		ctx.rect(PAGE.x, PAGE.y, PAGE.w, PAGE.h);
+		ctx.clip();
+
+		// The wave bends across the page rather than ruling a line across it.
+		const at = (x: number) => band + Math.sin((x / PAGE.w) * Math.PI * 2 + t / 700) * 7;
+
+		const g = ctx.createLinearGradient(0, band - 90, 0, band + 6);
+		g.addColorStop(0, 'rgba(233,167,60,0)');
+		g.addColorStop(0.72, 'rgba(233,167,60,0.10)');
+		g.addColorStop(1, 'rgba(233,167,60,0.20)');
+		ctx.fillStyle = g;
+		ctx.beginPath();
+		ctx.moveTo(PAGE.x, band - 90);
+		for (let x = PAGE.x; x <= PAGE.x + PAGE.w; x += 8) ctx.lineTo(x, at(x));
+		ctx.lineTo(PAGE.x + PAGE.w, band - 90);
+		ctx.closePath();
+		ctx.fill();
+
+		// the front, three passes of falling opacity so it has a soft core
+		[[3.4, 0.10], [2, 0.24], [1, 0.7]].forEach(([lw, a]) => {
+			ctx.strokeStyle = `rgba(247,206,140,${a})`;
+			ctx.lineWidth = lw;
+			ctx.beginPath();
+			for (let x = PAGE.x; x <= PAGE.x + PAGE.w; x += 8) {
+				if (x === PAGE.x) ctx.moveTo(x, at(x));
+				else ctx.lineTo(x, at(x));
+			}
+			ctx.stroke();
+		});
+
+		// loose letters riding the edge, moving continuously and lit, so they
+		// read as part of the effect rather than as debris on the page
+		for (let i = 0; i < 8; i++) {
+			const x = PAGE.x + (((i * 241 + t * 0.055) % (PAGE.w + 80)) - 40);
+			const wob = Math.sin(t / 340 + i * 1.7) * 9;
+			const a = (0.35 + 0.45 * hash(i, 2)) * (1 - Math.abs(wob) / 22);
+			if (a <= 0) continue;
+			ctx.font = `${11 + hash(i, 3) * 8}px ${SERIF_DISPLAY}`;
+			ctx.textBaseline = 'middle';
+			ctx.shadowColor = `rgba(233,167,60,${(a * 0.9).toFixed(2)})`;
+			ctx.shadowBlur = 14;
+			ctx.fillStyle = `rgba(255,238,206,${a.toFixed(2)})`;
+			ctx.fillText('aegQ&¶§'[i % 7], x, at(x) - 13 + wob);
 		}
+		ctx.textBaseline = 'top';
 		ctx.restore();
 	}
+
+	// the readout, the same one the extension shows before it touches anything
+	readout(ctx, on, 'rgba(26,20,12,0.95)', 'rgba(233,167,60,0.26)', (bx, by) => {
+		ctx.fillStyle = 'rgba(247,206,140,0.95)';
+		ctx.font = `500 12.5px ${UI}`;
+		ctx.fillText('Editorial', bx + 18, by + 16);
+		ctx.fillStyle = 'rgba(240,232,220,0.72)';
+		ctx.font = `400 11.5px ${UI}`;
+		ctx.fillText('Iowan Old Style · Charter', bx + 18, by + 40);
+		ctx.fillStyle = 'rgba(240,232,220,0.45)';
+		ctx.fillText('was 15/22 · now 16/26', bx + 18, by + 62);
+	});
 }
 
-// ---- By Hand ---------------------------------------------------------------
+// ---- By Hand -------------------------------------------------------------
 
-function drawByHand(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'by-hand') {
-	if (on < 0.02) {
-		paintSearch(ctx, kind, { typed, results });
-		return;
+let grainTile: HTMLCanvasElement | null = null;
+/** Built once and tiled, because a few thousand dots a frame is not free. */
+function grain(): HTMLCanvasElement {
+	if (grainTile) return grainTile;
+	const c = document.createElement('canvas');
+	c.width = c.height = 180;
+	const g = c.getContext('2d')!;
+	for (let i = 0; i < 7000; i++) {
+		g.fillStyle = `rgba(74,68,60,${(0.04 + Math.random() * 0.1).toFixed(3)})`;
+		g.fillRect(Math.random() * 180, Math.random() * 180, 1, 1);
+	}
+	grainTile = c;
+	return c;
+}
+
+const INK = '60,58,55';
+
+function drawByHand(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number) {
+	// Underneath is always the real page — the paper is laid over it, and on
+	// the way out it lifts off to reveal it again.
+	paintPage(ctx, 'by-hand', { typed, results, t });
+	if (on < 0.005) return;
+
+	const sheet = clamp01(on * 6);
+
+	ctx.save();
+	ctx.globalAlpha = sheet;
+	ctx.beginPath();
+	ctx.rect(PAGE.x, PAGE.y, PAGE.w, PAGE.h);
+	ctx.clip();
+
+	// The sheet sits a fraction of a degree off-square, which the page claims
+	// and the old preview did not do.
+	ctx.translate(PAGE.x + PAGE.w / 2, PAGE.y + PAGE.h / 2);
+	ctx.rotate(-0.0035);
+	ctx.translate(-(PAGE.x + PAGE.w / 2), -(PAGE.y + PAGE.h / 2));
+
+	ctx.fillStyle = '#fbfaf6';
+	ctx.fillRect(PAGE.x - 20, PAGE.y - 20, PAGE.w + 40, PAGE.h + 40);
+	const pat = ctx.createPattern(grain(), 'repeat');
+	if (pat) {
+		ctx.fillStyle = pat;
+		ctx.fillRect(PAGE.x - 20, PAGE.y - 20, PAGE.w + 40, PAGE.h + 40);
 	}
 
-	// paper
-	ctx.fillStyle = '#fbfaf7';
-	ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
-
-	const order = [...RECTS].sort((a, b) => a.y - b.y || a.x - b.x);
+	const rects = RECTS['by-hand'];
+	const order = [...rects].sort((a, b) => a.y - b.y || a.x - b.x);
 	const per = 1 / (order.length + 2);
 	ctx.lineCap = 'round';
 	ctx.lineJoin = 'round';
@@ -595,96 +933,115 @@ function drawByHand(ctx: CanvasRenderingContext2D, t: number, on: number, typed:
 	let nib: { x: number; y: number } | null = null;
 
 	order.forEach((r, i) => {
-		const local = clamp01((on - i * per * 0.85) / (per * 2.6));
+		const local = clamp01((on - i * per * 0.8) / (per * 2.6));
 		if (local <= 0) return;
 
-		if (r.kind === 'snip' || r.kind === 'meta' || r.kind === 'tabs') {
-			// ruled lines, drawn left to right
-			ctx.strokeStyle = `rgba(60,58,55,${(0.45 * local).toFixed(2)})`;
-			ctx.lineWidth = 1.1;
+		// Body copy gets ruled lines, the way anyone sketching a page does it.
+		// Headings and names get actual words. This is the branch that was
+		// dead before — the kind names never matched, so nothing was written.
+		if (r.kind === 'url' || r.kind === 'snip' || r.kind === 'tabs' || r.kind === 'divider') {
+			ctx.strokeStyle = `rgba(${INK},${(0.4 * local).toFixed(2)})`;
+			ctx.lineWidth = r.kind === 'divider' ? 1 : 1.3;
 			const p = wobble(ctx, r.x, r.y + r.h / 2, r.x + r.w, r.y + r.h / 2, i, local);
 			if (local < 1) nib = p;
 			return;
 		}
 
+		if (r.kind === 'title' || r.kind === 'site') {
+			const big = r.kind === 'title';
+			ctx.fillStyle = `rgba(${INK},${(0.92 * local).toFixed(2)})`;
+			// the hand faces run wider than Space Grotesk at the same size, so
+			// they are set a shade smaller to stay inside the box they were
+			// measured for
+			ctx.font = `${big ? 17 : 12.5}px ${HAND}`;
+			// letter by letter, with the baseline never quite settling
+			const chars = r.text!.split('');
+			const upto = Math.round(chars.length * local);
+			let cx = r.x;
+			for (let k = 0; k < upto; k++) {
+				const jy = (hash(i * 97 + k, 5) - 0.5) * (big ? 2.2 : 1.4);
+				ctx.fillText(chars[k], cx, r.y + jy);
+				cx += ctx.measureText(chars[k]).width;
+			}
+			if (upto < chars.length) nib = { x: cx, y: r.y + r.h };
+			if (big && local > 0.75) {
+				// underlined twice, the way people underline
+				const u = (local - 0.75) / 0.25;
+				ctx.strokeStyle = `rgba(${INK},${(0.5 * local).toFixed(2)})`;
+				ctx.lineWidth = 1.2;
+				wobble(ctx, r.x, r.y + r.h + 3, r.x + cx - r.x, r.y + r.h + 3, i + 400, u);
+				if (u > 0.5) wobble(ctx, r.x, r.y + r.h + 6.5, r.x + (cx - r.x) * 0.92, r.y + r.h + 6.5, i + 811, (u - 0.5) * 2);
+			}
+			return;
+		}
+
+		// everything else is a box, drawn edge by edge
 		const segs: [number, number, number, number][] = [
 			[r.x, r.y, r.x + r.w, r.y],
 			[r.x + r.w, r.y, r.x + r.w, r.y + r.h],
 			[r.x + r.w, r.y + r.h, r.x, r.y + r.h],
 			[r.x, r.y + r.h, r.x, r.y],
 		];
-		ctx.strokeStyle = `rgba(60,58,55,${(0.55 * local).toFixed(2)})`;
-		ctx.lineWidth = 1.2;
+		ctx.strokeStyle = `rgba(${INK},${(0.55 * local).toFixed(2)})`;
+		ctx.lineWidth = 1.4;
 		for (let s = 0; s < 4; s++) {
 			const sl = clamp01((local - s / 4) * 4);
 			if (sl <= 0) continue;
 			const p = wobble(ctx, segs[s][0], segs[s][1], segs[s][2], segs[s][3], i * 4 + s, sl);
 			if (sl < 1) nib = p;
-			// ink pools where the hand pauses at a corner
 			if (sl >= 1) {
-				ctx.fillStyle = `rgba(60,58,55,${(0.22 * local).toFixed(2)})`;
+				// ink pools where the hand pauses at a corner
+				ctx.fillStyle = `rgba(${INK},${(0.2 * local).toFixed(2)})`;
 				ctx.beginPath();
-				ctx.arc(segs[s][2], segs[s][3], 1.3, 0, Math.PI * 2);
+				ctx.arc(segs[s][2], segs[s][3], 1.5, 0, Math.PI * 2);
 				ctx.fill();
 			}
 		}
-
-		if (r.text) {
-			ctx.fillStyle = `rgba(60,58,55,${(0.9 * local).toFixed(2)})`;
-			ctx.font =
-				r.kind === 'title'
-					? '13px "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive'
-					: '8.5px "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive';
-			ctx.fillText(r.text, r.x + 2, r.y + (r.kind === 'title' ? 12 : 8));
-		}
-		if (r.kind === 'title' && local > 0.7) {
-			// underline it, the way people underline
-			ctx.strokeStyle = `rgba(60,58,55,${(0.5 * local).toFixed(2)})`;
-			wobble(ctx, r.x, r.y + r.h + 2, r.x + r.w * 0.8, r.y + r.h + 2, i + 400, (local - 0.7) / 0.3);
+		// a rectangle nobody gets right first time gets a second pass
+		if (local >= 1 && (r.kind === 'field' || r.kind === 'favicon')) {
+			ctx.strokeStyle = `rgba(${INK},0.22)`;
+			ctx.lineWidth = 1;
+			for (let s = 0; s < 4; s++) wobble(ctx, segs[s][0], segs[s][1], segs[s][2], segs[s][3], i * 4 + s + 55, 1);
 		}
 	});
 
 	// the query, in the same hand
-	ctx.fillStyle = 'rgba(60,58,55,0.9)';
-	ctx.font = '11px "Segoe Print", "Bradley Hand", cursive';
-	ctx.fillText(PAGES[kind].query.slice(0, Math.round(PAGES[kind].query.length * typed)), 120, PAGE_Y + 27);
+	const q = PAGES['by-hand'].query;
+	ctx.fillStyle = `rgba(${INK},0.9)`;
+	ctx.font = `17px ${HAND}`;
+	ctx.fillText(q.slice(0, Math.round(q.length * typed)), PAGE.x + GUT + 72, PAGE.y + 40);
 
-	// grain
-	ctx.save();
-	ctx.globalAlpha = 0.05;
-	for (let i = 0; i < 240; i++) {
-		ctx.fillStyle = '#2a2724';
-		ctx.fillRect(hash(i, 9) * W, PAGE_Y + hash(i, 10) * (H - PAGE_Y), 1, 1);
-	}
-	ctx.restore();
-
-	// the nib, visible wherever the hand currently is
+	// the nib, wherever the hand currently is
 	if (nib) {
 		const n = nib as { x: number; y: number };
-		ctx.fillStyle = 'rgba(40,38,36,0.9)';
-		ctx.beginPath();
-		ctx.arc(n.x, n.y, 1.9, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.strokeStyle = 'rgba(40,38,36,0.5)';
-		ctx.lineWidth = 1;
+		ctx.save();
+		ctx.shadowColor = 'rgba(40,38,36,0.35)';
+		ctx.shadowBlur = 5;
+		ctx.shadowOffsetY = 2;
+		ctx.strokeStyle = 'rgba(40,38,36,0.75)';
+		ctx.lineWidth = 2.2;
 		ctx.beginPath();
 		ctx.moveTo(n.x, n.y);
-		ctx.lineTo(n.x + 7, n.y - 11);
+		ctx.lineTo(n.x + 11, n.y - 17);
 		ctx.stroke();
+		ctx.restore();
+		ctx.fillStyle = 'rgba(34,32,30,0.95)';
+		ctx.beginPath();
+		ctx.arc(n.x, n.y, 2.2, 0, Math.PI * 2);
+		ctx.fill();
 	}
+
+	ctx.restore();
+	void t;
 }
 
 function wobble(
 	ctx: CanvasRenderingContext2D,
-	x1: number,
-	y1: number,
-	x2: number,
-	y2: number,
-	seed: number,
-	prog: number
+	x1: number, y1: number, x2: number, y2: number,
+	seed: number, prog: number
 ) {
 	const len = Math.hypot(x2 - x1, y2 - y1);
-	const steps = Math.max(4, Math.round(len / 10));
+	const steps = Math.max(4, Math.round(len / 12));
 	const nx = -(y2 - y1) / (len || 1);
 	const ny = (x2 - x1) / (len || 1);
 	const upto = Math.max(1, Math.round(steps * prog));
@@ -692,7 +1049,7 @@ function wobble(
 	ctx.beginPath();
 	for (let i = 0; i <= upto; i++) {
 		const tt = i / steps;
-		const off = (hash(seed * 31 + i, 2) - 0.5) * 2.2;
+		const off = (hash(seed * 31 + i, 2) - 0.5) * 2.4;
 		const px = x1 + (x2 - x1) * tt + nx * off;
 		const py = y1 + (y2 - y1) * tt + ny * off;
 		if (i === 0) ctx.moveTo(px, py);
@@ -703,11 +1060,12 @@ function wobble(
 	return last;
 }
 
-// ---- cursor + motes --------------------------------------------------------
+// ---- cursor + motes ------------------------------------------------------
 
 function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
 	ctx.save();
 	ctx.translate(x, y);
+	ctx.scale(1.4, 1.4);
 	ctx.beginPath();
 	ctx.moveTo(0, 0);
 	ctx.lineTo(0, 15);
@@ -717,10 +1075,15 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
 	ctx.lineTo(6.5, 10.6);
 	ctx.lineTo(11.5, 10.5);
 	ctx.closePath();
+	ctx.shadowColor = 'rgba(0,0,0,0.55)';
+	ctx.shadowBlur = 6;
+	ctx.shadowOffsetY = 2;
 	ctx.fillStyle = '#ffffff';
-	ctx.strokeStyle = 'rgba(20,20,24,0.85)';
-	ctx.lineWidth = 1.1;
 	ctx.fill();
+	ctx.shadowColor = 'transparent';
+	ctx.strokeStyle = 'rgba(18,18,22,0.7)';
+	ctx.lineWidth = 1;
+	ctx.lineJoin = 'round';
 	ctx.stroke();
 	ctx.restore();
 }
@@ -728,73 +1091,95 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function cursorAt(kind: PreviewKind, t: number) {
 	const a = (t / LOOP) * Math.PI * 2;
 	if (kind === 'colourway') {
-		return { x: W * 0.5 + Math.cos(a * 1.6 - 1.1) * W * 0.46, y: 6 + Math.sin(a * 1.2) * 30 + 34 };
+		// stays up near its own button, which is what it just clicked
+		return { x: W * 0.5 + Math.cos(a * 1.4 - 1.1) * W * 0.4, y: PAGE.y + 34 + Math.sin(a * 1.2) * 46 };
 	}
-	return { x: W * 0.5 + Math.cos(a * 0.9) * W * 0.32, y: H * 0.55 + Math.sin(a * 1.4) * H * 0.28 };
+	return { x: W * 0.5 + Math.cos(a * 0.9) * W * 0.3, y: H * 0.55 + Math.sin(a * 1.4) * H * 0.26 };
 }
 
-/** Each effect's own species, drifting in from an edge and taken by the cursor. */
-function drawMotes(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number, on: number) {
-	if (on < 0.05) return;
+/**
+ * Each effect's own species, drifting in from an edge of the screen, curling
+ * toward the pointer, and taken by it. Three size tiers so the field reads as
+ * having depth rather than as one flat layer of dots.
+ */
+function drawMotes(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number, on: number, seed: number) {
 	const c = cursorAt(kind, t);
-	for (let i = 0; i < 9; i++) {
-		const cycle = 2400 + hash(i, 1) * 3800;
-		const phase = ((t + hash(i, 2) * 11000) % cycle) / cycle;
-		if (phase > 0.95) continue;
-		const edge = Math.floor(hash(i, 3) * 4);
-		const along = hash(i, 4);
-		const s =
-			edge === 0 ? { x: along * W, y: -8 } :
-			edge === 1 ? { x: W + 8, y: along * H } :
-			edge === 2 ? { x: along * W, y: H + 8 } :
-			{ x: -8, y: along * H };
-		const e = 1 - Math.pow(1 - phase, 2.5);
-		const dx = c.x - s.x;
-		const dy = c.y - s.y;
+	// They only turn up once the effect has landed and the cursor has come to
+	// rest, which is both what the page promises and the only way they read as
+	// motes rather than as debris scattered across a page mid-sweep.
+	const settled = clamp01((on - 0.86) / 0.1);
+	if (settled <= 0.01) {
+		drawCursor(ctx, c.x, c.y);
+		return;
+	}
+	on = settled;
+	const N = 20;
+	for (let i = 0; i < N; i++) {
+		const s0 = i + seed * 31.7;
+		const cycle = 2600 + hash(s0, 1) * 4200;
+		const phase = ((t + hash(s0, 2) * LOOP) % cycle) / cycle;
+		if (phase > 0.96) continue;
+		const edge = Math.floor(hash(s0, 3) * 4);
+		const along = hash(s0, 4);
+		const src =
+			edge === 0 ? { x: along * W, y: -10 } :
+			edge === 1 ? { x: W + 10, y: along * H } :
+			edge === 2 ? { x: along * W, y: H + 10 } :
+			{ x: -10, y: along * H };
+		// Accelerating in, not easing out. On an ease-out they spend most of
+		// their life near the pointer and pile into a clump there; on an
+		// ease-in they hang out at the edges and are taken quickly.
+		const e = Math.pow(phase, 1.7);
+		const dx = c.x - src.x;
+		const dy = c.y - src.y;
 		const nl = Math.hypot(-dy, dx) || 1;
-		const swing = Math.sin(phase * Math.PI) * (hash(i, 5) - 0.5) * 140;
-		const x = s.x + dx * e + (-dy / nl) * swing;
-		const y = s.y + dy * e + (dx / nl) * swing;
+		const swing = Math.sin(phase * Math.PI) * (hash(s0, 5) - 0.5) * 190;
+		const x = src.x + dx * e + (-dy / nl) * swing;
+		const y = src.y + dy * e + (dx / nl) * swing;
 		const near = Math.hypot(c.x - x, c.y - y);
-		const merge = near < 20 ? 1 - near / 20 : 0;
-		const a = (Math.sin(phase * Math.PI) * 0.9 + 0.1) * on;
+		const merge = near < 26 ? 1 - near / 26 : 0;
+		const tier = 0.55 + hash(s0, 11) * 0.85;
+		// gone by the time they get there — the pointer takes them
+		const a = (Math.sin(phase * Math.PI) * 0.9 + 0.1) * on * (0.45 + tier * 0.45) * (1 - Math.pow(phase, 3));
 
 		ctx.save();
 		if (kind === 'typeset') {
-			ctx.font = `${9 + hash(i, 6) * 9 + merge * 8}px "Iowan Old Style", Palatino, Georgia, serif`;
+			ctx.font = `${(11 + hash(s0, 6) * 10) * tier + merge * 10}px ${SERIF_DISPLAY}`;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.shadowColor = `rgba(233,167,60,${(a * 0.9).toFixed(2)})`;
-			ctx.shadowBlur = 12;
-			ctx.fillStyle = `rgba(120,86,30,${a.toFixed(2)})`;
+			ctx.shadowBlur = 16;
+			ctx.fillStyle = `rgba(255,226,178,${a.toFixed(2)})`;
 			ctx.fillText('aegQ&¶§'[i % 7], x, y);
+			ctx.textAlign = 'left';
+			ctx.textBaseline = 'top';
 		} else if (kind === 'by-hand') {
 			ctx.translate(x, y);
 			ctx.rotate(phase * 7 + i);
-			ctx.strokeStyle = `rgba(60,58,55,${a.toFixed(2)})`;
-			ctx.lineWidth = 1.3;
+			ctx.strokeStyle = `rgba(196,190,180,${a.toFixed(2)})`;
+			ctx.lineWidth = 1.3 * tier;
 			ctx.lineCap = 'round';
-			const L = 4 + hash(i, 7) * 6 + merge * 7;
+			const L = (5 + hash(s0, 7) * 8) * tier + merge * 9;
 			ctx.beginPath();
 			ctx.moveTo(-L / 2, 0);
 			ctx.lineTo(L / 2, 0);
 			ctx.stroke();
 		} else {
-			const r = (1 + hash(i, 8) * 1.7) * (1 + merge * 3.4);
+			const r = (1.4 + hash(s0, 8) * 2) * tier * (1 + merge * 3.2);
 			const g = ctx.createRadialGradient(x, y, 0, x, y, r * 6);
-			g.addColorStop(0, `rgba(255,232,178,${(a * 0.95).toFixed(2)})`);
-			g.addColorStop(0.35, `rgba(255,206,128,${(a * 0.3).toFixed(2)})`);
-			g.addColorStop(1, 'rgba(255,206,128,0)');
+			g.addColorStop(0, `rgba(255,232,186,${(a * 0.95).toFixed(2)})`);
+			g.addColorStop(0.35, `rgba(255,206,136,${(a * 0.28).toFixed(2)})`);
+			g.addColorStop(1, 'rgba(255,206,136,0)');
 			ctx.fillStyle = g;
 			ctx.beginPath();
 			ctx.arc(x, y, r * 6, 0, Math.PI * 2);
 			ctx.fill();
-			ctx.fillStyle = `rgba(255,250,235,${(a * 0.9).toFixed(2)})`;
+			ctx.fillStyle = `rgba(255,250,238,${(a * 0.9).toFixed(2)})`;
 			ctx.beginPath();
-			ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
+			ctx.arc(x, y, r * 0.62, 0, Math.PI * 2);
 			ctx.fill();
 		}
 		ctx.restore();
 	}
-	if (kind !== 'colourway') drawCursor(ctx, c.x, c.y);
+	drawCursor(ctx, c.x, c.y);
 }
