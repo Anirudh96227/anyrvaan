@@ -17,7 +17,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-export type PreviewKind = 'one-sun' | 'typeset' | 'by-hand';
+export type PreviewKind = 'colourway' | 'typeset' | 'by-hand';
 
 const W = 560;
 const H = 315;
@@ -41,23 +41,23 @@ const hash = (i: number, s = 0) => {
 type Result = { site: string; url: string; title: string; snip: string[]; dot: string };
 
 const PAGES: Record<PreviewKind, { query: string; results: Result[] }> = {
-	'one-sun': {
-		query: 'why do shadows make things look real',
+	'colourway': {
+		query: 'dark mode that does not wreck the colours',
 		results: [
 			{
-				site: 'Perception Lab', url: 'https://perceptionlab.example › depth › shadow', dot: '#4b7bec',
-				title: 'How the eye reads depth from a single light source',
-				snip: ['A shadow tells you three things at once: where the light is,', 'how far the object floats, and how solid it is.'],
+				site: 'Colour Notes', url: 'https://colournotes.example › oklch › mapping', dot: '#4b7bec',
+				title: 'Why inverting a page ruins it, and what to do instead',
+				snip: ['In HSL, fifty per cent lightness means something different for', 'yellow than for blue. In OKLCH it does not.'],
 			},
 			{
-				site: 'Interface Notes', url: 'https://interfacenotes.example › elevation', dot: '#e8564a',
-				title: 'Elevation, and why flat design felt weightless',
-				snip: ['Removing shadow removed the only cue that told you what', 'was on top of what.'],
+				site: 'Contrast', url: 'https://contrast.example › apca › dark', dot: '#e8564a',
+				title: 'APCA, and why the old ratio misjudges dark backgrounds',
+				snip: ['A pair that passes the 2.1 ratio can still be unreadable when', 'the background is dark.'],
 			},
 			{
-				site: 'Cinematography', url: 'https://cine.example › lighting › key', dot: '#f2b53c',
-				title: 'One key light does more than three soft ones',
-				snip: ['Direction is the whole story. Ambient light describes nothing.'],
+				site: 'Schemes', url: 'https://schemes.example › complementary', dot: '#f2b53c',
+				title: 'A scheme is a relationship, not a single colour',
+				snip: ['Tint the neutrals. Leave the colours their own hue.'],
 			},
 		],
 	},
@@ -206,8 +206,8 @@ export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; at
 }
 
 const LABELS: Record<PreviewKind, string> = {
-	'one-sun':
-		'A search is typed into a browser, results appear, and then every element on the page lifts and casts a long shadow that swings as the light moves.',
+	'colourway':
+		'A search is typed into a browser, results appear, and then the whole page is re-coloured into a different scheme as the new palette spreads out from the cursor.',
 	typeset:
 		'A search is typed into a browser, results appear, and then the page is re-set in a different typeface as a wave passes down it.',
 	'by-hand':
@@ -222,7 +222,7 @@ function draw(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number) {
 	const results = easeOut(ramp(t, RES_A, RES_B));
 	const on = ramp(t, ON_A, ON_B) * (1 - ramp(t, OFF_A, OFF_B));
 
-	if (kind === 'one-sun') drawSun(ctx, t, on, typed, results, kind);
+	if (kind === 'colourway') drawColourway(ctx, t, on, typed, results, kind);
 	else if (kind === 'typeset') drawTypeset(ctx, t, on, typed, results, kind);
 	else drawByHand(ctx, t, on, typed, results, kind);
 
@@ -302,9 +302,10 @@ function paintSearch(
 	const page = PAGES[kind];
 	const head = opts.headFont || (() => 'system-ui, "Segoe UI", Arial, sans-serif');
 	const body = opts.bodyFont || (() => 'system-ui, "Segoe UI", Arial, sans-serif');
+	const P = { ...D, ...(opts.palette || {}) };
 
 	if (!opts.noBg) {
-		ctx.fillStyle = D.bg;
+		ctx.fillStyle = P.bg;
 		ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
 	}
 
@@ -326,7 +327,7 @@ function paintSearch(
 	roundRect(ctx, sb.x, sb.y, sb.w, sb.h, sb.h / 2);
 	ctx.fill();
 	const shown = page.query.slice(0, Math.round(page.query.length * opts.typed));
-	ctx.fillStyle = D.ink;
+	ctx.fillStyle = P.ink;
 	ctx.font = `11.5px ${body(sb)}`;
 	ctx.fillText(shown, sb.x + 16, sb.y + 16);
 	if (opts.typed < 1 && Math.floor(Date.now() / 400) % 2 === 0) {
@@ -334,7 +335,7 @@ function paintSearch(
 		ctx.fillRect(sb.x + 17 + ctx.measureText(shown).width, sb.y + 5, 1.2, 14);
 	}
 	// clear · mic · lens · search, as on the real thing
-	ctx.strokeStyle = D.sub;
+	ctx.strokeStyle = P.sub;
 	ctx.lineWidth = 1.2;
 	const icx = sb.x + sb.w - 62;
 	ctx.beginPath();
@@ -354,7 +355,7 @@ function paintSearch(
 	ctx.stroke();
 
 	// apps grid + avatar
-	ctx.fillStyle = D.sub;
+	ctx.fillStyle = P.sub;
 	for (let a = 0; a < 9; a++) {
 		ctx.beginPath();
 		ctx.arc(W - 62 + (a % 3) * 5, PAGE_Y + 18 + Math.floor(a / 3) * 5, 1.1, 0, Math.PI * 2);
@@ -375,14 +376,14 @@ function paintSearch(
 	ctx.font = `9px ${body(RECTS[3])}`;
 	let tx = 100;
 	tabs.forEach((tb, i) => {
-		ctx.fillStyle = i === 0 ? '#8ab4f8' : D.sub;
+		ctx.fillStyle = i === 0 ? '#8ab4f8' : P.sub;
 		ctx.fillText(tb, tx, PAGE_Y + 62 + rise);
 		if (i === 0) {
 			ctx.fillRect(tx - 2, PAGE_Y + 68 + rise, ctx.measureText(tb).width + 4, 2);
 		}
 		tx += ctx.measureText(tb).width + 16;
 	});
-	ctx.fillStyle = D.line;
+	ctx.fillStyle = P.line;
 	ctx.fillRect(0, PAGE_Y + 70 + rise, W, 1);
 
 	// results
@@ -403,18 +404,18 @@ function paintSearch(
 		ctx.font = `bold 10px ${body(fav)}`;
 		ctx.fillText(res.site[0], fav.x + 8.5, fav.y + 16 + rise);
 
-		ctx.fillStyle = D.ink;
+		ctx.fillStyle = P.ink;
 		ctx.font = `9px ${body(site)}`;
 		ctx.fillText(res.site, site.x, site.y + 8 + rise);
-		ctx.fillStyle = D.sub;
+		ctx.fillStyle = P.sub;
 		ctx.font = `8px ${body(url)}`;
 		ctx.fillText(res.url, url.x, url.y + 7 + rise);
 
-		ctx.fillStyle = D.link;
+		ctx.fillStyle = P.link;
 		ctx.font = `14px ${head(title)}`;
 		ctx.fillText(res.title, title.x, title.y + 12 + rise);
 
-		ctx.fillStyle = D.sub;
+		ctx.fillStyle = P.sub;
 		ctx.font = `9px ${body(s0)}`;
 		ctx.fillText(res.snip[0], s0.x, s0.y + 8 + rise + lead);
 		if (res.snip[1]) ctx.fillText(res.snip[1], s1.x, s1.y + 8 + rise + lead * 2);
@@ -424,92 +425,117 @@ function paintSearch(
 
 // ---- One Sun ---------------------------------------------------------------
 
-function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'one-sun') {
-	const a = (t / LOOP) * Math.PI * 2;
-	const sx = W * 0.5 + Math.cos(a * 1.6 - 1.1) * W * 0.46;
-	const sy = 6 + Math.sin(a * 1.2) * 30;
-	const sink = clamp01((t - 6200) / 3000); // the light lowers as the loop runs on
-	const warmR = 255, warmG = Math.round(216 - sink * 46), warmB = Math.round(158 - sink * 74);
+function drawColourway(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'colourway') {
+	// The same maths the extension uses, cut down to what a preview needs:
+	// the page's own lightness axis mapped onto the scheme's, neutrals taking
+	// the scheme's hue, and colours keeping theirs.
+	const THEME = { groundL: 0.19, groundC: 0.055, groundH: 275, inkL: 0.94, accentH: 75 };
+	const pageG = 0.248; // the dark page's own ground lightness
+	const pageI = 0.936; // and its text
 
-	ctx.fillStyle = D.bg;
-	ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
+	const remap = (hex: string) => {
+		const [r, g, b] = hexToRgb(hex);
+		const { L, C, H } = rgbToOklch(r, g, b);
+		const n = Math.max(-0.2, Math.min(1.2, (L - pageG) / (pageI - pageG)));
+		const outL = THEME.groundL + n * (THEME.inkL - THEME.groundL);
+		const neutral = 1 - Math.min(1, C / 0.045);
+		const outC = C * (1 - neutral) + (THEME.groundC + n * (0.02 - THEME.groundC)) * neutral;
+		const outH = neutral > 0.5 ? THEME.groundH : H;
+		return rgbToCss(oklchToRgb(outL, outC, outH));
+	};
 
-	const dx = W / 2 - sx;
-	const dy = H / 2 - sy;
-	const l = Math.hypot(dx, dy) || 1;
-	const stretch = 1 + sink * 1.9;
-	const ux = (dx / l) * stretch * on;
-	const uy = (dy / l) * stretch * on;
+	// Everything gets its new colour at once; the arrival is sold by the wash.
+	const P = on > 0.5;
+	paintSearch(ctx, kind, {
+		typed,
+		results,
+		palette: P
+			? {
+					bg: remap(D.bg),
+					ink: remap(D.ink),
+					sub: remap(D.sub),
+					link: remap(D.link),
+					line: remap(D.line),
+			  }
+			: undefined,
+	});
 
-	if (on > 0.01 && results > 0.2) {
-		// Shadows first, so they sit under the page. Skewed, not just offset —
-		// a projected shadow leans away from the light.
-		for (const r of RECTS) {
-			if (r.kind === 'snip' || r.kind === 'tabs' || r.kind === 'meta') continue;
-			const h = r.depth * 5.6;
-			ctx.save();
-			ctx.filter = `blur(${(1.4 + r.depth * 0.9).toFixed(1)}px)`;
-			ctx.fillStyle = `rgba(0, 0, 0, ${(0.34 * on).toFixed(3)})`;
-			ctx.beginPath();
-			ctx.moveTo(r.x, r.y + r.h);
-			ctx.lineTo(r.x + r.w, r.y + r.h);
-			ctx.lineTo(r.x + r.w + ux * h, r.y + r.h + uy * h);
-			ctx.lineTo(r.x + ux * h, r.y + r.h + uy * h);
-			ctx.closePath();
-			ctx.fill();
-			ctx.fillRect(r.x + ux * h * 0.5, r.y + uy * h * 0.5, r.w, r.h);
-			ctx.restore();
-		}
-		// glyph-shaped shadows under the result titles
+	// the wash: the new palette spreading out from the cursor
+	if (on > 0.02 && on < 1) {
+		const c = cursorAt('colourway', t);
+		const p = ramp(on, 0.02, 1);
+		const max = Math.hypot(W, H);
+		const r = p * max * 1.05;
+		const soft = Math.max(28, r * 0.32);
+		const accent = rgbToCss(oklchToRgb(0.62, 0.16, THEME.accentH));
+		const ground = rgbToCss(oklchToRgb(THEME.groundL, THEME.groundC, THEME.groundH));
+		const g = ctx.createRadialGradient(c.x, c.y, Math.max(0, r - soft), c.x, c.y, r);
+		g.addColorStop(0, 'rgba(0,0,0,0)');
+		g.addColorStop(0.6, accent);
+		g.addColorStop(1, ground);
 		ctx.save();
-		ctx.filter = 'blur(1.2px)';
-		ctx.fillStyle = `rgba(0, 0, 0, ${(0.45 * on).toFixed(3)})`;
-		for (const r of RECTS) {
-			if (r.kind !== 'title') continue;
-			const h = r.depth * 5.6;
-			ctx.font = '13px system-ui, "Segoe UI", sans-serif';
-			ctx.fillText(r.text!, r.x + ux * h, r.y + 12 + uy * h);
-		}
-		ctx.restore();
-	}
-
-	paintSearch(ctx, kind, { typed, results, noBg: true });
-
-	if (on > 0.01) {
-		// shafts of light, thrown from wherever the sun is
-		ctx.save();
-		ctx.globalCompositeOperation = 'lighter';
-		for (let i = 0; i < 9; i++) {
-			const ang = Math.atan2(H / 2 - sy, W / 2 - sx) + (i - 4) * 0.13 + Math.sin(t / 2600 + i) * 0.02;
-			const len = W * 1.2;
-			const wdt = 8 + hash(i, 4) * 16;
-			const g = ctx.createLinearGradient(sx, sy, sx + Math.cos(ang) * len, sy + Math.sin(ang) * len);
-			g.addColorStop(0, `rgba(${warmR}, ${warmG}, ${warmB}, ${(0.11 * on).toFixed(3)})`);
-			g.addColorStop(1, `rgba(${warmR}, ${warmG}, ${warmB}, 0)`);
-			ctx.fillStyle = g;
-			ctx.save();
-			ctx.translate(sx, sy);
-			ctx.rotate(ang);
-			ctx.beginPath();
-			ctx.moveTo(0, -2);
-			ctx.lineTo(len, -wdt);
-			ctx.lineTo(len, wdt);
-			ctx.lineTo(0, 2);
-			ctx.closePath();
-			ctx.fill();
-			ctx.restore();
-		}
-		ctx.restore();
-
-		// the light pooling where it lands
-		const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, W * 0.85);
-		g.addColorStop(0, `rgba(${warmR}, ${warmG}, ${warmB}, ${(0.34 * on).toFixed(3)})`);
-		g.addColorStop(0.45, `rgba(${warmR}, ${warmG}, ${warmB}, ${(0.08 * on).toFixed(3)})`);
-		g.addColorStop(1, 'rgba(255,200,150,0)');
+		ctx.globalAlpha = 0.85 * (1 - Math.pow(p, 2.4));
 		ctx.fillStyle = g;
-		ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
+		ctx.beginPath();
+		ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.restore();
 	}
-	drawCursor(ctx, sx, Math.max(PAGE_Y + 2, sy + 34));
+
+	// the readout the extension actually shows
+	if (on > 0.6) {
+		const a2 = ramp(on, 0.6, 0.85);
+		ctx.save();
+		ctx.globalAlpha = a2;
+		ctx.fillStyle = 'rgba(10,12,30,0.92)';
+		ctx.fillRect(14, H - 52, 208, 38);
+		ctx.strokeStyle = 'rgba(190,180,255,0.35)';
+		ctx.lineWidth = 1;
+		ctx.strokeRect(14.5, H - 51.5, 207, 37);
+		ctx.fillStyle = rgbToCss(oklchToRgb(0.75, 0.15, THEME.accentH));
+		ctx.font = '8px ui-monospace, monospace';
+		ctx.fillText('Indigo — complementary, amber accent', 22, H - 38);
+		ctx.fillStyle = 'rgba(225,228,245,0.85)';
+		ctx.fillText('34 colours remapped', 22, H - 28);
+		ctx.fillText('25 pairs repaired to APCA Lc 60', 22, H - 19);
+		ctx.restore();
+	}
+}
+
+// --- the colour maths, shared with the extension -------------------------
+
+function hexToRgb(h: string): [number, number, number] {
+	const s = h.replace('#', '');
+	return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
+}
+const rgbToCss = ([r, g, b]: number[]) => `rgb(${r}, ${g}, ${b})`;
+const toLin = (c: number) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+const toSrgb = (c: number) => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+
+function rgbToOklch(r: number, g: number, b: number) {
+	const R = toLin(r / 255), G = toLin(g / 255), B = toLin(b / 255);
+	const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+	const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+	const s2 = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+	const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s2;
+	const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s2;
+	const Bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s2;
+	return { L, C: Math.hypot(A, Bb), H: (Math.atan2(Bb, A) * 180) / Math.PI };
+}
+
+function oklchToRgb(L: number, C: number, H: number): number[] {
+	const h = (H * Math.PI) / 180;
+	const A = Math.cos(h) * C, B = Math.sin(h) * C;
+	const l_ = L + 0.3963377774 * A + 0.2158037573 * B;
+	const m_ = L - 0.1055613458 * A - 0.0638541728 * B;
+	const s_ = L - 0.0894841775 * A - 1.291485548 * B;
+	const l = l_ ** 3, m = m_ ** 3, s2 = s_ ** 3;
+	const cl = (v: number) => Math.max(0, Math.min(255, Math.round(toSrgb(v) * 255)));
+	return [
+		cl(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s2),
+		cl(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s2),
+		cl(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s2),
+	];
 }
 
 // ---- Typeset ---------------------------------------------------------------
@@ -701,7 +727,7 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
 function cursorAt(kind: PreviewKind, t: number) {
 	const a = (t / LOOP) * Math.PI * 2;
-	if (kind === 'one-sun') {
+	if (kind === 'colourway') {
 		return { x: W * 0.5 + Math.cos(a * 1.6 - 1.1) * W * 0.46, y: 6 + Math.sin(a * 1.2) * 30 + 34 };
 	}
 	return { x: W * 0.5 + Math.cos(a * 0.9) * W * 0.32, y: H * 0.55 + Math.sin(a * 1.4) * H * 0.28 };
@@ -770,5 +796,5 @@ function drawMotes(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number, 
 		}
 		ctx.restore();
 	}
-	if (kind !== 'one-sun') drawCursor(ctx, c.x, c.y);
+	if (kind !== 'colourway') drawCursor(ctx, c.x, c.y);
 }

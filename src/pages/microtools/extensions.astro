@@ -19,19 +19,19 @@ const extensions: {
 	steps: string[];
 }[] = [
 	{
-		name: 'One Sun',
-		slug: 'one-sun',
-		tagline: 'Your cursor becomes a distant sun',
-		body: "A flat page turns out to have had depth all along. Because a sun is distant, every shadow points the same direction and only the length changes — set by how deeply a thing is buried in the markup, so depth becomes something you can read at a glance. Text casts real letter-shaped shadows, each glyph throwing its own. Stop moving and the sun sets: the light drifts toward the horizon over about forty seconds, warming as it goes, shadows stretching the whole way.",
+		name: 'Colourway',
+		slug: 'colourway',
+		tagline: 'The same page, issued in a different set of colours',
+		body: "Not an invert — inverting is why most theme extensions turn photographs into negatives and careful greys into mud. Every colour is taken into OKLCH, where lightness, chroma and hue are separable, and mapped along the page's own lightness axis: where a colour sits between this page's background and its text is what matters, which is why a light page inverts correctly and a page that is already dark doesn't get flipped inside out. Neutrals take the scheme's hue; anything that already has colour keeps its own, so the site's internal relationships survive. Then every text pair is measured with APCA and repaired if it falls short — APCA rather than the old 2.1 ratio, which misjudges exactly the dark backgrounds this spends its time on.",
 		options:
-			'Noon · Golden · Blue hour · Moon · Studio, shadow length, sun pinned or following, sunset on or off.',
-		download: '/downloads/extensions/anyrvaan-one-sun.zip',
-		size: '43 KB',
+			'Ink · Paper · Indigo · Teal · Maximum, with a contrast target of Lc 60, 75 or 90. Photographs are left alone unless you ask otherwise.',
+		download: '/downloads/extensions/anyrvaan-colourway.zip',
+		size: '48 KB',
 		steps: [
 			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
 			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
 			'Click “Load unpacked” and pick the unzipped folder.',
-			'Click the icon on any page. Then leave the cursor alone and watch the light go down.',
+			'Right-click the icon → Options to pick a scheme, then click it on any site.',
 		],
 	},
 	{
@@ -146,10 +146,10 @@ const extensions: {
 						<p class="text-eyebrow uppercase text-amber-200/70">What they have in common</p>
 						<p class="mt-5 max-w-2xl text-body text-neutral-300">
 							All three are wired to notice when you stop. Leave the cursor alone and motes
-							drift in from the edges of the screen — dust in One Sun, letterforms in Typeset,
-							graphite in By Hand — curl toward the pointer, and are taken by it. They arrive
-							on their own schedule, never the same gap twice, so you can't learn to expect
-							them.
+							drift in from the edges of the screen — pigment in Colourway, letterforms in
+							Typeset, graphite in By Hand — curl toward the pointer, and are taken by it.
+							They arrive on their own schedule, never the same gap twice, so you can't
+							learn to expect them.
 						</p>
 						<p class="mt-4 max-w-2xl text-body text-neutral-500">
 							None of them ask for network access, so none of them can phone home. Settings
