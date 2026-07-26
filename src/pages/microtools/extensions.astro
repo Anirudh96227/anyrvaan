@@ -1,0 +1,165 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+import ExtensionPreview from '../../components/ExtensionPreview.tsx';
+
+// Extensions — browser extensions, listed separately from the single-page
+// tools above. Each one is real and installable; the preview beside it runs
+// the actual effect on a loop rather than showing a recording of it.
+const extensions: {
+	name: string;
+	slug: 'one-sun' | 'typeset' | 'by-hand';
+	tagline: string;
+	body: string;
+	options: string;
+	download: string;
+	size: string;
+	steps: string[];
+}[] = [
+	{
+		name: 'One Sun',
+		slug: 'one-sun',
+		tagline: 'Your cursor becomes a distant sun',
+		body: "A flat page turns out to have had depth all along. Because a sun is distant, every shadow points the same direction and only the length changes — set by how deeply a thing is buried in the markup, so depth becomes something you can read at a glance. Text casts real letter-shaped shadows, each glyph throwing its own. Stop moving and the sun sets: the light drifts toward the horizon over about forty seconds, warming as it goes, shadows stretching the whole way.",
+		options:
+			'Noon · Golden · Blue hour · Moon · Studio, shadow length, sun pinned or following, sunset on or off.',
+		download: '/downloads/extensions/anyrvaan-one-sun.zip',
+		size: '43 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Click the icon on any page. Then leave the cursor alone and watch the light go down.',
+		],
+	},
+	{
+		name: 'Typeset',
+		slug: 'typeset',
+		tagline: 'Re-sets any page in a pairing you chose',
+		body: "The page dims from the top down, the type changes underneath, and each line comes back with its leading and measure corrected. Before it touches anything it reads the site and tells you what it found — the face, the size, the ratio, the measure — and what it did about it. Hold the backtick key to see the site's own type again, which is the only honest way to judge whether you improved it. Every face is one already on your machine, so nothing is downloaded and no site learns which font you picked.",
+		options:
+			'Editorial · Technical · Quiet · Display · Typewriter, plus type scale, leading correction, and a measure cap. Icon fonts and code are never touched.',
+		download: '/downloads/extensions/anyrvaan-typeset.zip',
+		size: '44 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Right-click the icon → Options to choose a pairing, then click it on any article.',
+		],
+	},
+	{
+		name: 'By Hand',
+		slug: 'by-hand',
+		tagline: 'The page gets drawn, box by box',
+		body: "Not filtered — drawn. Pen strokes travel along every box in reading order, top-left to bottom-right, at drawing speed. Rectangles get a second pass, because nobody draws a rectangle right the first time, and headings get underlined twice. Brush an element once it has landed and it re-strokes with a new seed, so the wobble is never the same twice. The paper has grain, an off-white that isn't white, and sits a fraction of a degree off-square.",
+		options:
+			'Six media with their own physics — pencil, ballpoint, marker, ink brush, charcoal, blueprint — on white, cream, graph, dot grid, blueprint or kraft paper.',
+		download: '/downloads/extensions/anyrvaan-by-hand.zip',
+		size: '46 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Right-click the icon → Options to pick a medium and paper, then draw any page.',
+		],
+	},
+];
+---
+
+<Layout
+	title="Extensions — Anyrvaan Microtools"
+	description="Three browser extensions, each one doing a single thing to whatever page you're already on. Installed by hand, so you can read every line first."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Extensions"
+				intro="Three of them, each doing a single thing to whatever page you're already on. None are in a web store — you install them by hand, which means you can also read every line before you do. Chrome, Edge, Brave, or any other Chromium browser."
+			/>
+
+<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-4xl">
+					<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
+						Three browser extensions, each one doing a single thing to whatever page you're
+						already on. None of them are in a web store — you install them by hand, which
+						means you can also read every line before you do.
+					</p>
+					<p class="reveal mt-5 max-w-2xl text-body text-neutral-500">
+						Chrome, Edge, Brave, or any other Chromium browser. Nothing is collected or sent
+						anywhere; none of them ask for network access.
+					</p>
+
+					<div class="mt-16 space-y-24">
+						{
+							extensions.map((e) => (
+								<article class="reveal">
+									{/* The preview runs the real effect on a loop — not a recording. */}
+									<div class="overflow-hidden rounded-2xl border border-white/10 bg-black">
+										<ExtensionPreview client:visible kind={e.slug} />
+									</div>
+
+									<div class="mt-8 sm:flex sm:items-start sm:justify-between sm:gap-10">
+										<div class="max-w-xl">
+											<h3 class="text-h3 text-neutral-50">{e.name}</h3>
+											<p class="mt-2 text-body text-neutral-400">{e.tagline}</p>
+										</div>
+										<a
+											href={e.download}
+											download
+											class="mt-6 inline-flex shrink-0 items-center gap-3 rounded-full border border-white/15 px-6 py-3 text-small text-neutral-100 transition-colors hover:border-white/40 hover:bg-white/5 sm:mt-1"
+										>
+											Download
+											<span class="text-neutral-500">.zip · {e.size}</span>
+										</a>
+									</div>
+
+									<p class="mt-6 max-w-2xl text-body text-neutral-300">{e.body}</p>
+
+									<p class="mt-5 max-w-2xl text-body text-neutral-500">
+										<span class="text-neutral-400">Options —</span> {e.options}
+									</p>
+
+									<div class="mt-8 rounded-2xl border border-white/5 p-7">
+										<p class="text-eyebrow uppercase text-neutral-500">How to use it</p>
+										<ol class="mt-5 space-y-3">
+											{e.steps.map((s, i) => (
+												<li class="flex gap-4 text-body text-neutral-400">
+													<span class="shrink-0 tabular-nums text-neutral-600">
+														{String(i + 1).padStart(2, '0')}
+													</span>
+													<span>{s}</span>
+												</li>
+											))}
+										</ol>
+									</div>
+								</article>
+							))
+						}
+					</div>
+
+					<div class="reveal mt-24 rounded-2xl border border-amber-200/15 bg-amber-100/[0.03] p-8">
+						<p class="text-eyebrow uppercase text-amber-200/70">What they have in common</p>
+						<p class="mt-5 max-w-2xl text-body text-neutral-300">
+							All three are wired to notice when you stop. Leave the cursor alone and motes
+							drift in from the edges of the screen — dust in One Sun, letterforms in Typeset,
+							graphite in By Hand — curl toward the pointer, and are taken by it. They arrive
+							on their own schedule, never the same gap twice, so you can't learn to expect
+							them.
+						</p>
+						<p class="mt-4 max-w-2xl text-body text-neutral-500">
+							None of them ask for network access, so none of them can phone home. Settings
+							live in your browser's own synced storage. Every one is a lens you hold up —
+							reload the page and the real site is back.
+						</p>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
