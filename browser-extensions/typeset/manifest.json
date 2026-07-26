@@ -1,0 +1,11 @@
+{
+	"manifest_version": 3,
+	"name": "Typeset",
+	"version": "1.0.0",
+	"description": "Re-sets any page in a typographic pairing you chose — display, body and mono, with leading and measure corrected. Uses faces already on your machine; downloads nothing.",
+	"icons": { "128": "icon.png" },
+	"action": { "default_icon": "icon.png", "default_title": "Typeset — re-set this page" },
+	"permissions": ["activeTab", "scripting", "storage"],
+	"options_ui": { "page": "options.html", "open_in_tab": false },
+	"background": { "service_worker": "background.js" }
+}

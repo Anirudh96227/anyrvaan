@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Typeset — settings</title>
+<style>
+
+	:root { color-scheme: dark; }
+	body {
+		margin: 0;
+		padding: 28px 30px 34px;
+		width: 380px;
+		background: #0a0a0d;
+		color: #ECE6DB;
+		font: 14px/1.55 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+	}
+	h1 {
+		margin: 0 0 4px;
+		font: 400 24px/1.15 Georgia, "Iowan Old Style", serif;
+		letter-spacing: -0.01em;
+	}
+	.sub { margin: 0 0 26px; color: rgba(236,230,219,0.5); font-size: 13px; }
+	fieldset { border: 0; margin: 0 0 24px; padding: 0; }
+	legend {
+		padding: 0 0 10px;
+		font: 500 11px/1 ui-monospace, "Cascadia Mono", monospace;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: rgba(236,230,219,0.45);
+	}
+	.lights { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+	.light {
+		cursor: pointer;
+		border: 1px solid rgba(236,230,219,0.14);
+		background: transparent;
+		padding: 10px 4px 8px;
+		text-align: center;
+		color: rgba(236,230,219,0.7);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		transition: border-color 160ms ease, color 160ms ease;
+	}
+	.light .swatch {
+		display: block;
+		height: 26px;
+		margin-bottom: 7px;
+		border-radius: 2px;
+	}
+	.light:hover { border-color: rgba(236,230,219,0.35); color: #ECE6DB; }
+	.light[aria-pressed="true"] { border-color: #E9A73C; color: #ECE6DB; }
+	label.row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		padding: 9px 0;
+		border-bottom: 1px solid rgba(236,230,219,0.07);
+	}
+	label.row:last-child { border-bottom: 0; }
+	.row span { color: rgba(236,230,219,0.85); }
+	.row small { display: block; color: rgba(236,230,219,0.42); font-size: 12px; }
+	input[type="range"] { width: 130px; accent-color: #E9A73C; }
+	input[type="checkbox"] { accent-color: #E9A73C; width: 16px; height: 16px; }
+	.note {
+		margin-top: 22px;
+		padding-top: 16px;
+		border-top: 1px solid rgba(236,230,219,0.09);
+		color: rgba(236,230,219,0.4);
+		font-size: 12px;
+	}
+	.saved {
+		color: #E9A73C;
+		font: 500 11px/1 ui-monospace, monospace;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		opacity: 0;
+		transition: opacity 400ms ease;
+	}
+	.saved[data-on="1"] { opacity: 1; }
+	.pairs { display: grid; gap: 8px; }
+	.pair {
+		cursor: pointer; text-align: left; background: transparent;
+		border: 1px solid rgba(236,230,219,0.14); padding: 12px 14px; color: rgba(236,230,219,0.75);
+		transition: border-color 160ms ease, color 160ms ease;
+	}
+	.pair:hover { border-color: rgba(236,230,219,0.35); color: #ECE6DB; }
+	.pair[aria-pressed="true"] { border-color: #E9A73C; color: #ECE6DB; }
+	.pair .name { display: block; font-size: 15px; margin-bottom: 3px; }
+	.pair .faces { display: block; font-size: 11.5px; color: rgba(236,230,219,0.45); }
+	select { background: #14141a; color: #ECE6DB; border: 1px solid rgba(236,230,219,0.2); padding: 5px 8px; font: inherit; font-size: 13px; }
+</style>
+</head>
+<body>
+	<h1>Typeset</h1>
+	<p class="sub">Every face here is already installed on your machine. Nothing is downloaded, so this works offline and no site is told which font you chose.</p>
+
+	<fieldset>
+		<legend>Pairing</legend>
+		<div class="pairs" id="pairs"></div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Setting</legend>
+		<label class="row">
+			<span>Type scale</span>
+			<select id="scale"><option value="compact">Compact</option><option value="normal">Normal</option><option value="generous">Generous</option></select>
+		</label>
+		<label class="row">
+			<span>Correct the leading<small>Line height suited to the face, not the site's.</small></span>
+			<input type="checkbox" id="correctLeading" />
+		</label>
+		<label class="row">
+			<span>Cap the measure<small>Stops lines running past a readable length.</small></span>
+			<input type="checkbox" id="capMeasure" />
+		</label>
+		<label class="row">
+			<span>Letterforms in the light<small>Glyphs drift in from the edges and merge into the cursor.</small></span>
+			<input type="checkbox" id="motes" />
+		</label>
+	</fieldset>
+
+	<p class="note">Code and icon fonts are never touched. Hold <b>`</b> on any page to see the site's own type. <span class="saved" id="saved">saved</span></p>
+	<script src="options.js"></script>
+</body>
+</html>

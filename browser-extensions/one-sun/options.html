@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>One Sun — settings</title>
+<style>
+	:root { color-scheme: dark; }
+	body {
+		margin: 0;
+		padding: 28px 30px 34px;
+		width: 380px;
+		background: #0a0a0d;
+		color: #ECE6DB;
+		font: 14px/1.55 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+	}
+	h1 {
+		margin: 0 0 4px;
+		font: 400 24px/1.15 Georgia, "Iowan Old Style", serif;
+		letter-spacing: -0.01em;
+	}
+	.sub { margin: 0 0 26px; color: rgba(236,230,219,0.5); font-size: 13px; }
+	fieldset { border: 0; margin: 0 0 24px; padding: 0; }
+	legend {
+		padding: 0 0 10px;
+		font: 500 11px/1 ui-monospace, "Cascadia Mono", monospace;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: rgba(236,230,219,0.45);
+	}
+	.lights { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+	.light {
+		cursor: pointer;
+		border: 1px solid rgba(236,230,219,0.14);
+		background: transparent;
+		padding: 10px 4px 8px;
+		text-align: center;
+		color: rgba(236,230,219,0.7);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		transition: border-color 160ms ease, color 160ms ease;
+	}
+	.light .swatch {
+		display: block;
+		height: 26px;
+		margin-bottom: 7px;
+		border-radius: 2px;
+	}
+	.light:hover { border-color: rgba(236,230,219,0.35); color: #ECE6DB; }
+	.light[aria-pressed="true"] { border-color: #E9A73C; color: #ECE6DB; }
+	label.row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		padding: 9px 0;
+		border-bottom: 1px solid rgba(236,230,219,0.07);
+	}
+	label.row:last-child { border-bottom: 0; }
+	.row span { color: rgba(236,230,219,0.85); }
+	.row small { display: block; color: rgba(236,230,219,0.42); font-size: 12px; }
+	input[type="range"] { width: 130px; accent-color: #E9A73C; }
+	input[type="checkbox"] { accent-color: #E9A73C; width: 16px; height: 16px; }
+	.note {
+		margin-top: 22px;
+		padding-top: 16px;
+		border-top: 1px solid rgba(236,230,219,0.09);
+		color: rgba(236,230,219,0.4);
+		font-size: 12px;
+	}
+	.saved {
+		color: #E9A73C;
+		font: 500 11px/1 ui-monospace, monospace;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		opacity: 0;
+		transition: opacity 400ms ease;
+	}
+	.saved[data-on="1"] { opacity: 1; }
+</style>
+</head>
+<body>
+	<h1>One Sun</h1>
+	<p class="sub">A distant light. Direction is shared by everything on the page; only length changes, by how deep a thing sits in the markup.</p>
+
+	<fieldset>
+		<legend>The light</legend>
+		<div class="lights" id="lights"></div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Behaviour</legend>
+		<label class="row">
+			<span>Sun follows the cursor<small>Off pins it at a fixed angle.</small></span>
+			<input type="checkbox" id="follow" />
+		</label>
+		<label class="row">
+			<span>Fixed angle<small>Only used when the sun is pinned.</small></span>
+			<input type="range" id="angle" min="0" max="359" step="1" />
+		</label>
+		<label class="row">
+			<span>Shadow length</span>
+			<input type="range" id="lengthScale" min="0.4" max="2.4" step="0.1" />
+		</label>
+		<label class="row">
+			<span>Shadows fall on each other<small>Costs a little on slow machines.</small></span>
+			<input type="checkbox" id="castOnOthers" />
+		</label>
+		<label class="row">
+			<span>The sun sets if you go still<small>Stop moving and the light goes down over ~40s.</small></span>
+			<input type="checkbox" id="sunset" />
+		</label>
+		<label class="row">
+			<span>Dust in the light<small>Motes drift in from the edges and are swallowed by the sun.</small></span>
+			<input type="checkbox" id="motes" />
+		</label>
+	</fieldset>
+
+	<p class="note">Settings apply the next time you switch it on. <span class="saved" id="saved">saved</span></p>
+
+	<script src="options.js"></script>
+</body>
+</html>

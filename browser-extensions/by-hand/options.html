@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>By Hand — settings</title>
+<style>
+
+	:root { color-scheme: dark; }
+	body {
+		margin: 0;
+		padding: 28px 30px 34px;
+		width: 380px;
+		background: #0a0a0d;
+		color: #ECE6DB;
+		font: 14px/1.55 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+	}
+	h1 {
+		margin: 0 0 4px;
+		font: 400 24px/1.15 Georgia, "Iowan Old Style", serif;
+		letter-spacing: -0.01em;
+	}
+	.sub { margin: 0 0 26px; color: rgba(236,230,219,0.5); font-size: 13px; }
+	fieldset { border: 0; margin: 0 0 24px; padding: 0; }
+	legend {
+		padding: 0 0 10px;
+		font: 500 11px/1 ui-monospace, "Cascadia Mono", monospace;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: rgba(236,230,219,0.45);
+	}
+	.lights { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+	.light {
+		cursor: pointer;
+		border: 1px solid rgba(236,230,219,0.14);
+		background: transparent;
+		padding: 10px 4px 8px;
+		text-align: center;
+		color: rgba(236,230,219,0.7);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		transition: border-color 160ms ease, color 160ms ease;
+	}
+	.light .swatch {
+		display: block;
+		height: 26px;
+		margin-bottom: 7px;
+		border-radius: 2px;
+	}
+	.light:hover { border-color: rgba(236,230,219,0.35); color: #ECE6DB; }
+	.light[aria-pressed="true"] { border-color: #E9A73C; color: #ECE6DB; }
+	label.row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		padding: 9px 0;
+		border-bottom: 1px solid rgba(236,230,219,0.07);
+	}
+	label.row:last-child { border-bottom: 0; }
+	.row span { color: rgba(236,230,219,0.85); }
+	.row small { display: block; color: rgba(236,230,219,0.42); font-size: 12px; }
+	input[type="range"] { width: 130px; accent-color: #E9A73C; }
+	input[type="checkbox"] { accent-color: #E9A73C; width: 16px; height: 16px; }
+	.note {
+		margin-top: 22px;
+		padding-top: 16px;
+		border-top: 1px solid rgba(236,230,219,0.09);
+		color: rgba(236,230,219,0.4);
+		font-size: 12px;
+	}
+	.saved {
+		color: #E9A73C;
+		font: 500 11px/1 ui-monospace, monospace;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		opacity: 0;
+		transition: opacity 400ms ease;
+	}
+	.saved[data-on="1"] { opacity: 1; }
+	.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+	.opt {
+		cursor: pointer; background: transparent; border: 1px solid rgba(236,230,219,0.14);
+		padding: 11px 6px; color: rgba(236,230,219,0.72); font-size: 12px;
+		transition: border-color 160ms ease, color 160ms ease;
+	}
+	.opt:hover { border-color: rgba(236,230,219,0.35); color: #ECE6DB; }
+	.opt[aria-pressed="true"] { border-color: #E9A73C; color: #ECE6DB; }
+	.opt .sw { display:block; height: 22px; margin-bottom: 7px; border-radius: 2px; }
+	select { background: #14141a; color: #ECE6DB; border: 1px solid rgba(236,230,219,0.2); padding: 5px 8px; font: inherit; font-size: 13px; }
+</style>
+</head>
+<body>
+	<h1>By Hand</h1>
+	<p class="sub">The page gets drawn, box by box, in reading order. Brush anything once it has landed and it re-strokes with a new seed.</p>
+
+	<fieldset>
+		<legend>Medium</legend>
+		<div class="grid3" id="media"></div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Paper</legend>
+		<div class="grid3" id="papers"></div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Hand</legend>
+		<label class="row">
+			<span>Images</span>
+			<select id="images"><option value="wash">Watercolour wash</option><option value="outline">Line art</option><option value="leave">Leave photos alone</option></select>
+		</label>
+		<label class="row">
+			<span>Messiness<small>How far the hand wanders off the line.</small></span>
+			<input type="range" id="messiness" min="0.4" max="2.2" step="0.1" />
+		</label>
+		<label class="row">
+			<span>Draw it on<small>Off means it is simply already drawn.</small></span>
+			<input type="checkbox" id="drawOn" />
+		</label>
+		<label class="row">
+			<span>Handwriting<small>Off keeps the site's own type.</small></span>
+			<input type="checkbox" id="handwriting" />
+		</label>
+	</fieldset>
+
+	<p class="note">Photographs are wobbled with SVG filters, never repainted pixel by pixel — cross-origin images cannot be read from a page. <span class="saved" id="saved">saved</span></p>
+	<script src="options.js"></script>
+</body>
+</html>
