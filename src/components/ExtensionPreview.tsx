@@ -6,12 +6,13 @@
  *
  * The loop tells a small story rather than just toggling: a browser window,
  * a search typed into it letter by letter, results landing, and then the
- * effect arriving on top of the page you were just looking at.
+ * effect arriving on the page you just watched get built. Each extension
+ * searches for something to do with its own subject.
  *
- * The page underneath is a search-results layout because that is where anyone
- * actually installs one of these and clicks it for the first time. It is
- * drawn from scratch and deliberately unbranded — a search engine's shape,
- * not any particular company's marks.
+ * The page underneath is a dark-mode search-results layout, because that is
+ * where anyone actually installs one of these and clicks it for the first
+ * time — and because an effect about light reads for more against a dark
+ * page than a white one.
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -22,13 +23,10 @@ const W = 560;
 const H = 315;
 const LOOP = 11000;
 
-// Beats, in ms. The effect lands on a page that was built in front of you.
 const TYPE_A = 300, TYPE_B = 1750;   // the query being typed
 const RES_A = 1900, RES_B = 2700;    // results landing
 const ON_A = 3100, ON_B = 4500;      // the effect arriving
 const OFF_A = 9400, OFF_B = 10200;   // and lifting
-
-const QUERY = 'why does a page feel flat';
 
 const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);
 const ramp = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
@@ -38,55 +36,114 @@ const hash = (i: number, s = 0) => {
 	return v - Math.floor(v);
 };
 
-// ---- the page ------------------------------------------------------------
+// ---- what each one is looking up -----------------------------------------
 
-const CHROME_H = 26;
+type Result = { site: string; url: string; title: string; snip: string[]; dot: string };
+
+const PAGES: Record<PreviewKind, { query: string; results: Result[] }> = {
+	'one-sun': {
+		query: 'why do shadows make things look real',
+		results: [
+			{
+				site: 'Perception Lab', url: 'https://perceptionlab.example › depth › shadow', dot: '#4b7bec',
+				title: 'How the eye reads depth from a single light source',
+				snip: ['A shadow tells you three things at once: where the light is,', 'how far the object floats, and how solid it is.'],
+			},
+			{
+				site: 'Interface Notes', url: 'https://interfacenotes.example › elevation', dot: '#e8564a',
+				title: 'Elevation, and why flat design felt weightless',
+				snip: ['Removing shadow removed the only cue that told you what', 'was on top of what.'],
+			},
+			{
+				site: 'Cinematography', url: 'https://cine.example › lighting › key', dot: '#f2b53c',
+				title: 'One key light does more than three soft ones',
+				snip: ['Direction is the whole story. Ambient light describes nothing.'],
+			},
+		],
+	},
+	typeset: {
+		query: 'best font pairing for long reading',
+		results: [
+			{
+				site: 'Type Works', url: 'https://typeworks.example › pairing › reading', dot: '#4b7bec',
+				title: 'Pairing a display face with something you can read',
+				snip: ['The two faces should disagree about one thing and agree', 'about everything else.'],
+			},
+			{
+				site: 'Measure', url: 'https://measure.example › line-length', dot: '#3fa96a',
+				title: 'Sixty-six characters, and why the number keeps coming back',
+				snip: ['Past about seventy the eye starts losing its place on the', 'return sweep.'],
+			},
+			{
+				site: 'Practical Typography', url: 'https://practicaltype.example › leading', dot: '#e8564a',
+				title: 'Line height is set by the face, not by the rule',
+				snip: ['A tall x-height wants more leading than the same size in a', 'face with a small one.'],
+			},
+		],
+	},
+	'by-hand': {
+		query: 'why does handwriting look human',
+		results: [
+			{
+				site: 'Drawing Notes', url: 'https://drawingnotes.example › line › tremor', dot: '#f2b53c',
+				title: 'Nobody draws a straight line, and that is the point',
+				snip: ['The wobble is not error. It is the record of a hand that had', 'to make decisions on the way.'],
+			},
+			{
+				site: 'Letterform', url: 'https://letterform.example › script › hand', dot: '#4b7bec',
+				title: 'Why a font of your handwriting still looks like a font',
+				snip: ['Every a is identical. That is the only tell anyone needs.'],
+			},
+			{
+				site: 'Sketching', url: 'https://sketching.example › ink › pressure', dot: '#3fa96a',
+				title: 'Pressure, speed, and the weight of a pen stroke',
+				snip: ['A line drawn quickly is thin at both ends and heavy through', 'the middle.'],
+			},
+		],
+	},
+};
+
+// ---- layout --------------------------------------------------------------
+
+const CHROME_H = 30;
 const PAGE_Y = CHROME_H;
 
 type Rect = { x: number; y: number; w: number; h: number; depth: number; kind: string; text?: string };
 
-const RESULTS = [
-	{ url: 'designnotes.example / depth', title: 'Why flat interfaces read as flat', snip: 2 },
-	{ url: 'typeworks.example / measure', title: 'Light, shadow, and the illusion of paper', snip: 2 },
-	{ url: 'archive.example / drawing', title: 'Everything on screen was drawn by someone', snip: 1 },
-];
-
 /** Every box the effects can address. Depth stands in for DOM nesting. */
 function layout(): Rect[] {
 	const r: Rect[] = [];
-	r.push({ x: 0, y: PAGE_Y, w: W, h: 44, depth: 1, kind: 'header' });
-	r.push({ x: 108, y: PAGE_Y + 12, w: 268, h: 22, depth: 3, kind: 'searchbar' });
-	r.push({ x: 22, y: PAGE_Y + 17, w: 66, h: 14, depth: 3, kind: 'logo' });
-	r.push({ x: 108, y: PAGE_Y + 48, w: 150, h: 12, depth: 2, kind: 'tabs' });
-	r.push({ x: 108, y: PAGE_Y + 70, w: 120, h: 8, depth: 2, kind: 'meta' });
+	r.push({ x: 0, y: PAGE_Y, w: W, h: 46, depth: 1, kind: 'header' });
+	r.push({ x: 22, y: PAGE_Y + 14, w: 62, h: 18, depth: 3, kind: 'logo' });
+	r.push({ x: 100, y: PAGE_Y + 11, w: 300, h: 24, depth: 3, kind: 'searchbar' });
+	r.push({ x: 100, y: PAGE_Y + 54, w: 190, h: 12, depth: 2, kind: 'tabs' });
 
-	let y = PAGE_Y + 90;
-	RESULTS.forEach((res, i) => {
-		r.push({ x: 108, y, w: 250, h: 10, depth: 4, kind: 'url', text: res.url });
-		r.push({ x: 108, y: y + 14, w: 250, h: 15, depth: 4, kind: 'title', text: res.title });
-		for (let s = 0; s < res.snip; s++) {
-			r.push({ x: 108, y: y + 34 + s * 11, w: s === res.snip - 1 ? 190 : 250, h: 6, depth: 5, kind: 'snip' });
-		}
-		y += 34 + res.snip * 11 + 16;
-	});
-
-	r.push({ x: 388, y: PAGE_Y + 90, w: 150, h: 96, depth: 3, kind: 'card' });
-	r.push({ x: 388, y: PAGE_Y + 196, w: 150, h: 52, depth: 3, kind: 'card2' });
+	let y = PAGE_Y + 84;
+	for (let i = 0; i < 3; i++) {
+		r.push({ x: 100, y, w: 24, h: 24, depth: 4, kind: 'favicon' });
+		r.push({ x: 132, y: y + 1, w: 240, h: 9, depth: 4, kind: 'site' });
+		r.push({ x: 132, y: y + 13, w: 240, h: 8, depth: 4, kind: 'url' });
+		r.push({ x: 100, y: y + 30, w: 340, h: 16, depth: 4, kind: 'title' });
+		r.push({ x: 100, y: y + 52, w: 350, h: 9, depth: 5, kind: 'snip0' });
+		r.push({ x: 100, y: y + 64, w: 300, h: 9, depth: 5, kind: 'snip1' });
+		y += 92;
+	}
 	return r;
 }
 
 const RECTS = layout();
 
-// ---- palettes ------------------------------------------------------------
-
-const LIGHT = {
-	paper: '#ffffff',
-	ink: '#1f1f1f',
-	sub: '#5f6368',
-	link: '#1a4fbb',
-	url: '#3a7d4f',
-	line: '#e3e6ea',
-	chrome: '#dfe3e8',
+// Google's dark surface, near enough that it reads as the real thing.
+const D = {
+	bg: '#202124',
+	chrome: '#35373b',
+	chromeTab: '#202124',
+	pill: '#303134',
+	pillEdge: '#5f6368',
+	ink: '#e8eaed',
+	sub: '#bdc1c6',
+	link: '#99c3ff',
+	line: '#3c4043',
 };
 
 export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; atMs?: number }) {
@@ -128,7 +185,7 @@ export default function ExtensionPreview({ kind, atMs }: { kind: PreviewKind; at
 		io.observe(cv);
 
 		if (pinned) draw(ctx, kind, atMs! % LOOP);
-		else if (mq.matches) draw(ctx, kind, 6000); // one settled frame
+		else if (mq.matches) draw(ctx, kind, 6000);
 		else raf = requestAnimationFrame(frame);
 
 		return () => {
@@ -165,36 +222,12 @@ function draw(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number) {
 	const results = easeOut(ramp(t, RES_A, RES_B));
 	const on = ramp(t, ON_A, ON_B) * (1 - ramp(t, OFF_A, OFF_B));
 
-	if (kind === 'one-sun') drawSun(ctx, t, on, typed, results);
-	else if (kind === 'typeset') drawTypeset(ctx, t, on, typed, results);
-	else drawByHand(ctx, t, on, typed, results);
+	if (kind === 'one-sun') drawSun(ctx, t, on, typed, results, kind);
+	else if (kind === 'typeset') drawTypeset(ctx, t, on, typed, results, kind);
+	else drawByHand(ctx, t, on, typed, results, kind);
 
-	drawChrome(ctx, typed);
+	drawChrome(ctx, kind, typed, on);
 	drawMotes(ctx, kind, t, on);
-}
-
-/** Browser furniture. Sells "this is your actual browser" more than the page does. */
-function drawChrome(ctx: CanvasRenderingContext2D, typed: number) {
-	ctx.fillStyle = LIGHT.chrome;
-	ctx.fillRect(0, 0, W, CHROME_H);
-	ctx.fillStyle = '#c3c8cf';
-	[0, 1, 2].forEach((i) => {
-		ctx.beginPath();
-		ctx.arc(14 + i * 11, 13, 3.4, 0, Math.PI * 2);
-		ctx.fill();
-	});
-	// the address pill, filling in as the search is typed
-	ctx.fillStyle = '#f5f7f9';
-	roundRect(ctx, 56, 5.5, W - 112, 15, 7.5);
-	ctx.fill();
-	ctx.fillStyle = '#8b9098';
-	ctx.font = '8px ui-monospace, monospace';
-	const shown = QUERY.slice(0, Math.round(QUERY.length * typed));
-	ctx.fillText(typed < 1 ? 'search.example' : `search.example/?q=${shown.replace(/ /g, '+')}`, 66, 15.5);
-	// the extension's own button, lit once it has been clicked
-	ctx.fillStyle = 'rgba(96,165,250,0.9)';
-	roundRect(ctx, W - 46, 6, 14, 14, 3.5);
-	ctx.fill();
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -207,132 +240,198 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 	ctx.closePath();
 }
 
+/** Browser furniture: a tab strip and an address bar, dark like the rest. */
+function drawChrome(ctx: CanvasRenderingContext2D, kind: PreviewKind, typed: number, on: number) {
+	const q = PAGES[kind].query;
+	ctx.fillStyle = D.chrome;
+	ctx.fillRect(0, 0, W, CHROME_H);
+
+	// active tab
+	ctx.fillStyle = D.chromeTab;
+	roundRect(ctx, 8, 3, 132, CHROME_H - 3, 7);
+	ctx.fill();
+	ctx.fillStyle = '#8ab4f8';
+	ctx.beginPath();
+	ctx.arc(20, 15, 4, 0, Math.PI * 2);
+	ctx.fill();
+	ctx.fillStyle = D.sub;
+	ctx.font = '8px system-ui, "Segoe UI", sans-serif';
+	const shown = q.slice(0, Math.round(q.length * typed));
+	ctx.fillText((typed < 1 ? 'New tab' : shown).slice(0, 20), 30, 18);
+
+	// address pill
+	ctx.fillStyle = '#292a2d';
+	roundRect(ctx, 150, 6, W - 210, 18, 9);
+	ctx.fill();
+	ctx.fillStyle = '#9aa0a6';
+	ctx.font = '7.5px ui-monospace, monospace';
+	ctx.fillText(
+		typed < 1 ? 'google.com' : `google.com/search?q=${shown.replace(/ /g, '+')}`.slice(0, 58),
+		160,
+		18.5
+	);
+
+	// the extension's button, lit once it has been used
+	ctx.fillStyle = on > 0.02 ? 'rgba(138,180,248,0.95)' : 'rgba(138,180,248,0.35)';
+	roundRect(ctx, W - 48, 8, 15, 15, 4);
+	ctx.fill();
+	if (on > 0.02) {
+		ctx.strokeStyle = 'rgba(138,180,248,0.5)';
+		ctx.lineWidth = 1;
+		roundRect(ctx, W - 51, 5, 21, 21, 6);
+		ctx.stroke();
+	}
+}
+
 /**
- * The search page. `fonts` lets Typeset swap faces mid-page; `flat` strips
- * the colour so By Hand can draw over bare structure.
+ * The results page. `headFont`/`bodyFont` let Typeset swap faces mid-page;
+ * `noBg` lets One Sun lay down shadows before the page is painted over them.
  */
 function paintSearch(
 	ctx: CanvasRenderingContext2D,
+	kind: PreviewKind,
 	opts: {
 		typed: number;
 		results: number;
 		headFont?: (r: Rect) => string;
 		bodyFont?: (r: Rect) => string;
 		leading?: (r: Rect) => number;
-		/** Skip the background fill — the caller has already laid down paper,
-		 *  and in One Sun's case a set of shadows it would otherwise erase. */
 		noBg?: boolean;
 	}
 ) {
-	const head = opts.headFont || (() => 'system-ui, "Segoe UI", sans-serif');
-	const body = opts.bodyFont || (() => 'system-ui, "Segoe UI", sans-serif');
+	const page = PAGES[kind];
+	const head = opts.headFont || (() => 'system-ui, "Segoe UI", Arial, sans-serif');
+	const body = opts.bodyFont || (() => 'system-ui, "Segoe UI", Arial, sans-serif');
 
 	if (!opts.noBg) {
-		ctx.fillStyle = LIGHT.paper;
+		ctx.fillStyle = D.bg;
 		ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
 	}
 
-	// header rule
-	ctx.fillStyle = LIGHT.line;
-	ctx.fillRect(0, PAGE_Y + 43, W, 1);
-
-	// the mark — a shape, not anyone's logo
+	// wordmark
 	const lg = RECTS.find((r) => r.kind === 'logo')!;
-	const dots = ['#4b7bec', '#e8564a', '#f2b53c', '#3fa96a'];
-	dots.forEach((c, i) => {
-		ctx.fillStyle = c;
-		ctx.beginPath();
-		ctx.arc(lg.x + 5 + i * 11, lg.y + 7, 4.2, 0, Math.PI * 2);
-		ctx.fill();
+	ctx.font = '400 21px "Product Sans", system-ui, Arial, sans-serif';
+	const letters = 'Google'.split('');
+	const cols = ['#4285f4', '#ea4335', '#fbbc05', '#4285f4', '#34a853', '#ea4335'];
+	let lx = lg.x;
+	letters.forEach((ch, i) => {
+		ctx.fillStyle = cols[i];
+		ctx.fillText(ch, lx, lg.y + 15);
+		lx += ctx.measureText(ch).width;
 	});
 
-	// search field, with the query appearing letter by letter
+	// search pill
 	const sb = RECTS.find((r) => r.kind === 'searchbar')!;
-	ctx.fillStyle = '#ffffff';
-	ctx.strokeStyle = '#d6dae0';
-	ctx.lineWidth = 1;
+	ctx.fillStyle = D.pill;
 	roundRect(ctx, sb.x, sb.y, sb.w, sb.h, sb.h / 2);
 	ctx.fill();
-	ctx.stroke();
-	const shown = QUERY.slice(0, Math.round(QUERY.length * opts.typed));
-	ctx.fillStyle = LIGHT.ink;
-	ctx.font = `11px ${body(sb)}`;
-	ctx.fillText(shown, sb.x + 12, sb.y + 15);
+	const shown = page.query.slice(0, Math.round(page.query.length * opts.typed));
+	ctx.fillStyle = D.ink;
+	ctx.font = `11.5px ${body(sb)}`;
+	ctx.fillText(shown, sb.x + 16, sb.y + 16);
 	if (opts.typed < 1 && Math.floor(Date.now() / 400) % 2 === 0) {
-		const wq = ctx.measureText(shown).width;
-		ctx.fillRect(sb.x + 13 + wq, sb.y + 5, 1, 12);
+		ctx.fillStyle = '#8ab4f8';
+		ctx.fillRect(sb.x + 17 + ctx.measureText(shown).width, sb.y + 5, 1.2, 14);
 	}
-	// magnifier
-	ctx.strokeStyle = '#9aa0a6';
-	ctx.lineWidth = 1.3;
+	// clear · mic · lens · search, as on the real thing
+	ctx.strokeStyle = D.sub;
+	ctx.lineWidth = 1.2;
+	const icx = sb.x + sb.w - 62;
 	ctx.beginPath();
-	ctx.arc(sb.x + sb.w - 15, sb.y + 10, 3.6, 0, Math.PI * 2);
+	ctx.moveTo(icx - 4, sb.y + 8); ctx.lineTo(icx + 4, sb.y + 16);
+	ctx.moveTo(icx + 4, sb.y + 8); ctx.lineTo(icx - 4, sb.y + 16);
+	ctx.stroke();
+	ctx.fillStyle = '#8ab4f8';
+	roundRect(ctx, icx + 16, sb.y + 7, 5, 10, 2.5);
+	ctx.fill();
+	ctx.strokeStyle = '#8ab4f8';
+	ctx.strokeRect(icx + 34, sb.y + 8, 9, 9);
+	ctx.beginPath();
+	ctx.arc(icx + 57, sb.y + 11, 4, 0, Math.PI * 2);
 	ctx.stroke();
 	ctx.beginPath();
-	ctx.moveTo(sb.x + sb.w - 12.4, sb.y + 12.6);
-	ctx.lineTo(sb.x + sb.w - 10, sb.y + 15);
+	ctx.moveTo(icx + 60, sb.y + 14); ctx.lineTo(icx + 63, sb.y + 17);
 	ctx.stroke();
+
+	// apps grid + avatar
+	ctx.fillStyle = D.sub;
+	for (let a = 0; a < 9; a++) {
+		ctx.beginPath();
+		ctx.arc(W - 62 + (a % 3) * 5, PAGE_Y + 18 + Math.floor(a / 3) * 5, 1.1, 0, Math.PI * 2);
+		ctx.fill();
+	}
+	ctx.fillStyle = '#e8a33c';
+	ctx.beginPath();
+	ctx.arc(W - 34, PAGE_Y + 23, 8, 0, Math.PI * 2);
+	ctx.fill();
 
 	if (opts.results <= 0.01) return;
 	ctx.save();
 	ctx.globalAlpha = opts.results;
+	const rise = (1 - opts.results) * 10;
 
 	// tabs
-	const tabs = ['All', 'Images', 'News', 'Videos'];
+	const tabs = ['All', 'Images', 'Videos', 'News', 'Web'];
 	ctx.font = `9px ${body(RECTS[3])}`;
-	let tx = 108;
+	let tx = 100;
 	tabs.forEach((tb, i) => {
-		ctx.fillStyle = i === 0 ? LIGHT.link : LIGHT.sub;
-		ctx.fillText(tb, tx, PAGE_Y + 57);
-		if (i === 0) ctx.fillRect(tx, PAGE_Y + 61, ctx.measureText(tb).width, 1.5);
-		tx += ctx.measureText(tb).width + 14;
-	});
-
-	ctx.fillStyle = LIGHT.sub;
-	ctx.font = `8px ${body(RECTS[4])}`;
-	ctx.fillText('About 1,240,000 results (0.38 seconds)', 108, PAGE_Y + 77);
-
-	// results, each sliding up a little as it lands
-	for (const r of RECTS) {
-		const rise = (1 - opts.results) * 10;
-		if (r.kind === 'url') {
-			ctx.fillStyle = LIGHT.url;
-			ctx.font = `8.5px ${body(r)}`;
-			ctx.fillText(r.text!, r.x, r.y + 8 + rise);
-		} else if (r.kind === 'title') {
-			ctx.fillStyle = LIGHT.link;
-			ctx.font = `${opts.leading ? 13 : 13}px ${head(r)}`;
-			ctx.fillText(r.text!, r.x, r.y + 12 + rise);
-		} else if (r.kind === 'snip') {
-			ctx.fillStyle = '#cfd4da';
-			ctx.fillRect(r.x, r.y + rise + (opts.leading ? opts.leading(r) : 0), r.w, r.h);
-		} else if (r.kind === 'card' || r.kind === 'card2') {
-			ctx.fillStyle = '#ffffff';
-			ctx.strokeStyle = LIGHT.line;
-			ctx.lineWidth = 1;
-			roundRect(ctx, r.x, r.y + rise, r.w, r.h, 6);
-			ctx.fill();
-			ctx.stroke();
-			ctx.fillStyle = '#e9edf1';
-			ctx.fillRect(r.x + 10, r.y + rise + 10, r.w - 20, r.kind === 'card' ? 34 : 12);
-			ctx.fillStyle = '#d3d9df';
-			ctx.fillRect(r.x + 10, r.y + rise + (r.kind === 'card' ? 52 : 28), r.w - 40, 6);
-			ctx.fillRect(r.x + 10, r.y + rise + (r.kind === 'card' ? 64 : 38), r.w - 26, 6);
+		ctx.fillStyle = i === 0 ? '#8ab4f8' : D.sub;
+		ctx.fillText(tb, tx, PAGE_Y + 62 + rise);
+		if (i === 0) {
+			ctx.fillRect(tx - 2, PAGE_Y + 68 + rise, ctx.measureText(tb).width + 4, 2);
 		}
-	}
+		tx += ctx.measureText(tb).width + 16;
+	});
+	ctx.fillStyle = D.line;
+	ctx.fillRect(0, PAGE_Y + 70 + rise, W, 1);
+
+	// results
+	page.results.forEach((res, i) => {
+		const fav = RECTS.filter((r) => r.kind === 'favicon')[i];
+		const site = RECTS.filter((r) => r.kind === 'site')[i];
+		const url = RECTS.filter((r) => r.kind === 'url')[i];
+		const title = RECTS.filter((r) => r.kind === 'title')[i];
+		const s0 = RECTS.filter((r) => r.kind === 'snip0')[i];
+		const s1 = RECTS.filter((r) => r.kind === 'snip1')[i];
+		const lead = opts.leading ? opts.leading(s0) : 0;
+
+		ctx.fillStyle = res.dot;
+		ctx.beginPath();
+		ctx.arc(fav.x + 12, fav.y + 12 + rise, 11, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.fillStyle = 'rgba(255,255,255,0.9)';
+		ctx.font = `bold 10px ${body(fav)}`;
+		ctx.fillText(res.site[0], fav.x + 8.5, fav.y + 16 + rise);
+
+		ctx.fillStyle = D.ink;
+		ctx.font = `9px ${body(site)}`;
+		ctx.fillText(res.site, site.x, site.y + 8 + rise);
+		ctx.fillStyle = D.sub;
+		ctx.font = `8px ${body(url)}`;
+		ctx.fillText(res.url, url.x, url.y + 7 + rise);
+
+		ctx.fillStyle = D.link;
+		ctx.font = `14px ${head(title)}`;
+		ctx.fillText(res.title, title.x, title.y + 12 + rise);
+
+		ctx.fillStyle = D.sub;
+		ctx.font = `9px ${body(s0)}`;
+		ctx.fillText(res.snip[0], s0.x, s0.y + 8 + rise + lead);
+		if (res.snip[1]) ctx.fillText(res.snip[1], s1.x, s1.y + 8 + rise + lead * 2);
+	});
 	ctx.restore();
 }
 
 // ---- One Sun ---------------------------------------------------------------
 
-function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number) {
+function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'one-sun') {
 	const a = (t / LOOP) * Math.PI * 2;
 	const sx = W * 0.5 + Math.cos(a * 1.6 - 1.1) * W * 0.46;
 	const sy = 6 + Math.sin(a * 1.2) * 30;
 	const sink = clamp01((t - 6200) / 3000); // the light lowers as the loop runs on
 	const warmR = 255, warmG = Math.round(216 - sink * 46), warmB = Math.round(158 - sink * 74);
 
-	ctx.fillStyle = LIGHT.paper;
+	ctx.fillStyle = D.bg;
 	ctx.fillRect(0, PAGE_Y, W, H - PAGE_Y);
 
 	const dx = W / 2 - sx;
@@ -350,7 +449,7 @@ function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: nu
 			const h = r.depth * 5.6;
 			ctx.save();
 			ctx.filter = `blur(${(1.4 + r.depth * 0.9).toFixed(1)}px)`;
-			ctx.fillStyle = `rgba(52, 38, 24, ${(0.34 * on).toFixed(3)})`;
+			ctx.fillStyle = `rgba(0, 0, 0, ${(0.34 * on).toFixed(3)})`;
 			ctx.beginPath();
 			ctx.moveTo(r.x, r.y + r.h);
 			ctx.lineTo(r.x + r.w, r.y + r.h);
@@ -364,7 +463,7 @@ function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: nu
 		// glyph-shaped shadows under the result titles
 		ctx.save();
 		ctx.filter = 'blur(1.2px)';
-		ctx.fillStyle = `rgba(52, 38, 24, ${(0.45 * on).toFixed(3)})`;
+		ctx.fillStyle = `rgba(0, 0, 0, ${(0.45 * on).toFixed(3)})`;
 		for (const r of RECTS) {
 			if (r.kind !== 'title') continue;
 			const h = r.depth * 5.6;
@@ -374,7 +473,7 @@ function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: nu
 		ctx.restore();
 	}
 
-	paintSearch(ctx, { typed, results, noBg: true });
+	paintSearch(ctx, kind, { typed, results, noBg: true });
 
 	if (on > 0.01) {
 		// shafts of light, thrown from wherever the sun is
@@ -415,12 +514,12 @@ function drawSun(ctx: CanvasRenderingContext2D, t: number, on: number, typed: nu
 
 // ---- Typeset ---------------------------------------------------------------
 
-function drawTypeset(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number) {
+function drawTypeset(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'typeset') {
 	const sweep = easeOut(ramp(t, ON_A, ON_B + 900));
 	const band = PAGE_Y + sweep * (H - PAGE_Y + 70) - 35;
 	const done = (r: Rect) => on > 0.02 && r.y + r.h < band;
 
-	paintSearch(ctx, {
+	paintSearch(ctx, kind, {
 		typed,
 		results,
 		headFont: (r) => (done(r) ? '"Iowan Old Style", Palatino, Georgia, serif' : 'system-ui, "Segoe UI", sans-serif'),
@@ -452,9 +551,9 @@ function drawTypeset(ctx: CanvasRenderingContext2D, t: number, on: number, typed
 
 // ---- By Hand ---------------------------------------------------------------
 
-function drawByHand(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number) {
+function drawByHand(ctx: CanvasRenderingContext2D, t: number, on: number, typed: number, results: number, kind: PreviewKind = 'by-hand') {
 	if (on < 0.02) {
-		paintSearch(ctx, { typed, results });
+		paintSearch(ctx, kind, { typed, results });
 		return;
 	}
 
@@ -522,7 +621,7 @@ function drawByHand(ctx: CanvasRenderingContext2D, t: number, on: number, typed:
 	// the query, in the same hand
 	ctx.fillStyle = 'rgba(60,58,55,0.9)';
 	ctx.font = '11px "Segoe Print", "Bradley Hand", cursive';
-	ctx.fillText(QUERY.slice(0, Math.round(QUERY.length * typed)), 120, PAGE_Y + 27);
+	ctx.fillText(PAGES[kind].query.slice(0, Math.round(PAGES[kind].query.length * typed)), 120, PAGE_Y + 27);
 
 	// grain
 	ctx.save();
