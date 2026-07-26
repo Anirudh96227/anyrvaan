@@ -101,8 +101,8 @@ const ogImage = project.data.cover
 	? (await getImage({ src: project.data.cover, width: 1200, format: 'jpeg' })).src
 	: undefined;
 
-// An ambient "world" behind the five filmed case studies, matched to subject.
-// Other case studies (the AI-image ones) keep the plain dark ground.
+// An ambient "world" behind every case study, matched to its subject — no two
+// pages share a ground unless they genuinely share a subject.
 const WORLDS: Record<string, World> = {
 	'effects-index': 'effects',
 	'spiritual-series': 'spiritual',
@@ -116,6 +116,8 @@ const WORLDS: Record<string, World> = {
 	'ui-animation-atlas': 'ui',
 	'motion-made-with-code': 'code-pulse',
 	'rough-cut-divinity': 'suspended-arc',
+	// the case study about this site gets the mark this site keeps drawing
+	'anyrvaan-site': 'enso',
 };
 const world = WORLDS[project.id];
 ---
@@ -126,7 +128,7 @@ const world = WORLDS[project.id];
 	image={ogImage}
 	type="article"
 >
-	<div class:list={['relative min-h-screen text-neutral-50', !world && 'bg-neutral-950']}>
+	<div class:list={['page-shell relative min-h-screen text-neutral-50', !world && 'bg-neutral-950']}>
 		{world && <WorldBackground client:visible theme={world} />}
 		<div class="relative z-10">
 			<Nav />

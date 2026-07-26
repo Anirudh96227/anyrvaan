@@ -1,0 +1,17 @@
+{
+	"manifest_version": 3,
+	"name": "Bloom",
+	"version": "1.0.0",
+	"description": "Pages grow in instead of loading in. Elements unfurl into place, then keep breathing — the web as something grown, not built.",
+	"icons": {
+		"128": "icon.png"
+	},
+	"action": {
+		"default_icon": "icon.png",
+		"default_title": "Bloom — grow this page in"
+	},
+	"permissions": ["activeTab", "scripting"],
+	"background": {
+		"service_worker": "background.js"
+	}
+}

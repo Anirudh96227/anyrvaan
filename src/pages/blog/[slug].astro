@@ -67,7 +67,7 @@ const world = WORLDS[post.id];
 	<div class="read-progress" aria-hidden="true"><span class="read-progress__fill"></span></div>
 	<!-- Cursor spotlight: a soft blue light that tints the text it passes over. -->
 	<div class="spotlight" aria-hidden="true"></div>
-	<div class:list={['relative min-h-screen text-neutral-50', !world && 'bg-neutral-950']}>
+	<div class:list={['page-shell relative min-h-screen text-neutral-50', !world && 'bg-neutral-950']}>
 		{world && <WorldBackground client:visible theme={world} />}
 		<div class="relative z-10">
 			<Nav />

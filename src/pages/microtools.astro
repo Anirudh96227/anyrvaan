@@ -7,17 +7,65 @@ import Footer from '../components/Footer.astro';
 // Small, single-purpose tools — each one coded, not assembled from a
 // component kit. Each entry below is a real, live tool — no
 // placeholders standing in for work that doesn't exist yet.
-const tools: { name: string; description: string; href: string }[] = [
+const tools: { name: string; description: string; href: string }[] = [];
+
+// Extensions — browser extensions, listed separately from the single-page
+// tools above. Each one is real, installable, and does what the film shows.
+// The films are rendered in Remotion from the same lab as everything else.
+const extensions: {
+	name: string;
+	tagline: string;
+	body: string;
+	video: string;
+	poster?: string;
+	download: string;
+	size: string;
+	steps: string[];
+}[] = [
 	{
-		name: 'Vitals',
-		description:
-			'Enter your height and weight, build a figure, then hand it a pulse, a breath, a coffee, a meal — ten readings, one body.',
-		href: '/microtools/vitals',
+		name: 'Negative Space',
+		tagline: 'Strips any page to its skeleton',
+		body: "neti-neti, as a browser extension. One click removes colour, imagery, shadow, and every rounded corner from the page you're on, leaving the structure that was underneath — type, whitespace, and hairline frames where the pictures used to sit. The counter tells you how many things came off. On most sites the number is larger than I expect it to be.",
+		video: '/videos/extensions/negative-space.mp4',
+		poster: '/videos/extensions/negative-space.jpg',
+		download: '/downloads/extensions/anyrvaan-negative-space.zip',
+		size: '38 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Pin the icon, open any site, click once. Click again to bring the page back.',
+		],
 	},
 	{
-		name: 'Pulse',
-		description: 'Type a heart rate, or tap along to your own, and watch it drawn live as an ECG-style trace.',
-		href: '/microtools/pulse',
+		name: 'Bloom',
+		tagline: 'Pages grow in instead of loading in',
+		body: 'Every block unfurls upward from its own base — clipped open from the bottom edge, tilted a hair off-axis, released on a curve that arrives and stops. The growth is staggered by how far down the page a block sits, so it spreads like something rooted rather than everything appearing at once. Once it settles, the larger blocks keep breathing: about a pixel, on a slow cycle. Reduce-motion turns all of it off.',
+		video: '/videos/extensions/bloom.mp4',
+		poster: '/videos/extensions/bloom.jpg',
+		download: '/downloads/extensions/anyrvaan-bloom.zip',
+		size: '39 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Pin the icon, then try it on a long article — the wave needs room to travel.',
+		],
+	},
+	{
+		name: 'Undercurrent',
+		tagline: "Shows you what a page is actually made of",
+		body: 'The site stays readable and clickable. Over the top goes the layer you normally never see: everything built to sell you something boxed in amber, every outbound link tagged with where it really goes, content outlined in hairlines that thicken with how deep it is buried, and a slow current running down the spine of the page. The readout counts how much of what you are reading is the article and how much is the business model.',
+		video: '/videos/extensions/undercurrent.mp4',
+		poster: '/videos/extensions/undercurrent.jpg',
+		download: '/downloads/extensions/anyrvaan-undercurrent.zip',
+		size: '40 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Pin the icon, open a news site, and scroll with it on — the layer follows.',
+		],
 	},
 ];
 ---
@@ -26,7 +74,7 @@ const tools: { name: string; description: string; href: string }[] = [
 	title="Microtools — Anyrvaan"
 	description="Small, single-purpose tools built and shipped one at a time — each one coded from scratch, not assembled from a kit."
 >
-	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
 			<PageHeader
@@ -35,48 +83,129 @@ const tools: { name: string; description: string; href: string }[] = [
 				intro="Small tools, one purpose each, built the same way as everything else here — designed and coded by the same pair of hands. This section fills in as each one ships, not before."
 			/>
 
-			{
-				tools.length > 0 ? (
-					<section class="mx-auto max-w-4xl px-6 pb-32">
-						<div class="grid gap-6 sm:grid-cols-2">
-							{tools.map((t) => (
-								<a
-									href={t.href}
-									class="reveal group block rounded-2xl border border-white/5 p-8 transition-colors hover:border-white/15"
-								>
-									<h2 class="text-h3 text-neutral-50">{t.name}</h2>
-									<p class="mt-3 text-body text-neutral-400">{t.description}</p>
-									<span
-										aria-hidden="true"
-										class="mt-6 inline-block text-small text-neutral-500 transition-transform group-hover:translate-x-1"
-										>Open &rarr;</span
+			<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-4xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">Tools</p>
+					{
+						tools.length > 0 ? (
+							<div class="mt-8 grid gap-6 sm:grid-cols-2">
+								{tools.map((t) => (
+									<a
+										href={t.href}
+										class="reveal group block rounded-2xl border border-white/5 p-8 transition-colors hover:border-white/15"
 									>
+										<h2 class="text-h3 text-neutral-50">{t.name}</h2>
+										<p class="mt-3 text-body text-neutral-400">{t.description}</p>
+										<span
+											aria-hidden="true"
+											class="mt-6 inline-block text-small text-neutral-500 transition-transform group-hover:translate-x-1"
+											>Open &rarr;</span
+										>
+									</a>
+								))}
+							</div>
+						) : (
+							<>
+								<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
+									Nothing live here yet. The first one is picked, not placeholder-named — I'd
+									rather this stay empty than fill it with tools that don't exist.
+								</p>
+								<p class="reveal mt-6 max-w-2xl text-body text-neutral-500">
+									If there's a small, specific tool you wish existed, that's a good reason to
+									write in.
+								</p>
+								<a
+									href="/contact"
+									class="reveal mt-8 inline-block text-body text-neutral-300 transition-colors hover:text-neutral-50"
+								>
+									Suggest one &nearr;
 								</a>
-							))}
-						</div>
-					</section>
-				) : (
-					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
-						<div class="mx-auto max-w-4xl">
-							<p class="reveal text-eyebrow uppercase text-neutral-400">Status</p>
-							<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
-								Nothing live here yet. The first one is picked, not placeholder-named — I'd
-								rather this stay empty than fill it with tools that don't exist.
-							</p>
-							<p class="reveal mt-6 max-w-2xl text-body text-neutral-500">
-								If there's a small, specific tool you wish existed, that's a good reason to write
-								in.
-							</p>
-							<a
-								href="/contact"
-								class="reveal mt-8 inline-block text-body text-neutral-300 transition-colors hover:text-neutral-50"
-							>
-								Suggest one &nearr;
-							</a>
-						</div>
-					</section>
-				)
-			}
+							</>
+						)
+					}
+				</div>
+			</section>
+
+			<section id="extensions" class="border-t border-white/5 px-6 py-24 sm:py-32">
+				<div class="mx-auto max-w-4xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">Extensions</p>
+					<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
+						Three browser extensions, each one doing a single thing to whatever page you're
+						already on. None of them are in a web store — you install them by hand, which
+						means you can also read every line before you do.
+					</p>
+					<p class="reveal mt-5 max-w-2xl text-body text-neutral-500">
+						Chrome, Edge, Brave, or any other Chromium browser. Nothing is collected or sent
+						anywhere; none of them ask for network access.
+					</p>
+
+					<div class="mt-16 space-y-24">
+						{
+							extensions.map((e) => (
+								<article class="reveal">
+									<div class="overflow-hidden rounded-2xl border border-white/10 bg-black">
+										<video
+											class="block aspect-video w-full"
+											src={e.video}
+											poster={e.poster}
+											muted
+											loop
+											playsinline
+											preload="metadata"
+											controls
+										/>
+									</div>
+
+									<div class="mt-8 sm:flex sm:items-start sm:justify-between sm:gap-10">
+										<div class="max-w-xl">
+											<h3 class="text-h3 text-neutral-50">{e.name}</h3>
+											<p class="mt-2 text-body text-neutral-400">{e.tagline}</p>
+										</div>
+										<a
+											href={e.download}
+											download
+											class="mt-6 inline-flex shrink-0 items-center gap-3 rounded-full border border-white/15 px-6 py-3 text-small text-neutral-100 transition-colors hover:border-white/40 hover:bg-white/5 sm:mt-1"
+										>
+											Download
+											<span class="text-neutral-500">.zip · {e.size}</span>
+										</a>
+									</div>
+
+									<p class="mt-6 max-w-2xl text-body text-neutral-300">{e.body}</p>
+
+									<div class="mt-8 rounded-2xl border border-white/5 p-7">
+										<p class="text-eyebrow uppercase text-neutral-500">How to use it</p>
+										<ol class="mt-5 space-y-3">
+											{e.steps.map((s, i) => (
+												<li class="flex gap-4 text-body text-neutral-400">
+													<span class="shrink-0 tabular-nums text-neutral-600">
+														{String(i + 1).padStart(2, '0')}
+													</span>
+													<span>{s}</span>
+												</li>
+											))}
+										</ol>
+									</div>
+								</article>
+							))
+						}
+					</div>
+
+					<div class="reveal mt-24 rounded-2xl border border-amber-200/15 bg-amber-100/[0.03] p-8">
+						<p class="text-eyebrow uppercase text-amber-200/70">If you install all three</p>
+						<p class="mt-5 max-w-2xl text-body text-neutral-300">
+							Click all three toolbar icons within about a second and a half. Instead of
+							toggling, they perform in order — the page grows in, gets X-rayed, then strips
+							to bone. Eight seconds, and then you have your page back.
+						</p>
+						<p class="mt-4 max-w-2xl text-body text-neutral-500">
+							Each extension runs in its own sealed world and can't see the other two, so they
+							coordinate through the page itself: the handshake is written onto the document
+							and the trigger is an ordinary DOM event.
+						</p>
+					</div>
+				</div>
+			</section>
 		</main>
 		<Footer />
 	</div>

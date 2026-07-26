@@ -41,7 +41,8 @@ export type World =
 	| 'diorama-drift'
 	| 'almost-nothing'
 	| 'code-pulse'
-	| 'suspended-arc';
+	| 'suspended-arc'
+	| 'enso';
 
 const COBALT = '96, 165, 250'; // the site's one signal blue, rgb
 const PHOSPHOR = '110, 231, 183'; // faint CRT green, retro only
@@ -127,6 +128,21 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			arcR[i] = 30 + Math.random() * 70;
 			arcStart[i] = Math.random() * Math.PI * 2;
 			arcSeed[i] = Math.random() * 1000;
+		}
+
+		// enso: the site's own mark, drawn slowly and left open. Each one takes
+		// most of a minute to come round, rests, and lifts — the case study
+		// about this site gets the thing this site keeps drawing.
+		const ENSO_N = 4;
+		const ensoX = new Float32Array(ENSO_N);
+		const ensoY = new Float32Array(ENSO_N);
+		const ensoR = new Float32Array(ENSO_N);
+		const ensoSeed = new Float32Array(ENSO_N);
+		for (let i = 0; i < ENSO_N; i++) {
+			ensoX[i] = (0.18 + Math.random() * 0.64) * w;
+			ensoY[i] = (0.12 + Math.random() * 0.76) * h;
+			ensoR[i] = 46 + Math.random() * 74;
+			ensoSeed[i] = Math.random() * 1000;
 		}
 
 		// almost-nothing: very few, very faint, very slow.
@@ -398,6 +414,54 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						ctx!.beginPath();
 						ctx!.arc(arcX[i] + Math.cos(tipA) * arcR[i], arcY[i] + Math.sin(tipA) * arcR[i], 1.8, 0, Math.PI * 2);
 						ctx!.fill();
+					}
+				}
+			} else if (theme === 'enso') {
+				// Each circle draws itself brush-like — the stroke swells through
+				// the middle of the sweep and thins at both ends — stops short of
+				// closing, holds, and lifts. Same mark as the nav, same opening
+				// left unclosed.
+				const SWEEP = Math.PI * 1.82;
+				for (let i = 0; i < ENSO_N; i++) {
+					const cycle = 21000 + ensoSeed[i] * 9;
+					const phase = ((t + ensoSeed[i] * 53) % cycle) / cycle;
+					const drawEnd = 0.46;
+					const holdEnd = 0.78;
+					let p: number;
+					let alpha: number;
+					if (phase < drawEnd) {
+						p = phase / drawEnd;
+						p = 1 - Math.pow(1 - p, 2.2); // slows as it comes round
+						alpha = Math.min(1, (phase / drawEnd) * 4);
+					} else if (phase < holdEnd) {
+						p = 1;
+						alpha = 1;
+					} else {
+						p = 1;
+						alpha = 1 - (phase - holdEnd) / (1 - holdEnd);
+					}
+					if (alpha <= 0.02) continue;
+
+					const start = -Math.PI / 2 - 0.2 + ensoSeed[i];
+					const R = ensoR[i];
+					const steps = Math.max(40, Math.round(R * 1.1));
+					const drawn = Math.floor(steps * p);
+					ctx!.lineCap = 'round';
+					for (let s = 0; s < drawn; s++) {
+						const t0 = s / steps;
+						const t1 = (s + 1) / steps;
+						const a0 = start + SWEEP * t0;
+						const a1 = start + SWEEP * t1;
+						const wob = (a: number) => Math.sin(a * 5 + ensoSeed[i]);
+						const r0 = R + R * 0.045 * wob(a0);
+						const r1 = R + R * 0.045 * wob(a1);
+						const body = Math.pow(Math.sin(Math.PI * t0), 0.35);
+						ctx!.lineWidth = (0.7 + 1.1 * body) * (lowTier ? 0.8 : 1);
+						ctx!.strokeStyle = `rgba(${COBALT}, ${(0.3 * alpha * (0.35 + 0.65 * body)).toFixed(3)})`;
+						ctx!.beginPath();
+						ctx!.moveTo(ensoX[i] + Math.cos(a0) * r0, ensoY[i] + Math.sin(a0) * r0);
+						ctx!.lineTo(ensoX[i] + Math.cos(a1) * r1, ensoY[i] + Math.sin(a1) * r1);
+						ctx!.stroke();
 					}
 				}
 			} else {

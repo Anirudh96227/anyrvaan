@@ -75,6 +75,19 @@ body {
 	background-color: var(--color-neutral-950);
 }
 
+/* Several effects deliberately paint outside their own box — the canvas
+   behind the word "move" is padded two font-sizes past the text on every
+   side so particles can spill. On a narrow screen a word sitting near the
+   right edge pushes that spill past the viewport and the whole document
+   gains a sideways scroll.
+   `overflow-x: clip` on the root does not reliably propagate to the viewport
+   (Chrome still scrolls), so the clip is applied to the page shell instead —
+   a non-root element, where `clip` genuinely clips without becoming a scroll
+   container, leaving `position: sticky` (ScrollFilm) working underneath. */
+.page-shell {
+	overflow-x: clip;
+}
+
 /* Reveal-on-scroll, shared across every page (see the global script in
    Layout.astro). Progressive enhancement: elements are visible by default,
    so with no JS or with reduced motion nothing is ever stuck hidden. Only
@@ -195,6 +208,32 @@ body {
 	min-width: 32rem;
 	border-collapse: collapse;
 	font-size: 0.9em;
+}
+/* Markdown emits a bare <table> with no `.table-wrap` around it to scroll
+   inside, so on a phone that 32rem floor ran straight off the side of the
+   page — and once the page shell started clipping, off the side for good.
+   Below the small breakpoint the floor comes off and cells wrap instead.
+   These tables are two-column comparisons; wrapping reads better on a phone
+   than sideways scrolling anyway. */
+@media (max-width: 639px) {
+	.prose table {
+		/* `display: block` turns the table itself into the scroll container the
+		   missing wrapper would have provided — the rows keep their table
+		   display types and lay out as a table inside it. Cells wrap first;
+		   anything that still cannot fit scrolls sideways within the table
+		   rather than off the edge of the page. */
+		display: block;
+		overflow-x: auto;
+		min-width: 0;
+		max-width: 100%;
+		font-size: 0.85em;
+	}
+	.prose thead th {
+		white-space: normal;
+	}
+	.prose :is(th, td) {
+		padding: 0.6em 0.7em;
+	}
 }
 .prose thead th {
 	text-align: left;

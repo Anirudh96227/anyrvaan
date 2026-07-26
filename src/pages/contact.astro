@@ -55,7 +55,7 @@ const workNotes = [
 	title="Studio & Contact — Anyrvaan"
 	description="One person, Delhi-based, making quiet motion work and the interfaces around it. Write in — one person reads this inbox, and one person writes back."
 >
-	<div class="min-h-screen bg-neutral-950 text-neutral-50">
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
 			<PageHeader
@@ -72,7 +72,7 @@ const workNotes = [
 					<a
 						href={`mailto:${email}`}
 						data-email={email}
-						class="email-link reveal group mt-8 block w-fit text-h1 text-neutral-50 transition-colors hover:text-neutral-300"
+						class="email-link reveal group mt-8 block w-fit text-h2 text-neutral-50 transition-colors [overflow-wrap:anywhere] hover:text-neutral-300 sm:text-h1"
 					>
 						<span class="email-link__label">{email}</span>
 						<span
