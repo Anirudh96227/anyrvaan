@@ -1,0 +1,866 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+import ToolPreview from '../../components/ToolPreview.tsx';
+
+// Three calculations that get done on the same job, on the same day, so they
+// live on one page rather than three. The two constants the whole page rests
+// on are declared in the client script below, but they are worth stating here:
+//
+//   0.0117 m³ per 25 kg bag. Not a guess — 25 kg of dry mix plus the ~3 litres
+//   of water it takes, over a placed density of 2400 kg/m³. It lands within a
+//   percent of the yields printed on US 40/60/80 lb bags, which is the check
+//   that made me trust it. Call it 86 bags to the cubic metre.
+//
+//   Rebar mass is d²/162 kg/m, which is exact enough that #4 bar comes out at
+//   0.994 kg/m against a real 0.994.
+---
+
+<Layout
+	title="Concrete Calculator — Anyrvaan Microtools"
+	description="Slab volume and bag count, post hole volume with the post subtracted, and rebar grid count. Every formula shown under the calculator that uses it."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Concrete Calculator"
+				intro="Three calculations that tend to happen on the same afternoon: how much concrete a slab takes, how much disappears into post holes, and how much steel goes in before any of it is poured. Every formula is printed under the calculator that uses it, because a number you can't check is a number you have to trust."
+			/>
+
+			<section class="border-t border-white/5 px-6 pt-16">
+				<div class="mx-auto max-w-5xl">
+					<div class="reveal overflow-hidden rounded-2xl border border-white/10 bg-black">
+						<ToolPreview client:visible kind="concrete" />
+					</div>
+					<p class="reveal mt-5 max-w-2xl text-small text-neutral-500">
+						The volume is the easy half. The bag count is what you carry, and the waste
+						allowance is what stops you driving back.
+					</p>
+				</div>
+			</section>
+
+			<section class="px-6 py-20 sm:py-24" data-calc-page="concrete">
+				<div class="mx-auto max-w-5xl">
+					{/* Unit system — converts every field on the page, rather than just
+					    relabelling them, so switching never silently changes an answer. */}
+					<div class="reveal mb-14 flex flex-wrap items-center justify-between gap-4">
+						<p class="text-eyebrow uppercase text-neutral-400">Units</p>
+						<div class="calc-seg" role="radiogroup" aria-label="Unit system">
+							<label
+								><input type="radio" name="units" value="metric" checked /><span
+									>Metric</span
+								></label
+							>
+							<label
+								><input type="radio" name="units" value="imperial" /><span>Imperial</span></label
+							>
+						</div>
+					</div>
+
+					<!-- ============================ SLAB ============================ -->
+					<div class="calc reveal">
+						<div class="calc__head">
+							<h2 class="calc__title">Slab</h2>
+							<p class="calc__lede">
+								A rectangular pour of one thickness — a shed base, a patio, a garage floor.
+								Thickness is the field people get wrong, because it is quoted in millimetres
+								and everything else is in metres.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="calc-fields calc-fields--3">
+									<div class="calc-field">
+										<label class="calc-label" for="s-len">Length</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="s-len"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.05"
+												value="4"
+												data-dim="len"
+											/>
+											<span class="calc-unit" data-unit="len">m</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="s-wid">Width</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="s-wid"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.05"
+												value="3"
+												data-dim="len"
+											/>
+											<span class="calc-unit" data-unit="len">m</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="s-thk"
+											>Thickness <span>· 100 mm typical</span></label
+										>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="s-thk"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="5"
+												value="100"
+												data-dim="small"
+											/>
+											<span class="calc-unit" data-unit="small">mm</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+									<label class="calc-toggle">
+										<input type="checkbox" id="s-waste" checked />
+										<span class="calc-toggle__track"></span>
+										<span>Add waste allowance</span>
+									</label>
+									<div class="calc-seg" role="radiogroup" aria-label="Waste allowance">
+										<label
+											><input type="radio" name="waste" value="5" /><span>5%</span></label
+										>
+										<label
+											><input type="radio" name="waste" value="10" checked /><span
+												>10%</span
+											></label
+										>
+										<label
+											><input type="radio" name="waste" value="15" /><span>15%</span></label
+										>
+									</div>
+								</div>
+								<p class="mt-3 text-small text-neutral-600">
+									5% for ready-mix onto a level, compacted sub-base. 10% is the honest default
+									for bagged mix. 15% if the ground is uneven or you are pouring against earth.
+								</p>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>Volume</i> = length × width × thickness</div>
+										<div data-out="s-eq1">1.200 m³ = 4.000 × 3.000 × 0.100</div>
+										<div class="pt-2"><i>Bags</i> = volume ÷ 0.0117 m³ per 25 kg bag</div>
+										<div data-out="s-eq2">113 bags = 1.320 ÷ 0.0117</div>
+									</div>
+									<p class="calc-formula__note">
+										A 25 kg bag yields about 0.0117 m³ once mixed — the dry weight plus roughly
+										three litres of water, over a placed density of 2,400 kg/m³. That works out
+										at about 86 bags to the cubic metre, and matches the yields printed on
+										40, 60 and 80 lb bags to within a percent.
+									</p>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Concrete needed</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="s-vol">1.320</span>
+									<span class="calc-figure__u" data-out="s-vol-u">m³</span>
+								</div>
+								<p class="calc-figure__sub" data-out="s-vol-alt">46.6 ft³ · 1.73 yd³</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">25 kg bags</span>
+										<span class="calc-row__v" data-out="s-b25">113</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">20 kg bags</span>
+										<span class="calc-row__v" data-out="s-b20">142</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Ready-mix, order to</span>
+										<span class="calc-row__v" data-out="s-mix">1.5 m³</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Placed weight</span>
+										<span class="calc-row__v" data-out="s-wt">3.17 t</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Before waste</span>
+										<span class="calc-row__v" data-out="s-base">1.200 m³</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="s-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ========================== POST HOLES ========================== -->
+					<div class="calc reveal">
+						<div class="calc__head">
+							<h2 class="calc__title">Post holes</h2>
+							<p class="calc__lede">
+								A hole is a cylinder, but it isn't a full one — the post is standing in it. On a
+								100 mm post in a 300 mm hole that displacement is about 14% of the concrete, which
+								is roughly the margin most people are trying to get right in the first place.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="calc-fields calc-fields--3">
+									<div class="calc-field">
+										<label class="calc-label" for="p-dia">Hole diameter</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="p-dia"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="10"
+												value="300"
+												data-dim="small"
+											/>
+											<span class="calc-unit" data-unit="small">mm</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="p-dep">Hole depth</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="p-dep"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="50"
+												value="600"
+												data-dim="small"
+											/>
+											<span class="calc-unit" data-unit="small">mm</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="p-qty">Number of holes</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="p-qty"
+												type="number"
+												inputmode="numeric"
+												min="1"
+												step="1"
+												value="12"
+											/>
+											<span class="calc-unit">holes</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="p-shape">Post</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="p-shape">
+												<option value="square" selected>Square section</option>
+												<option value="round">Round section</option>
+												<option value="none">None — fill the hole</option>
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="p-size"
+											>Post size <span>· across the face</span></label
+										>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="p-size"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="5"
+												value="100"
+												data-dim="small"
+											/>
+											<span class="calc-unit" data-unit="small">mm</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="p-waste">Waste</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="p-waste">
+												<option value="0">None</option>
+												<option value="10" selected>10%</option>
+												<option value="15">15%</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>Per hole</i> = π × (⌀ ÷ 2)² × depth − post section × depth</div>
+										<div data-out="p-eq">
+											0.0364 m³ = π × 0.150² × 0.600 − 0.100² × 0.600
+										</div>
+									</div>
+									<p class="calc-formula__note">
+										Rules of thumb worth checking against: the hole wants to be about three
+										times the post's width, and a third of the post's above-ground height deep
+										— never less than 600 mm, and always below the local frost line, whichever
+										is deeper. A gate post or anything carrying wind load wants more of both.
+									</p>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Concrete needed</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="p-vol">0.480</span>
+									<span class="calc-figure__u" data-out="p-vol-u">m³</span>
+								</div>
+								<p class="calc-figure__sub" data-out="p-vol-alt">12 holes · 10% waste added</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">25 kg bags</span>
+										<span class="calc-row__v" data-out="p-b25">42</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Per hole</span>
+										<span class="calc-row__v" data-out="p-each">0.0364 m³</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Bags per hole</span>
+										<span class="calc-row__v" data-out="p-beach">3.1</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Post displaces</span>
+										<span class="calc-row__v" data-out="p-disp">0.0060 m³ · 14%</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Spoil to remove</span>
+										<span class="calc-row__v" data-out="p-spoil">0.611 m³</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="p-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ============================ REBAR ============================ -->
+					<div class="calc reveal">
+						<div class="calc__head">
+							<h2 class="calc__title">Rebar</h2>
+							<p class="calc__lede">
+								A mat is a grid, and a grid is two counts. Both fall out of the same
+								arithmetic: take the cover off each edge, divide by the spacing, and add the
+								bar you always forget at the far end.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="calc-fields calc-fields--3">
+									<div class="calc-field">
+										<label class="calc-label" for="r-len">Slab length</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="r-len"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.05"
+												value="4"
+												data-dim="len"
+											/>
+											<span class="calc-unit" data-unit="len">m</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="r-wid">Slab width</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="r-wid"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.05"
+												value="3"
+												data-dim="len"
+											/>
+											<span class="calc-unit" data-unit="len">m</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="r-bar">Bar size</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="r-bar">
+												<option value="8">8 mm</option>
+												<option value="10">10 mm</option>
+												<option value="12" selected>12 mm</option>
+												<option value="16">16 mm</option>
+												<option value="20">20 mm</option>
+												<option value="9.5">#3 · 9.5 mm</option>
+												<option value="12.7">#4 · 12.7 mm</option>
+												<option value="15.9">#5 · 15.9 mm</option>
+												<option value="19.1">#6 · 19.1 mm</option>
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="r-spa"
+											>Spacing <span>· centre to centre</span></label
+										>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="r-spa"
+												type="number"
+												inputmode="decimal"
+												min="1"
+												step="25"
+												value="200"
+												data-dim="small"
+											/>
+											<span class="calc-unit" data-unit="small">mm</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="r-cov">Edge cover</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="r-cov"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="5"
+												value="50"
+												data-dim="small"
+											/>
+											<span class="calc-unit" data-unit="small">mm</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="r-stock">Stock bar length</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="r-stock"
+												type="number"
+												inputmode="decimal"
+												min="0.5"
+												step="0.5"
+												value="6"
+												data-dim="len"
+											/>
+											<span class="calc-unit" data-unit="len">m</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div>
+											<i>Bars one way</i> = ⌊(span − 2 × cover) ÷ spacing⌋ + 1
+										</div>
+										<div data-out="r-eq1">15 bars = ⌊(2.900) ÷ 0.200⌋ + 1</div>
+										<div class="pt-2"><i>Mass</i> = d² ÷ 162 kg per metre</div>
+										<div data-out="r-eq2">0.889 kg/m = 12² ÷ 162</div>
+									</div>
+									<p class="calc-formula__note">
+										The <b>+ 1</b> is the bar at the far edge — leave it out and every count is
+										short by one in each direction. Splices are figured at 40 bar diameters of
+										lap, which is the common residential figure; anything engineered will
+										specify its own.
+									</p>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Steel needed</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="r-lin">116.5</span>
+									<span class="calc-figure__u" data-out="r-lin-u">m</span>
+								</div>
+								<p class="calc-figure__sub" data-out="r-wt">103.6 kg · 12 mm bar</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Bars, lengthwise</span>
+										<span class="calc-row__v" data-out="r-nl">15 × 3.90 m</span>
+									</div>
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Bars, crosswise</span>
+										<span class="calc-row__v" data-out="r-nw">20 × 2.90 m</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Stock bars to buy</span>
+										<span class="calc-row__v" data-out="r-stockn">35</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Tie intersections</span>
+										<span class="calc-row__v" data-out="r-ties">300</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Tie wire, at 300 mm each</span>
+										<span class="calc-row__v" data-out="r-wire">90 m</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="r-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ========================== ASSUMPTIONS ========================== -->
+					<div class="reveal mt-24 rounded-2xl border border-white/5 p-8">
+						<p class="text-eyebrow uppercase text-neutral-500">What this assumes</p>
+						<ul class="mt-6 space-y-3 text-body text-neutral-400">
+							<li>
+								A flat, compacted sub-base of even depth. Concrete finds every low spot before
+								it finds the top of the form, which is most of what the waste allowance is
+								paying for.
+							</li>
+							<li>
+								A general-purpose bagged mix at 0.0117 m³ per 25 kg. A bag with larger
+								aggregate yields slightly more; a rapid-set post mix slightly less. The figure
+								on your bag wins over the one here.
+							</li>
+							<li>
+								Ready-mix suppliers usually sell in 0.5 m³ steps with a minimum load, so the
+								rounded figure above is what to ask for, not what you strictly need.
+							</li>
+							<li>
+								Reinforcement quantities are a take-off, not a design. What size bar and what
+								spacing a slab actually needs is an engineer's call.
+							</li>
+						</ul>
+					</div>
+
+					<div class="reveal mt-10">
+						<a
+							href="/microtools"
+							class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100"
+						>
+							<span
+								aria-hidden="true"
+								class="transition-transform group-hover:-translate-x-1">&larr;</span
+							>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	const BAG_25 = 0.0117;
+	const BAG_20 = 0.00936;
+	const DENSITY = 2400;
+	const FT = 3.280839895;
+	const IN = 25.4;
+
+	function initConcrete() {
+		const found = document.querySelector<HTMLElement>(
+			'[data-calc-page="concrete"]:not([data-calc-ready])'
+		);
+		if (!found) return;
+		// Re-declared as non-nullable: the calculators below are hoisted function
+		// declarations, and TypeScript drops the null-narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.calcReady = 'true';
+
+		const el = <T extends HTMLElement>(sel: string) => root.querySelector(sel) as T;
+		const out = (key: string) => root.querySelector(`[data-out="${key}"]`) as HTMLElement | null;
+		const set = (key: string, v: string) => {
+			const n = out(key);
+			if (n) n.textContent = v;
+		};
+
+		/** Imperial mode is a display + entry concern only; everything below the
+		 *  read functions is metric, which keeps one set of formulas honest. */
+		let imperial = false;
+		const val = (id: string) => {
+			const n = Number((el<HTMLInputElement>(`#${id}`) || ({} as any)).value);
+			return Number.isFinite(n) ? n : 0;
+		};
+		/** A field entered in metres or feet, always returned in metres. */
+		const asM = (id: string) => (imperial ? val(id) / FT : val(id));
+		/** A field entered in millimetres or inches, always returned in metres. */
+		const asMm = (id: string) => (imperial ? val(id) * IN : val(id)) / 1000;
+
+		const fmt = (n: number, dp = 2) =>
+			Number.isFinite(n)
+				? n.toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp })
+				: '—';
+		const int = (n: number) =>
+			Number.isFinite(n) ? Math.round(n).toLocaleString('en-GB') : '—';
+
+		// Volume is always computed in m³; these render it in whichever system
+		// is showing, so the headline figure matches the fields above it.
+		const volN = (m3: number) => (imperial ? m3 * 35.3147 : m3);
+		const volU = () => (imperial ? 'ft³' : 'm³');
+		const lenN = (m: number) => (imperial ? m * FT : m);
+		const lenU = () => (imperial ? 'ft' : 'm');
+		const smU = () => (imperial ? 'in' : 'mm');
+
+		const flag = (key: string, html: string | null) => {
+			const n = out(key);
+			if (!n) return;
+			if (html) {
+				n.innerHTML = html;
+				n.hidden = false;
+			} else {
+				n.hidden = true;
+			}
+		};
+
+		// ---- slab ----
+		function slab() {
+			const L = asM('s-len');
+			const W = asM('s-wid');
+			const T = asMm('s-thk');
+			const base = L * W * T;
+
+			const on = (el<HTMLInputElement>('#s-waste') || ({} as any)).checked;
+			const pctEl = root.querySelector<HTMLInputElement>('input[name="waste"]:checked');
+			const pct = on ? Number(pctEl?.value ?? 10) : 0;
+			const vol = base * (1 + pct / 100);
+
+			set('s-vol', fmt(volN(vol), imperial ? 1 : 3));
+			set('s-vol-u', volU());
+			set('s-vol-alt', `${fmt(vol * 35.3147, 1)} ft³ · ${fmt(vol * 1.30795, 2)} yd³`);
+			set('s-b25', int(Math.ceil(vol / BAG_25)));
+			set('s-b20', int(Math.ceil(vol / BAG_20)));
+			// Ready-mix is sold in half-metre steps, so round to how you'd order it.
+			set(
+				's-mix',
+				imperial
+					? `${fmt(Math.ceil(vol * 1.30795 * 4) / 4, 2)} yd³`
+					: `${fmt(Math.ceil(vol * 2) / 2, 1)} m³`
+			);
+			const kg = vol * DENSITY;
+			set('s-wt', imperial ? `${int(kg * 2.20462)} lb` : `${fmt(kg / 1000, 2)} t`);
+			set('s-base', `${fmt(volN(base), imperial ? 1 : 3)} ${volU()}`);
+
+			set(
+				's-eq1',
+				`${fmt(base, 3)} m³ = ${fmt(L, 3)} × ${fmt(W, 3)} × ${fmt(T, 3)}`
+			);
+			set(
+				's-eq2',
+				`${int(Math.ceil(vol / BAG_25))} bags = ${fmt(vol, 3)} ÷ ${BAG_25}`
+			);
+
+			// The one piece of advice worth interrupting for: past about a cubic
+			// metre you cannot mix fast enough to keep a cold joint out of it.
+			if (vol > 1) {
+				flag(
+					's-flag',
+					`<b>That is ${int(Math.ceil(vol / BAG_25))} bags.</b> Past about a cubic metre, ready-mix is usually cheaper and always faster — mixing this by hand means the first barrow has started going off before the last one is placed.`
+				);
+			} else if (base > 0 && T > 0 && T < 0.075) {
+				flag(
+					's-flag',
+					`<b>Thin for a slab.</b> Under 75 mm is a screed rather than something you can drive or build on. Domestic slabs are usually 100 mm, and 150 mm if a vehicle goes on it.`
+				);
+			} else {
+				flag('s-flag', null);
+			}
+		}
+
+		// ---- post holes ----
+		function posts() {
+			const dia = asMm('p-dia');
+			const dep = asMm('p-dep');
+			const qty = Math.max(0, Math.round(val('p-qty')));
+			const shape = (el<HTMLSelectElement>('#p-shape') || ({} as any)).value;
+			const size = asMm('p-size');
+			const pct = Number((el<HTMLSelectElement>('#p-waste') || ({} as any)).value || 0);
+
+			const hole = Math.PI * Math.pow(dia / 2, 2) * dep;
+			const postArea =
+				shape === 'square'
+					? size * size
+					: shape === 'round'
+						? Math.PI * Math.pow(size / 2, 2)
+						: 0;
+			// A post wider than its hole is a data-entry slip, not a negative pour.
+			const post = Math.min(postArea * dep, hole);
+			const each = Math.max(0, hole - post);
+			const total = each * qty * (1 + pct / 100);
+
+			set('p-vol', fmt(volN(total), imperial ? 2 : 3));
+			set('p-vol-u', volU());
+			set(
+				'p-vol-alt',
+				`${qty} hole${qty === 1 ? '' : 's'}${pct ? ` · ${pct}% waste added` : ' · no waste added'}`
+			);
+			set('p-b25', int(Math.ceil(total / BAG_25)));
+			set('p-each', `${fmt(volN(each), imperial ? 3 : 4)} ${volU()}`);
+			set('p-beach', fmt(each / BAG_25, 1));
+			const share = hole > 0 ? (post / hole) * 100 : 0;
+			set('p-disp', `${fmt(volN(post), imperial ? 3 : 4)} ${volU()} · ${fmt(share, 0)}%`);
+			// Spoil comes out loose — dug earth bulks up by roughly a fifth.
+			set('p-spoil', `${fmt(volN(hole * qty * 1.2), imperial ? 2 : 3)} ${volU()}`);
+
+			set(
+				'p-eq',
+				`${fmt(each, 4)} m³ = π × ${fmt(dia / 2, 3)}² × ${fmt(dep, 3)} − ${
+					shape === 'none'
+						? '0'
+						: shape === 'round'
+							? `π × ${fmt(size / 2, 3)}²`
+							: `${fmt(size, 3)}²`
+				}${shape === 'none' ? '' : ` × ${fmt(dep, 3)}`}`
+			);
+
+			const notes: string[] = [];
+			if (shape !== 'none' && size > 0 && dia < size * 3) {
+				notes.push(
+					`the hole wants to be about three times the post's width — ${
+						imperial ? `${fmt((size * 3 * 1000) / IN, 1)} in` : `${int(size * 3 * 1000)} mm`
+					} for this one`
+				);
+			}
+			if (dep > 0 && dep < 0.6) {
+				notes.push('600 mm is the usual minimum depth, and frost line beats that if it is deeper');
+			}
+			flag(
+				'p-flag',
+				notes.length ? `<b>Worth a look —</b> ${notes.join('; ')}.` : null
+			);
+		}
+
+		// ---- rebar ----
+		function rebar() {
+			const L = asM('r-len');
+			const W = asM('r-wid');
+			const d = Number((el<HTMLSelectElement>('#r-bar') || ({} as any)).value || 12);
+			const spa = asMm('r-spa');
+			const cov = asMm('r-cov');
+			const stock = asM('r-stock');
+
+			// Clear span each way, once the cover is taken off both edges.
+			const spanL = Math.max(0, L - 2 * cov);
+			const spanW = Math.max(0, W - 2 * cov);
+			// Bars running the length are spaced across the width, and vice versa.
+			const nL = spa > 0 && spanW > 0 ? Math.floor(spanW / spa) + 1 : 0;
+			const nW = spa > 0 && spanL > 0 ? Math.floor(spanL / spa) + 1 : 0;
+
+			const linear = nL * spanL + nW * spanW;
+			const kgPerM = (d * d) / 162;
+			const weight = linear * kgPerM;
+
+			set('r-lin', fmt(lenN(linear), 1));
+			set('r-lin-u', lenU());
+			set(
+				'r-wt',
+				imperial
+					? `${int(weight * 2.20462)} lb · ${d} mm bar`
+					: `${fmt(weight, 1)} kg · ${d} mm bar`
+			);
+			set('r-nl', `${int(nL)} × ${fmt(lenN(spanL), 2)} ${lenU()}`);
+			set('r-nw', `${int(nW)} × ${fmt(lenN(spanW), 2)} ${lenU()}`);
+
+			// Splices, when a run is longer than a stock bar. 40 diameters of lap
+			// is the common residential figure.
+			const lap = 40 * (d / 1000);
+			const piecesFor = (run: number) => {
+				if (run <= 0 || stock <= 0) return 0;
+				if (run <= stock) return 1;
+				const after = stock - lap;
+				return after > 0 ? 1 + Math.ceil((run - stock) / after) : Infinity;
+			};
+			const stockBars = nL * piecesFor(spanL) + nW * piecesFor(spanW);
+			set('r-stockn', Number.isFinite(stockBars) ? int(Math.ceil(stockBars)) : '—');
+
+			const ties = nL * nW;
+			set('r-ties', int(ties));
+			set('r-wire', `${fmt(lenN(ties * 0.3), 0)} ${lenU()}`);
+
+			set(
+				'r-eq1',
+				`${int(nL)} bars = ⌊(${fmt(spanW, 3)}) ÷ ${fmt(spa, 3)}⌋ + 1`
+			);
+			set('r-eq2', `${fmt(kgPerM, 3)} kg/m = ${d}² ÷ 162`);
+
+			const notes: string[] = [];
+			if (spanL > stock && stock > 0) {
+				notes.push(
+					`runs are longer than a ${fmt(lenN(stock), 1)} ${lenU()} bar, so the count above includes ${
+						imperial ? `${fmt((lap * 1000) / IN, 0)} in` : `${int(lap * 1000)} mm`
+					} laps`
+				);
+			}
+			if (cov > 0 && cov < 0.04) {
+				notes.push('cover under 40 mm leaves steel close enough to the edge to rust through');
+			}
+			flag('r-flag', notes.length ? `<b>Note —</b> ${notes.join('; ')}.` : null);
+		}
+
+		function recalc() {
+			slab();
+			posts();
+			rebar();
+		}
+
+		/** Switching units converts what is already in the fields, rather than
+		 *  relabelling them — a 4 that silently becomes 4 ft is how you order
+		 *  the wrong amount of concrete. */
+		function switchUnits(next: boolean) {
+			if (next === imperial) return;
+			root.querySelectorAll<HTMLInputElement>('input[data-dim]').forEach((input) => {
+				const v = Number(input.value);
+				if (!Number.isFinite(v)) return;
+				const isLen = input.dataset.dim === 'len';
+				const k = isLen ? FT : 1 / IN; // metric → imperial
+				const conv = next ? v * k : v / k;
+				input.value = String(Math.round(conv * (isLen ? 1000 : 100)) / (isLen ? 1000 : 100));
+				input.step = isLen ? (next ? '0.25' : '0.05') : next ? '0.25' : '5';
+			});
+			imperial = next;
+			root.querySelectorAll<HTMLElement>('[data-unit="len"]').forEach((n) => {
+				n.textContent = lenU();
+			});
+			root.querySelectorAll<HTMLElement>('[data-unit="small"]').forEach((n) => {
+				n.textContent = smU();
+			});
+			recalc();
+		}
+
+		root.addEventListener('input', (e) => {
+			const t = e.target as HTMLElement;
+			if (t instanceof HTMLInputElement && t.name === 'units') {
+				switchUnits(t.value === 'imperial');
+				return;
+			}
+			recalc();
+		});
+		root.addEventListener('change', recalc);
+
+		recalc();
+	}
+
+	document.addEventListener('astro:page-load', initConcrete);
+	initConcrete();
+</script>

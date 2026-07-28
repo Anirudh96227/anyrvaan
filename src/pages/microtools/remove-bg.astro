@@ -1,0 +1,318 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+
+// ormbg by default because it is small, cheap on memory and rarely falls over;
+// BiRefNet_lite as the optional sharper one, with an automatic climb-down to
+// ormbg if it runs out of room. Apache-2.0 and MIT respectively.
+---
+
+<Layout
+	title="Background Remover — Anyrvaan Microtools"
+	description="Cut the background out of a photograph in your browser. Feather the edge, drop in a new background, and export a transparent PNG or a flattened JPG."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Background Remover"
+				intro="A matting model separates the subject from everything behind it, and the result stays on your machine. The edge is where these things live or die, so there's a feather control and a before/after divider to judge it with."
+			/>
+
+			<section class="px-6 py-16 sm:py-20" data-vai="rmbg">
+				<div class="mx-auto max-w-5xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">Model</p>
+					<div class="reveal vai-tiers">
+						<button type="button" class="vai-tier" data-tier="sleek">
+							<span class="vai-tier__n">Sleek — ormbg</span>
+							<span class="vai-tier__d">A convolutional matting net. Light on memory and reliable on a phone. The right default.</span>
+							<span class="vai-tier__mb">~44 MB · Apache-2.0</span>
+						</button>
+						<button type="button" class="vai-tier" data-tier="accurate">
+							<span class="vai-tier__n">Accurate — BiRefNet lite</span>
+							<span class="vai-tier__d">Transformer-based, and noticeably better on hair and fine edges. Hungrier for memory.</span>
+							<span class="vai-tier__mb">~90 MB · MIT</span>
+						</button>
+					</div>
+					<p class="reveal vai-hint">
+						If BiRefNet runs out of memory on a large image it will finish the job on ormbg
+						rather than fail, and say so underneath.
+					</p>
+
+					<div class="reveal vai-drop" data-drop>
+						<p class="vai-drop__t">Drop a photo, paste one, or click to choose</p>
+						<p class="vai-drop__s">A clear subject against a distinguishable background works best.</p>
+					</div>
+
+					<div class="vai-load" data-load data-phase="idle"></div>
+
+					<div class="vai-stage" data-stage hidden>
+						<div class="vai-panel">
+							<div class="vai-panel__h">
+								<span>Before / after</span>
+								<span data-dims></span>
+							</div>
+							<div class="vai-split" data-split>
+								<canvas class="vai-canvas" data-out></canvas>
+								<div class="vai-split__top"><canvas class="vai-canvas vai-canvas--plain" data-orig></canvas></div>
+								<div class="vai-split__handle"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="vai-controls vai-controls--2" data-controls hidden>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Edge feather <b data-v-feather>0 px</b></span>
+							<input class="vai-range" type="range" data-feather min="0" max="12" step="1" value="0" />
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Background</span>
+							<div style="display:flex; gap:.5rem; align-items:center">
+								<select class="vai-select" data-bg>
+									<option value="none">Transparent</option>
+									<option value="solid">Solid colour</option>
+									<option value="image">An image of your own</option>
+								</select>
+								<input class="vai-color" type="color" data-bgcolor value="#0a0b0d" />
+							</div>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Output size</span>
+							<select class="vai-select" data-size>
+								<option value="orig">Original</option>
+								<option value="1080x1080">1080 × 1080 — square</option>
+								<option value="1920x1080">1920 × 1080 — landscape</option>
+								<option value="1080x1920">1080 × 1920 — portrait</option>
+							</select>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Replacement image</span>
+							<input class="vai-select" type="file" accept="image/*" data-bgfile />
+						</div>
+					</div>
+
+					<div class="vai-bar" data-bar hidden>
+						<button type="button" class="vai-btn vai-btn--go" data-dl-png>Download PNG</button>
+						<button type="button" class="vai-btn" data-dl-jpg>Download JPG</button>
+						<button type="button" class="vai-btn" data-reset>Reset</button>
+						<button type="button" class="vai-btn" data-another>Try another image</button>
+					</div>
+					<p class="vai-hint" data-note></p>
+
+					<div class="reveal mt-20 rounded-2xl border border-white/5 p-8">
+						<p class="text-eyebrow uppercase text-neutral-500">Where it struggles</p>
+						<ul class="mt-6 space-y-3 text-body text-neutral-400">
+							<li>
+								Hair against a busy background, and anything semi-transparent — glass,
+								smoke, a veil. Matting has to invent an opacity for those, and it usually
+								guesses too hard one way or the other.
+							</li>
+							<li>
+								A subject the same tone as what's behind it. The model is reading contrast
+								as much as shape.
+							</li>
+							<li>
+								The feather is a blur on the alpha channel, not a smarter edge. A pixel or
+								two removes the cut-with-scissors look; more than about six starts eating
+								the subject.
+							</li>
+						</ul>
+					</div>
+
+					<div class="reveal mt-10">
+						<a href="/microtools" class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100">
+							<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	import {
+		makeWorker, mountDropzone, mountChooser, mountSplit, readImage, fitTo,
+		Loader, downloadCanvas, $, getTier,
+	} from '../../scripts/visual-tools';
+
+	function initRmbg() {
+		const found = document.querySelector<HTMLElement>('[data-vai="rmbg"]:not([data-ready])');
+		if (!found) return;
+		// Non-nullable rebinding: the helpers below are hoisted function
+		// declarations, and TypeScript drops the narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.ready = 'true';
+
+		const loader = new Loader($(root, '[data-load]')!);
+		const origCv = $<HTMLCanvasElement>(root, '[data-orig]')!;
+		const outCv = $<HTMLCanvasElement>(root, '[data-out]')!;
+		const stage = $(root, '[data-stage]')!;
+		const controls = $(root, '[data-controls]')!;
+		const bar = $(root, '[data-bar]')!;
+		const note = $(root, '[data-note]')!;
+
+		let tier = getTier();
+		let worker: Worker | null = null;
+		let blob: Blob | null = null;
+		let cut: HTMLCanvasElement | null = null; // the subject, alpha intact
+		let bgImg: HTMLImageElement | null = null;
+
+		mountChooser(root, (t) => { tier = t; if (blob) run(); });
+		mountSplit($(root, '[data-split]')!);
+
+		function ensureWorker() {
+			if (worker) return worker;
+			worker = makeWorker('rmbg');
+			worker.onmessage = (e) => {
+				const m = e.data;
+				if (m.type === 'progress') loader.progress(m.p, tier === 'accurate' ? 'BiRefNet lite' : 'ormbg');
+				else if (m.type === 'running') loader.running('Separating the subject');
+				else if (m.type === 'result') {
+					loader.done();
+					// The pipeline hands back RGBA with the background already
+					// cleared, so this is just a paste into a canvas.
+					const c = document.createElement('canvas');
+					c.width = m.width; c.height = m.height;
+					c.getContext('2d')!.putImageData(new ImageData(m.data, m.width, m.height), 0, 0);
+					cut = c;
+					stage.hidden = false; controls.hidden = false; bar.hidden = false;
+					$(root, '[data-dims]')!.textContent = `${m.width} × ${m.height}`;
+					note.textContent = m.fellBack
+						? 'BiRefNet ran out of memory on this one, so it was finished on ormbg.'
+						: '';
+					compose();
+					outCv.classList.add('vai-fade');
+				} else if (m.type === 'error') loader.fail(m.message, () => run());
+			};
+			worker.onerror = (e) => loader.fail(e.message || 'The worker stopped.', () => run());
+			return worker;
+		}
+
+		function run() {
+			if (!blob) return;
+			ensureWorker().postMessage({ type: 'run', blob, tier });
+		}
+
+		mountDropzone($(root, '[data-drop]')!, async (file) => {
+			const { img } = await readImage(file);
+			const fit = fitTo(img.naturalWidth, img.naturalHeight, 1400);
+			origCv.width = fit.w; origCv.height = fit.h;
+			origCv.getContext('2d')!.drawImage(img, 0, 0, fit.w, fit.h);
+			blob = await new Promise<Blob>((res) => origCv.toBlob((b) => res(b!), 'image/png'));
+			run();
+		});
+
+		// ---- composition ----
+
+		/**
+		 * Feathering blurs the *alpha* only. Blurring the whole cutout would
+		 * soften the subject as well, so a white silhouette is blurred instead
+		 * and used as a mask via destination-in, which keeps the colour sharp.
+		 */
+		function feathered(src: HTMLCanvasElement, px: number) {
+			if (px <= 0) return src;
+			const w = src.width, h = src.height;
+			const mask = document.createElement('canvas');
+			mask.width = w; mask.height = h;
+			const mc = mask.getContext('2d')!;
+			mc.filter = `blur(${px}px)`;
+			mc.drawImage(src, 0, 0);
+			mc.filter = 'none';
+
+			const out = document.createElement('canvas');
+			out.width = w; out.height = h;
+			const oc = out.getContext('2d')!;
+			oc.drawImage(src, 0, 0);
+			oc.globalCompositeOperation = 'destination-in';
+			oc.drawImage(mask, 0, 0);
+			return out;
+		}
+
+		function compose() {
+			if (!cut) return;
+			const px = Number(($<HTMLInputElement>(root, '[data-feather]')!).value);
+			const mode = ($<HTMLSelectElement>(root, '[data-bg]')!).value;
+			const size = ($<HTMLSelectElement>(root, '[data-size]')!).value;
+			const colour = ($<HTMLInputElement>(root, '[data-bgcolor]')!).value;
+			const subject = feathered(cut, px);
+
+			let W = cut.width, H = cut.height;
+			if (size !== 'orig') {
+				const [a, b] = size.split('x').map(Number);
+				W = a; H = b;
+			}
+			outCv.width = W; outCv.height = H;
+			const ctx = outCv.getContext('2d')!;
+			ctx.clearRect(0, 0, W, H);
+
+			if (mode === 'solid') {
+				ctx.fillStyle = colour;
+				ctx.fillRect(0, 0, W, H);
+			} else if (mode === 'image' && bgImg) {
+				// cover, so a replacement never letterboxes
+				const s = Math.max(W / bgImg.naturalWidth, H / bgImg.naturalHeight);
+				const bw = bgImg.naturalWidth * s, bh = bgImg.naturalHeight * s;
+				ctx.drawImage(bgImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
+			}
+
+			// Subject fitted inside, centred — never upscaled past its own pixels.
+			const s = Math.min(W / subject.width, H / subject.height, size === 'orig' ? 1 : Infinity);
+			const sw = subject.width * s, sh = subject.height * s;
+			ctx.drawImage(subject, (W - sw) / 2, (H - sh) / 2, sw, sh);
+		}
+
+		for (const sel of ['[data-feather]', '[data-bg]', '[data-bgcolor]', '[data-size]']) {
+			$(root, sel)!.addEventListener('input', () => {
+				$(root, '[data-v-feather]')!.textContent = `${($<HTMLInputElement>(root, '[data-feather]')!).value} px`;
+				compose();
+			});
+		}
+
+		$(root, '[data-bgfile]')!.addEventListener('change', async (e) => {
+			const f = (e.target as HTMLInputElement).files?.[0];
+			if (!f) return;
+			const { img } = await readImage(f);
+			bgImg = img;
+			($<HTMLSelectElement>(root, '[data-bg]')!).value = 'image';
+			compose();
+		});
+
+		$(root, '[data-dl-png]')!.addEventListener('click', () => downloadCanvas(outCv, 'cutout.png'));
+		$(root, '[data-dl-jpg]')!.addEventListener('click', () => {
+			// JPG has no alpha, so anything still transparent has to be given a
+			// colour or it comes out black.
+			const flat = document.createElement('canvas');
+			flat.width = outCv.width; flat.height = outCv.height;
+			const c = flat.getContext('2d')!;
+			c.fillStyle = ($<HTMLSelectElement>(root, '[data-bg]')!).value === 'none'
+				? '#ffffff'
+				: ($<HTMLInputElement>(root, '[data-bgcolor]')!).value;
+			c.fillRect(0, 0, flat.width, flat.height);
+			c.drawImage(outCv, 0, 0);
+			downloadCanvas(flat, 'cutout.jpg', 'image/jpeg', 0.92);
+		});
+
+		$(root, '[data-reset]')!.addEventListener('click', () => {
+			($<HTMLInputElement>(root, '[data-feather]')!).value = '0';
+			($<HTMLSelectElement>(root, '[data-bg]')!).value = 'none';
+			($<HTMLSelectElement>(root, '[data-size]')!).value = 'orig';
+			$(root, '[data-v-feather]')!.textContent = '0 px';
+			compose();
+		});
+
+		$(root, '[data-another]')!.addEventListener('click', () => {
+			stage.hidden = true; controls.hidden = true; bar.hidden = true;
+			blob = null; cut = null; note.textContent = '';
+			$(root, '[data-drop]')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+	}
+
+	document.addEventListener('astro:page-load', initRmbg);
+	initRmbg();
+</script>

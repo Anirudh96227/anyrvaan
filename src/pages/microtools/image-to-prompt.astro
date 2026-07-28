@@ -1,0 +1,299 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+
+// SmolVLM describing a picture back as the prompt that might have made it.
+// Three phrasings of the same question, cached per image so switching between
+// them costs nothing after the first run of each.
+---
+
+<Layout
+	title="Image to Prompt — Anyrvaan Microtools"
+	description="Turn any image into a generation prompt — as a sentence, as JSON, or as a labelled breakdown. A small vision-language model runs it on your device."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Image to Prompt"
+				intro="A small vision-language model looks at a picture and writes the prompt that might have produced it — as a sentence you can paste somewhere, as JSON you can edit field by field, or as a labelled breakdown you can copy a line at a time."
+			/>
+
+			<section class="px-6 py-16 sm:py-20" data-vai="vlm">
+				<div class="mx-auto max-w-5xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">Model</p>
+					<div class="reveal vai-tiers">
+						<button type="button" class="vai-tier" data-tier="sleek">
+							<span class="vai-tier__n">Quick — SmolVLM 256M</span>
+							<span class="vai-tier__d">Small enough to be quick on almost anything. Gets the subject and the setting.</span>
+							<span class="vai-tier__mb">~250 MB</span>
+						</button>
+						<button type="button" class="vai-tier" data-tier="accurate">
+							<span class="vai-tier__n">Detailed — SmolVLM 500M</span>
+							<span class="vai-tier__d">Richer descriptions, better at lighting and mood. Worth the wait on a decent machine.</span>
+							<span class="vai-tier__mb">~500 MB</span>
+						</button>
+					</div>
+					<p class="reveal vai-hint">
+						These are the largest downloads in the set. Both are Apache-2.0, and both stay
+						cached in your browser afterwards.
+					</p>
+
+					<div class="reveal vai-drop" data-drop>
+						<p class="vai-drop__t">Drop an image, paste one, or click to choose</p>
+						<p class="vai-drop__s">Nothing is uploaded. The model reads it where it sits.</p>
+					</div>
+
+					<div class="vai-load" data-load data-phase="idle"></div>
+
+					<div class="vai-stage vai-stage--two" data-stage hidden>
+						<div class="vai-panel">
+							<div class="vai-panel__h"><span>Image</span></div>
+							<canvas class="vai-canvas vai-canvas--plain" data-src></canvas>
+						</div>
+						<div>
+							<div class="vai-tabs" role="tablist">
+								<button type="button" class="vai-tab" role="tab" data-style="sentence" aria-selected="true">Natural sentence</button>
+								<button type="button" class="vai-tab" role="tab" data-style="json" aria-selected="false">JSON</button>
+								<button type="button" class="vai-tab" role="tab" data-style="breakdown" aria-selected="false">Breakdown</button>
+							</div>
+							<div class="vai-out" data-out>Pick a style and it'll be written here.</div>
+							<div class="vai-bar">
+								<button type="button" class="vai-btn vai-btn--go" data-copy>Copy</button>
+								<button type="button" class="vai-btn" data-dl>Download .txt</button>
+								<button type="button" class="vai-btn" data-regen>Regenerate</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="vai-controls vai-controls--2" data-controls hidden>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Detail level</span>
+							<select class="vai-select" data-detail>
+								<option value="concise">Concise</option>
+								<option value="detailed" selected>Detailed</option>
+							</select>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Extras</span>
+							<label class="vai-check"><input type="checkbox" data-camera checked /> Include camera &amp; lens terms</label>
+						</div>
+					</div>
+
+					<div class="vai-bar" data-bar hidden>
+						<button type="button" class="vai-btn" data-another>Try another image</button>
+					</div>
+
+					<div class="reveal mt-20 rounded-2xl border border-white/5 p-8">
+						<p class="text-eyebrow uppercase text-neutral-500">What to expect</p>
+						<ul class="mt-6 space-y-3 text-body text-neutral-400">
+							<li>
+								These are small models — a quarter and a half a billion parameters. They are
+								good at what is plainly in the frame and unreliable about anything requiring
+								knowledge of the world: they will not name a landmark, and they will
+								occasionally invent a detail that isn't there.
+							</li>
+							<li>
+								The JSON tab asks for strict JSON, which a model this size doesn't always
+								manage. When it doesn't, you get the raw text and a retry rather than a
+								blank panel.
+							</li>
+							<li>
+								Generation is greedy rather than sampled, so the same image and the same
+								settings give the same answer twice running. Regenerate only changes
+								anything if you change a setting.
+							</li>
+						</ul>
+					</div>
+
+					<div class="reveal mt-10">
+						<a href="/microtools" class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100">
+							<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	import {
+		makeWorker, mountDropzone, mountChooser, readImage, fitTo,
+		Loader, copyText, downloadURL, $, getTier,
+	} from '../../scripts/visual-tools';
+
+	type Style = 'sentence' | 'json' | 'breakdown';
+
+	const FIELDS = [
+		'Subject', 'Setting', 'Lighting', 'Composition',
+		'Colour palette', 'Mood', 'Camera & lens', 'Style/medium',
+	];
+
+	/** One instruction per tab, tuned by the two controls under them. */
+	function promptFor(style: Style, detail: string, camera: boolean) {
+		const len = detail === 'concise' ? 'Keep it to one or two short clauses per idea.' : 'Be specific and descriptive.';
+		const cam = camera ? ' Include camera, lens and depth-of-field terms.' : ' Do not mention cameras or lenses.';
+
+		if (style === 'json') {
+			return `Describe this image as a JSON object and return ONLY the JSON, with no prose before or after it. Use exactly these keys: subject, setting, lighting, composition, color_palette, mood, camera, style, aspect_ratio. ${len}${cam}`;
+		}
+		if (style === 'breakdown') {
+			return `Describe this image as a labelled list, one line per label, using exactly these labels: ${FIELDS.join(', ')}. Put a colon after each label. ${len}${cam}`;
+		}
+		return `Write a single flowing image-generation prompt describing this image, of the kind used for Midjourney. Cover the subject, the setting, the lighting, the mood and the composition in one paragraph. ${len}${cam}`;
+	}
+
+	function initVlm() {
+		const found = document.querySelector<HTMLElement>('[data-vai="vlm"]:not([data-ready])');
+		if (!found) return;
+		// Non-nullable rebinding: the helpers below are hoisted function
+		// declarations, and TypeScript drops the narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.ready = 'true';
+
+		const loader = new Loader($(root, '[data-load]')!);
+		const srcCv = $<HTMLCanvasElement>(root, '[data-src]')!;
+		const out = $(root, '[data-out]')!;
+		const stage = $(root, '[data-stage]')!;
+		const controls = $(root, '[data-controls]')!;
+		const bar = $(root, '[data-bar]')!;
+
+		let tier = getTier();
+		let worker: Worker | null = null;
+		let blob: Blob | null = null;
+		let style: Style = 'sentence';
+		/** Cached per style, so flipping between tabs is instant after the first. */
+		let cache: Partial<Record<Style, string>> = {};
+
+		mountChooser(root, (t) => { tier = t; cache = {}; if (blob) generate(); });
+
+		function ensureWorker() {
+			if (worker) return worker;
+			worker = makeWorker('vlm');
+			worker.onmessage = (e) => {
+				const m = e.data;
+				if (m.type === 'progress') loader.progress(m.p, tier === 'accurate' ? 'SmolVLM 500M' : 'SmolVLM 256M');
+				else if (m.type === 'running') loader.running('Looking at your image');
+				else if (m.type === 'result') {
+					loader.done();
+					cache[m.style as Style] = m.text;
+					if (m.style === style) render();
+				} else if (m.type === 'error') loader.fail(m.message, () => generate());
+			};
+			worker.onerror = (e) => loader.fail(e.message || 'The worker stopped.', () => generate());
+			return worker;
+		}
+
+		function generate() {
+			if (!blob) return;
+			const detail = ($<HTMLSelectElement>(root, '[data-detail]')!).value;
+			const camera = ($<HTMLInputElement>(root, '[data-camera]')!).checked;
+			ensureWorker().postMessage({
+				type: 'run',
+				blob,
+				tier,
+				style,
+				prompt: promptFor(style, detail, camera),
+				maxTokens: detail === 'concise' ? 200 : 380,
+			});
+		}
+
+		mountDropzone($(root, '[data-drop]')!, async (file) => {
+			const { img } = await readImage(file);
+			// These models see a small square anyway; sending more is just slower.
+			const fit = fitTo(img.naturalWidth, img.naturalHeight, 768);
+			srcCv.width = fit.w; srcCv.height = fit.h;
+			srcCv.getContext('2d')!.drawImage(img, 0, 0, fit.w, fit.h);
+			blob = await new Promise<Blob>((res) => srcCv.toBlob((b) => res(b!), 'image/png'));
+			cache = {};
+			stage.hidden = false; controls.hidden = false; bar.hidden = false;
+			generate();
+		});
+
+		// ---- rendering ----
+
+		const esc = (s: string) =>
+			s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
+
+		function render() {
+			const text = cache[style];
+			out.className = 'vai-out vai-fade';
+			if (!text) { out.textContent = 'Nothing yet.'; return; }
+
+			if (style === 'json') {
+				// Models this size like to wrap JSON in prose or a fence, so the
+				// object is dug out rather than trusted to arrive clean.
+				const grab = text.match(/\{[\s\S]*\}/);
+				if (grab) {
+					try {
+						out.className = 'vai-out vai-out--code vai-fade';
+						out.textContent = JSON.stringify(JSON.parse(grab[0]), null, 2);
+						return;
+					} catch { /* fall through to raw */ }
+				}
+				out.innerHTML =
+					`<p style="color:#f2b53c;margin-bottom:.75rem">That didn't come back as valid JSON. Here it is raw:</p>${esc(text)}`;
+				return;
+			}
+
+			if (style === 'breakdown') {
+				const rows: string[] = [];
+				for (const f of FIELDS) {
+					const re = new RegExp(`${f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*(.+)`, 'i');
+					const hit = text.match(re);
+					if (!hit) continue;
+					const v = hit[1].trim().replace(/\s*[-–—]\s*$/, '');
+					rows.push(
+						`<div class="vai-field"><span class="vai-field__k">${esc(f)}</span><span class="vai-field__v">${esc(v)}</span><button type="button" class="vai-field__c" data-copyfield="${esc(v).replace(/"/g, '&quot;')}">copy</button></div>`
+					);
+				}
+				out.innerHTML = rows.length ? rows.join('') : esc(text);
+				for (const b of out.querySelectorAll<HTMLElement>('[data-copyfield]')) {
+					b.addEventListener('click', () => copyText(b.dataset.copyfield ?? '', b));
+				}
+				return;
+			}
+
+			out.textContent = text;
+		}
+
+		for (const tab of root.querySelectorAll<HTMLElement>('[data-style]')) {
+			tab.addEventListener('click', () => {
+				style = tab.dataset.style as Style;
+				for (const t of root.querySelectorAll<HTMLElement>('[data-style]')) {
+					t.setAttribute('aria-selected', String(t === tab));
+				}
+				if (cache[style]) render();
+				else if (blob) generate();
+			});
+		}
+
+		for (const sel of ['[data-detail]', '[data-camera]']) {
+			$(root, sel)!.addEventListener('change', () => { cache = {}; if (blob) generate(); });
+		}
+
+		$(root, '[data-copy]')!.addEventListener('click', (e) =>
+			copyText(cache[style] ?? '', e.currentTarget as HTMLElement)
+		);
+		$(root, '[data-dl]')!.addEventListener('click', () => {
+			const url = URL.createObjectURL(new Blob([cache[style] ?? ''], { type: 'text/plain' }));
+			downloadURL(url, `prompt-${style}.txt`);
+			setTimeout(() => URL.revokeObjectURL(url), 4000);
+		});
+		$(root, '[data-regen]')!.addEventListener('click', () => { delete cache[style]; generate(); });
+		$(root, '[data-another]')!.addEventListener('click', () => {
+			stage.hidden = true; controls.hidden = true; bar.hidden = true;
+			blob = null; cache = {};
+			$(root, '[data-drop]')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+	}
+
+	document.addEventListener('astro:page-load', initVlm);
+	initVlm();
+</script>

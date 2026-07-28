@@ -1,0 +1,460 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+
+// Depth Anything V2 Small, run in a worker, then used twice: once as a picture
+// of distance, and once as a displacement map that lets a flat photograph be
+// looked around. Both tiers are the same repo at different precisions, so the
+// licence is Apache-2.0 either way.
+---
+
+<Layout
+	title="Depth & Parallax — Anyrvaan Microtools"
+	description="Estimate a depth map from any photograph in your browser, colour it, and drive a 2.5D parallax animation from it. The model runs on your device."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Depth & Parallax"
+				intro="A photograph doesn't record distance, but a model can guess it well enough to be useful. Here that guess is shown twice: as a depth map you can colour and keep, and as a displacement map that lets the picture be looked around as though the camera were moving."
+			/>
+
+			<section class="px-6 py-16 sm:py-20" data-vai="depth">
+				<div class="mx-auto max-w-5xl">
+					<!-- model tier -->
+					<p class="reveal text-eyebrow uppercase text-neutral-400">Model</p>
+					<div class="reveal vai-tiers">
+						<button type="button" class="vai-tier" data-tier="sleek">
+							<span class="vai-tier__n">Sleek</span>
+							<span class="vai-tier__d">Quantised. Quick to fetch, quick to run, and good enough for almost everything.</span>
+							<span class="vai-tier__mb">~13 MB</span>
+						</button>
+						<button type="button" class="vai-tier" data-tier="accurate">
+							<span class="vai-tier__n">Accurate</span>
+							<span class="vai-tier__d">Full precision. Cleaner edges where a subject meets a busy background.</span>
+							<span class="vai-tier__mb">~100 MB</span>
+						</button>
+					</div>
+					<p class="reveal vai-hint">
+						Same model either way — Depth Anything V2 Small, Apache-2.0. The tiers are just
+						two precisions of it, so there's no second licence and no second download if you
+						stay on one.
+					</p>
+
+					<!-- input -->
+					<div class="reveal vai-drop" data-drop>
+						<p class="vai-drop__t">Drop an image, paste one, or click to choose</p>
+						<p class="vai-drop__s">Nothing leaves your device. Photographs with real depth work best.</p>
+					</div>
+
+					<div class="vai-load" data-load data-phase="idle"></div>
+
+					<!-- stage 1 -->
+					<div class="vai-stage vai-stage--two" data-stage hidden>
+						<div class="vai-panel">
+							<div class="vai-panel__h"><span>Original</span></div>
+							<canvas class="vai-canvas vai-canvas--plain" data-src></canvas>
+						</div>
+						<div class="vai-panel">
+							<div class="vai-panel__h"><span>Depth</span><span data-dims></span></div>
+							<canvas class="vai-canvas vai-canvas--plain" data-depth></canvas>
+						</div>
+					</div>
+
+					<div class="vai-controls vai-controls--3" data-c1 hidden>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Colormap</span>
+							<select class="vai-select" data-cmap>
+								<option value="gray">Grayscale</option>
+								<option value="inferno">Inferno</option>
+								<option value="viridis">Viridis</option>
+								<option value="turbo">Turbo</option>
+								<option value="magma">Magma</option>
+							</select>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Depth direction</span>
+							<label class="vai-check"><input type="checkbox" data-invert /> Invert depth</label>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Keep it</span>
+							<button type="button" class="vai-btn" data-dl-depth>Download depth PNG</button>
+						</div>
+					</div>
+
+					<!-- stage 2 -->
+					<div class="vai-section mt-16" data-stage2 hidden>
+						<h2 class="vai-h">2.5D parallax</h2>
+						<p class="vai-lede">
+							The photograph is used as a texture and the depth map as a displacement: every
+							pixel is shifted by how far away the model thinks it is. Foreground and
+							background then separate as the offset moves, which is the whole trick.
+						</p>
+
+						<div class="vai-panel mt-6">
+							<div class="vai-panel__h"><span>Preview</span><span data-fps></span></div>
+							<canvas class="vai-canvas vai-canvas--plain" data-gl></canvas>
+						</div>
+
+						<div class="vai-controls vai-controls--3">
+							<div class="vai-ctl">
+								<span class="vai-ctl__l">Parallax strength <b data-v-strength>0.030</b></span>
+								<input class="vai-range" type="range" data-strength min="0" max="120" value="30" />
+							</div>
+							<div class="vai-ctl">
+								<span class="vai-ctl__l">Motion</span>
+								<select class="vai-select" data-motion>
+									<option value="sway">Horizontal sway</option>
+									<option value="vertical">Vertical</option>
+									<option value="circular">Circular</option>
+									<option value="mouse">Mouse-follow</option>
+								</select>
+							</div>
+							<div class="vai-ctl">
+								<span class="vai-ctl__l">Speed <b data-v-speed>1.00×</b></span>
+								<input class="vai-range" type="range" data-speed min="10" max="300" value="100" />
+							</div>
+						</div>
+
+						<div class="vai-bar">
+							<button type="button" class="vai-btn vai-btn--go" data-record>Record 5s clip</button>
+							<button type="button" class="vai-btn" data-reset>Reset</button>
+							<button type="button" class="vai-btn" data-another>Try another image</button>
+						</div>
+						<p class="vai-hint" data-note>
+							Mouse-follow drives the offset from the cursor over the preview. On a touch
+							screen it falls back to a gentle automatic sway.
+						</p>
+					</div>
+
+					<div class="reveal mt-20 rounded-2xl border border-white/5 p-8">
+						<p class="text-eyebrow uppercase text-neutral-500">What it is and isn't</p>
+						<ul class="mt-6 space-y-3 text-body text-neutral-400">
+							<li>
+								Monocular depth is an estimate, not a measurement. It reads the cues a
+								photograph carries — occlusion, texture gradient, familiar sizes — and it
+								can be confidently wrong about reflections, glass, and flat pictures of
+								scenes.
+							</li>
+							<li>
+								Parallax from a single image can only reveal what the image already
+								contains. Push the strength far enough and you'll see the edges smear,
+								because there is nothing behind the foreground to uncover.
+							</li>
+							<li>
+								The model is fetched once and cached by your browser. After that this page
+								works with the network off.
+							</li>
+						</ul>
+					</div>
+
+					<div class="reveal mt-10">
+						<a href="/microtools" class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100">
+							<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	import {
+		makeWorker, mountDropzone, mountChooser, readImage, fitTo,
+		Loader, downloadCanvas, downloadURL, $, getTier,
+	} from '../../scripts/visual-tools';
+
+	// Five colormaps as a handful of stops each, interpolated. Small enough to
+	// keep inline, and the stops are the recognisable ones from each ramp.
+	const RAMPS: Record<string, [number, number, number][]> = {
+		gray: [[0,0,0],[255,255,255]],
+		inferno: [[0,0,4],[40,11,84],[101,21,110],[159,42,99],[212,72,66],[245,125,21],[250,193,39],[252,255,164]],
+		viridis: [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]],
+		turbo: [[48,18,59],[70,134,251],[27,229,181],[164,252,60],[251,177,57],[219,63,17],[122,4,3]],
+		magma: [[0,0,4],[45,17,95],[114,31,129],[183,55,121],[240,96,93],[254,175,120],[252,253,191]],
+	};
+
+	function sample(name: string, v: number) {
+		const stops = RAMPS[name] ?? RAMPS.gray;
+		const x = Math.max(0, Math.min(1, v)) * (stops.length - 1);
+		const i = Math.min(stops.length - 2, Math.floor(x));
+		const f = x - i;
+		const a = stops[i], b = stops[i + 1];
+		return [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f, a[2] + (b[2]-a[2])*f];
+	}
+
+	const VERT = `attribute vec2 p; varying vec2 vUv;
+	void main(){ vUv = vec2((p.x+1.0)*0.5, 1.0-(p.y+1.0)*0.5); gl_Position = vec4(p,0.0,1.0); }`;
+
+	// The displacement itself. Sampling with the depth centred on 0.5 means the
+	// mid-distance stays put and near/far push opposite ways, which is what
+	// makes it read as a camera move rather than the whole picture sliding.
+	const FRAG = `precision mediump float;
+	uniform sampler2D uImg; uniform sampler2D uDepth;
+	uniform vec2 uOff; uniform float uStr;
+	varying vec2 vUv;
+	void main(){
+		float d = texture2D(uDepth, vUv).r;
+		vec2 uv = clamp(vUv + uOff * (d - 0.5) * uStr, 0.001, 0.999);
+		gl_FragColor = texture2D(uImg, uv);
+	}`;
+
+	function initDepth() {
+		const found = document.querySelector<HTMLElement>('[data-vai="depth"]:not([data-ready])');
+		if (!found) return;
+		// Non-nullable rebinding: the helpers below are hoisted function
+		// declarations, and TypeScript drops the narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.ready = 'true';
+
+		const loader = new Loader($(root, '[data-load]')!);
+		const srcCv = $<HTMLCanvasElement>(root, '[data-src]')!;
+		const depCv = $<HTMLCanvasElement>(root, '[data-depth]')!;
+		const glCv = $<HTMLCanvasElement>(root, '[data-gl]')!;
+		const stage = $(root, '[data-stage]')!;
+		const c1 = $(root, '[data-c1]')!;
+		const stage2 = $(root, '[data-stage2]')!;
+
+		let tier = getTier();
+		let worker: Worker | null = null;
+		let blob: Blob | null = null;
+		let depth: { data: Uint8Array; width: number; height: number; channels: number } | null = null;
+		let img: HTMLImageElement | null = null;
+
+		mountChooser(root, (t) => {
+			tier = t;
+			// A different precision is a different download; the current result
+			// stays on screen until the new one replaces it.
+			if (blob) run();
+		});
+
+		function ensureWorker() {
+			if (worker) return worker;
+			worker = makeWorker('depth');
+			worker.onmessage = (e) => {
+				const m = e.data;
+				if (m.type === 'progress') loader.progress(m.p, tier === 'accurate' ? 'Depth Anything (full precision)' : 'Depth Anything (quantised)');
+				else if (m.type === 'running') loader.running('Reading the depth of your image');
+				else if (m.type === 'result') {
+					depth = m;
+					loader.done();
+					paintDepth();
+					startGL();
+					stage.hidden = false; c1.hidden = false; stage2.hidden = false;
+					depCv.classList.add('vai-fade');
+					$(root, '[data-dims]')!.textContent = `${m.width} × ${m.height}`;
+				} else if (m.type === 'error') {
+					loader.fail(m.message, () => run());
+				}
+			};
+			worker.onerror = (e) => loader.fail(e.message || 'The worker stopped.', () => run());
+			return worker;
+		}
+
+		function run() {
+			if (!blob) return;
+			ensureWorker().postMessage({ type: 'run', blob, tier });
+		}
+
+		// ---- input ----
+		mountDropzone($(root, '[data-drop]')!, async (file) => {
+			const { img: el } = await readImage(file);
+			img = el;
+			// Cap the working size — the model gets slow past about 1024px and
+			// nobody can see the difference in a preview this size.
+			const fit = fitTo(el.naturalWidth, el.naturalHeight, 1024);
+			srcCv.width = fit.w; srcCv.height = fit.h;
+			srcCv.getContext('2d')!.drawImage(el, 0, 0, fit.w, fit.h);
+			blob = await new Promise<Blob>((res) => srcCv.toBlob((b) => res(b!), 'image/png'));
+			run();
+		});
+
+		// ---- stage 1 ----
+		function paintDepth() {
+			if (!depth) return;
+			const { width: w, height: h, channels, data } = depth;
+			depCv.width = w; depCv.height = h;
+			const ctx = depCv.getContext('2d')!;
+			const out = ctx.createImageData(w, h);
+			const name = ($<HTMLSelectElement>(root, '[data-cmap]')!).value;
+			const inv = ($<HTMLInputElement>(root, '[data-invert]')!).checked;
+			for (let i = 0; i < w * h; i++) {
+				let v = data[i * channels] / 255;
+				if (inv) v = 1 - v;
+				const [r, g, b] = sample(name, v);
+				out.data[i*4] = r; out.data[i*4+1] = g; out.data[i*4+2] = b; out.data[i*4+3] = 255;
+			}
+			ctx.putImageData(out, 0, 0);
+			if (gl) uploadDepth();
+		}
+
+		$(root, '[data-cmap]')!.addEventListener('change', paintDepth);
+		$(root, '[data-invert]')!.addEventListener('change', paintDepth);
+		$(root, '[data-dl-depth]')!.addEventListener('click', () => downloadCanvas(depCv, 'depth-map.png'));
+
+		// ---- stage 2: WebGL ----
+		let gl: WebGLRenderingContext | null = null;
+		let prog: WebGLProgram | null = null;
+		let texImg: WebGLTexture | null = null;
+		let texDep: WebGLTexture | null = null;
+		let raf = 0;
+		const mouse = { x: 0, y: 0, has: false };
+
+		function compile(src: string, type: number) {
+			const s = gl!.createShader(type)!;
+			gl!.shaderSource(s, src); gl!.compileShader(s);
+			return s;
+		}
+
+		function makeTex(source: TexImageSource) {
+			const t = gl!.createTexture();
+			gl!.bindTexture(gl!.TEXTURE_2D, t);
+			gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_S, gl!.CLAMP_TO_EDGE);
+			gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_T, gl!.CLAMP_TO_EDGE);
+			gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MIN_FILTER, gl!.LINEAR);
+			gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MAG_FILTER, gl!.LINEAR);
+			gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA, gl!.RGBA, gl!.UNSIGNED_BYTE, source);
+			return t;
+		}
+
+		function uploadDepth() {
+			if (!gl) return;
+			// The depth texture is taken from the *grayscale* values, not the
+			// coloured canvas — a colormap would otherwise change the geometry.
+			const w = depth!.width, h = depth!.height;
+			const tmp = document.createElement('canvas');
+			tmp.width = w; tmp.height = h;
+			const c = tmp.getContext('2d')!;
+			const id = c.createImageData(w, h);
+			const inv = ($<HTMLInputElement>(root, '[data-invert]')!).checked;
+			for (let i = 0; i < w * h; i++) {
+				let v = depth!.data[i * depth!.channels];
+				if (inv) v = 255 - v;
+				id.data[i*4] = v; id.data[i*4+1] = v; id.data[i*4+2] = v; id.data[i*4+3] = 255;
+			}
+			c.putImageData(id, 0, 0);
+			if (texDep) gl.deleteTexture(texDep);
+			texDep = makeTex(tmp);
+		}
+
+		function startGL() {
+			if (!img || !depth) return;
+			glCv.width = srcCv.width; glCv.height = srcCv.height;
+			if (!gl) {
+				gl = glCv.getContext('webgl', { preserveDrawingBuffer: true });
+				if (!gl) { $(root, '[data-note]')!.textContent = 'This browser has no WebGL, so the parallax stage is unavailable — the depth map above still works.'; return; }
+				const p = gl.createProgram()!;
+				gl.attachShader(p, compile(VERT, gl.VERTEX_SHADER));
+				gl.attachShader(p, compile(FRAG, gl.FRAGMENT_SHADER));
+				gl.linkProgram(p); gl.useProgram(p); prog = p;
+				const buf = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+				const loc = gl.getAttribLocation(p, 'p');
+				gl.enableVertexAttribArray(loc);
+				gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+			}
+			if (texImg) gl.deleteTexture(texImg);
+			texImg = makeTex(srcCv);
+			uploadDepth();
+			gl.viewport(0, 0, glCv.width, glCv.height);
+			if (!raf) raf = requestAnimationFrame(frame);
+		}
+
+		function frame(now: number) {
+			raf = requestAnimationFrame(frame);
+			if (!gl || !prog || !texImg || !texDep) return;
+			const strength = Number(($<HTMLInputElement>(root, '[data-strength]')!).value) / 1000;
+			const speed = Number(($<HTMLInputElement>(root, '[data-speed]')!).value) / 100;
+			const mode = ($<HTMLSelectElement>(root, '[data-motion]')!).value;
+			const t = (now / 1000) * speed;
+
+			let ox = 0, oy = 0;
+			if (mode === 'mouse' && mouse.has) { ox = mouse.x; oy = mouse.y; }
+			else if (mode === 'vertical') oy = Math.sin(t);
+			else if (mode === 'circular') { ox = Math.cos(t); oy = Math.sin(t); }
+			else ox = Math.sin(t);
+
+			gl.uniform2f(gl.getUniformLocation(prog, 'uOff'), ox, oy);
+			gl.uniform1f(gl.getUniformLocation(prog, 'uStr'), strength);
+			gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texImg);
+			gl.uniform1i(gl.getUniformLocation(prog, 'uImg'), 0);
+			gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texDep);
+			gl.uniform1i(gl.getUniformLocation(prog, 'uDepth'), 1);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+		}
+
+		glCv.addEventListener('pointermove', (e) => {
+			const r = glCv.getBoundingClientRect();
+			mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+			mouse.y = ((e.clientY - r.top) / r.height) * 2 - 1;
+			mouse.has = true;
+		});
+		glCv.addEventListener('pointerleave', () => { mouse.has = false; });
+
+		const strengthEl = $<HTMLInputElement>(root, '[data-strength]')!;
+		const speedEl = $<HTMLInputElement>(root, '[data-speed]')!;
+		const syncLabels = () => {
+			$(root, '[data-v-strength]')!.textContent = (Number(strengthEl.value) / 1000).toFixed(3);
+			$(root, '[data-v-speed]')!.textContent = `${(Number(speedEl.value) / 100).toFixed(2)}×`;
+		};
+		strengthEl.addEventListener('input', syncLabels);
+		speedEl.addEventListener('input', syncLabels);
+		syncLabels();
+
+		// ---- record ----
+		$(root, '[data-record]')!.addEventListener('click', (e) => {
+			const btn = e.currentTarget as HTMLButtonElement;
+			if (!glCv.captureStream) return;
+			const stream = glCv.captureStream(30);
+			const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+				.find((m) => MediaRecorder.isTypeSupported(m));
+			if (!mime) return;
+			const rec = new MediaRecorder(stream, { mimeType: mime });
+			const chunks: Blob[] = [];
+			rec.ondataavailable = (ev) => ev.data.size && chunks.push(ev.data);
+			rec.onstop = () => {
+				const url = URL.createObjectURL(new Blob(chunks, { type: 'video/webm' }));
+				downloadURL(url, 'parallax.webm');
+				setTimeout(() => URL.revokeObjectURL(url), 5000);
+				btn.disabled = false;
+				btn.textContent = 'Record 5s clip';
+			};
+			btn.disabled = true;
+			let left = 5;
+			btn.textContent = `Recording… ${left}s`;
+			const tick = setInterval(() => {
+				left--;
+				btn.textContent = `Recording… ${left}s`;
+				if (left <= 0) clearInterval(tick);
+			}, 1000);
+			rec.start();
+			setTimeout(() => rec.stop(), 5000);
+		});
+
+		$(root, '[data-reset]')!.addEventListener('click', () => {
+			strengthEl.value = '30'; speedEl.value = '100';
+			($<HTMLSelectElement>(root, '[data-motion]')!).value = 'sway';
+			($<HTMLSelectElement>(root, '[data-cmap]')!).value = 'gray';
+			($<HTMLInputElement>(root, '[data-invert]')!).checked = false;
+			syncLabels(); paintDepth();
+		});
+
+		$(root, '[data-another]')!.addEventListener('click', () => {
+			stage.hidden = true; c1.hidden = true; stage2.hidden = true;
+			blob = null; depth = null; img = null;
+			if (raf) { cancelAnimationFrame(raf); raf = 0; }
+			$(root, '[data-drop]')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+	}
+
+	document.addEventListener('astro:page-load', initDepth);
+	initDepth();
+</script>

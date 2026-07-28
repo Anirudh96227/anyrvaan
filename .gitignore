@@ -32,6 +32,12 @@ pnpm-debug.log*
 /Downloads/
 *.mp4
 
+# Working briefs, handover docs and planning notes kept beside the project.
+# These are desk files, not site source, and some name unreleased work — this
+# repo is public, so they stay out of it.
+/anyrvaan-*.md
+/visual-ai-tools-handover*.md
+
 # Downloaded render bundles and loose desk files — not site source.
 /2026-*_ANYRVAAN-*/
 /2026-*_remotion-casebook/

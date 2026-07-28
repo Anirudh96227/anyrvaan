@@ -1299,3 +1299,1257 @@ html.degauss-active::after {
 	border: none;
 	border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* -------------------------------------------------------------------------
+   VISUAL AI TOOLS — the four that run a model in the browser.
+   One look across all four, so the set reads as one thing. Everything here is
+   `.vai-` prefixed and used only by /microtools/{depth-parallax, cutout,
+   image-to-prompt, remove-bg}.
+   ------------------------------------------------------------------------- */
+
+.vai-section {
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	padding-top: 3rem;
+}
+.vai-section + .vai-section {
+	margin-top: 4rem;
+}
+.vai-h {
+	font-size: var(--text-h3);
+	line-height: var(--text-h3--line-height);
+	font-weight: 500;
+	color: var(--color-neutral-50);
+}
+.vai-lede {
+	margin-top: 0.6rem;
+	max-width: 44rem;
+	font-size: var(--text-body);
+	line-height: var(--text-body--line-height);
+	color: var(--color-neutral-400);
+}
+
+/* --- model chooser --- */
+
+.vai-tiers {
+	display: grid;
+	gap: 0.75rem;
+	margin-top: 1.5rem;
+}
+@media (min-width: 560px) {
+	.vai-tiers {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+.vai-tier {
+	text-align: left;
+	cursor: pointer;
+	border: 1px solid rgba(255, 255, 255, 0.09);
+	border-radius: 0.85rem;
+	background: transparent;
+	padding: 1.1rem 1.2rem;
+	color: var(--color-neutral-300);
+	font: inherit;
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+.vai-tier:hover {
+	border-color: rgba(255, 255, 255, 0.22);
+}
+.vai-tier[aria-pressed='true'] {
+	border-color: rgba(139, 166, 255, 0.55);
+	background: rgba(139, 166, 255, 0.05);
+}
+.vai-tier__n {
+	display: block;
+	font-size: var(--text-body);
+	font-weight: 500;
+	color: var(--color-neutral-100);
+}
+.vai-tier__d {
+	display: block;
+	margin-top: 0.3rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+}
+.vai-tier__mb {
+	display: inline-block;
+	margin-top: 0.55rem;
+	font-size: 0.78rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-neutral-600);
+	border: 1px solid rgba(255, 255, 255, 0.09);
+	border-radius: 999px;
+	padding: 0.15rem 0.6rem;
+}
+
+/* --- dropzone --- */
+
+.vai-drop {
+	position: relative;
+	margin-top: 1.5rem;
+	display: grid;
+	place-items: center;
+	gap: 0.5rem;
+	min-height: 15rem;
+	padding: 2.5rem 1.5rem;
+	text-align: center;
+	cursor: pointer;
+	border: 1px dashed rgba(255, 255, 255, 0.16);
+	border-radius: 1rem;
+	background: rgba(255, 255, 255, 0.012);
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+.vai-drop:hover,
+.vai-drop.is-over {
+	border-color: rgba(139, 166, 255, 0.5);
+	background: rgba(139, 166, 255, 0.04);
+}
+.vai-drop__t {
+	font-size: var(--text-body-lg);
+	color: var(--color-neutral-200);
+}
+.vai-drop__s {
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+}
+
+/* --- the two-phase loader --- */
+
+.vai-load {
+	margin-top: 1.5rem;
+	border: 1px solid rgba(255, 255, 255, 0.07);
+	border-radius: 0.9rem;
+	padding: 1.4rem 1.5rem;
+}
+.vai-load[data-phase='idle'] {
+	display: none;
+}
+.vai-load__title {
+	font-size: var(--text-body);
+	color: var(--color-neutral-100);
+}
+.vai-load__note {
+	margin-top: 0.45rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+}
+.vai-load__pct {
+	margin-top: 0.3rem;
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-neutral-600);
+}
+.vai-load__track {
+	margin-top: 0.9rem;
+	height: 4px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.07);
+	overflow: hidden;
+}
+.vai-load__bar {
+	display: block;
+	height: 100%;
+	width: 0%;
+	border-radius: 999px;
+	background: #8ba6ff;
+	transition: width 0.25s ease;
+}
+.vai-load__retry {
+	margin-top: 1rem;
+}
+/* Download shows the bar; inference shows the breath; neither shows both. */
+.vai-load[data-phase='run'] .vai-load__track,
+.vai-load[data-phase='error'] .vai-load__track,
+.vai-load[data-phase='download'] .vai-load__retry,
+.vai-load[data-phase='run'] .vai-load__retry {
+	display: none;
+}
+/* A slow pulse at roughly a resting breath — deliberately not a spinner,
+   which reads as "waiting" where this reads as "thinking". */
+.vai-load[data-phase='run'] .vai-load__title::after {
+	content: '';
+	display: inline-block;
+	width: 0.55rem;
+	height: 0.55rem;
+	margin-left: 0.55rem;
+	border-radius: 999px;
+	background: #8ba6ff;
+	animation: vai-breathe 1.6s ease-in-out infinite;
+}
+@keyframes vai-breathe {
+	0%, 100% { opacity: 0.25; transform: scale(0.7); }
+	50% { opacity: 1; transform: scale(1.15); }
+}
+.vai-load[data-phase='error'] .vai-load__title {
+	color: #e8564a;
+}
+
+/* --- stage & results --- */
+
+.vai-stage {
+	margin-top: 1.75rem;
+	display: grid;
+	gap: 1rem;
+}
+@media (min-width: 860px) {
+	.vai-stage--two {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+.vai-panel {
+	border: 1px solid rgba(255, 255, 255, 0.07);
+	border-radius: 0.9rem;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.012);
+}
+.vai-panel__h {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.7rem 0.95rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+	font-size: var(--text-eyebrow);
+	letter-spacing: var(--text-eyebrow--letter-spacing);
+	text-transform: uppercase;
+	color: var(--color-neutral-500);
+}
+/* The chequerboard behind anything with an alpha channel — the only honest way
+   to show that a cutout really is transparent. */
+.vai-canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+	background-color: #17191d;
+	background-image:
+		linear-gradient(45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
+		linear-gradient(-45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.035) 75%),
+		linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.035) 75%);
+	background-size: 18px 18px;
+	background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+}
+.vai-canvas--plain {
+	background-image: none;
+}
+.vai-canvas--pick {
+	cursor: crosshair;
+	touch-action: none;
+}
+
+/* Result appears rather than snapping in. */
+.vai-fade {
+	animation: vai-in 180ms ease both;
+}
+@keyframes vai-in {
+	from { opacity: 0; }
+}
+
+/* --- before / after --- */
+
+.vai-split {
+	position: relative;
+	overflow: hidden;
+	touch-action: none;
+	user-select: none;
+}
+.vai-split img,
+.vai-split canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.vai-split__top {
+	position: absolute;
+	inset: 0;
+}
+.vai-split__handle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	margin-left: -1px;
+	background: rgba(255, 255, 255, 0.85);
+	cursor: ew-resize;
+	touch-action: none;
+}
+.vai-split__handle::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 2rem;
+	height: 2rem;
+	transform: translate(-50%, -50%);
+	border-radius: 999px;
+	border: 2px solid rgba(255, 255, 255, 0.85);
+	background: rgba(10, 11, 13, 0.55);
+	backdrop-filter: blur(3px);
+}
+.vai-split__handle:focus-visible {
+	outline: 2px solid #8ba6ff;
+	outline-offset: 3px;
+}
+
+/* --- controls --- */
+
+.vai-controls {
+	margin-top: 1.25rem;
+	border: 1px solid rgba(255, 255, 255, 0.07);
+	border-radius: 0.9rem;
+	padding: 1.2rem 1.35rem;
+	display: grid;
+	gap: 1rem;
+}
+@media (min-width: 720px) {
+	.vai-controls--2 {
+		grid-template-columns: 1fr 1fr;
+	}
+	.vai-controls--3 {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+.vai-ctl {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	min-width: 0;
+}
+.vai-ctl__l {
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+	display: flex;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+.vai-ctl__l b {
+	font-weight: 400;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-neutral-500);
+}
+.vai-range {
+	width: 100%;
+	accent-color: #8ba6ff;
+}
+.vai-select {
+	width: 100%;
+	appearance: none;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.6rem;
+	background: rgba(255, 255, 255, 0.02);
+	color: var(--color-neutral-100);
+	font: inherit;
+	font-size: var(--text-small);
+	padding: 0.55rem 0.75rem;
+	cursor: pointer;
+}
+.vai-select option {
+	background: #14161a;
+}
+.vai-check {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+	cursor: pointer;
+}
+.vai-check input {
+	accent-color: #8ba6ff;
+	width: 1rem;
+	height: 1rem;
+}
+.vai-color {
+	width: 2.4rem;
+	height: 2rem;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 0.4rem;
+	background: none;
+	cursor: pointer;
+}
+
+/* --- buttons & toolbar --- */
+
+.vai-bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.55rem;
+	margin-top: 1.25rem;
+}
+.vai-btn {
+	cursor: pointer;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--color-neutral-200);
+	font: inherit;
+	font-size: var(--text-small);
+	padding: 0.5rem 1.1rem;
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+.vai-btn:hover:not(:disabled) {
+	border-color: rgba(255, 255, 255, 0.4);
+	background: rgba(255, 255, 255, 0.04);
+	color: var(--color-neutral-50);
+}
+.vai-btn:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+.vai-btn--go {
+	border-color: rgba(139, 166, 255, 0.55);
+	background: rgba(139, 166, 255, 0.12);
+	color: var(--color-neutral-50);
+}
+.vai-btn--go:hover:not(:disabled) {
+	background: rgba(139, 166, 255, 0.22);
+	border-color: rgba(139, 166, 255, 0.8);
+}
+.vai-btn[data-copied] {
+	border-color: rgba(63, 169, 106, 0.6);
+	color: #3fa96a;
+}
+
+/* --- tabs (image-to-prompt) --- */
+
+.vai-tabs {
+	display: flex;
+	gap: 0.4rem;
+	overflow-x: auto;
+	padding-bottom: 0.2rem;
+	scrollbar-width: none;
+}
+.vai-tabs::-webkit-scrollbar {
+	display: none;
+}
+.vai-tab {
+	flex-shrink: 0;
+	cursor: pointer;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--color-neutral-400);
+	font: inherit;
+	font-size: var(--text-small);
+	padding: 0.45rem 1rem;
+	transition:
+		border-color 0.2s ease,
+		color 0.2s ease,
+		background-color 0.2s ease;
+}
+.vai-tab[aria-selected='true'] {
+	border-color: rgba(139, 166, 255, 0.55);
+	background: rgba(139, 166, 255, 0.1);
+	color: var(--color-neutral-50);
+}
+.vai-out {
+	margin-top: 1rem;
+	border: 1px solid rgba(255, 255, 255, 0.07);
+	border-radius: 0.9rem;
+	padding: 1.15rem 1.3rem;
+	font-size: var(--text-body);
+	line-height: 1.65;
+	color: var(--color-neutral-300);
+	white-space: pre-wrap;
+	word-break: break-word;
+	min-height: 6rem;
+}
+.vai-out--code {
+	font-family: ui-monospace, "Cascadia Mono", monospace;
+	font-size: 0.84rem;
+	line-height: 1.6;
+	overflow-x: auto;
+	white-space: pre;
+}
+.vai-field {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.6rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.vai-field:last-child {
+	border-bottom: none;
+}
+.vai-field__k {
+	flex-shrink: 0;
+	width: 9rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+}
+.vai-field__v {
+	flex: 1;
+	min-width: 0;
+	color: var(--color-neutral-200);
+}
+.vai-field__c {
+	flex-shrink: 0;
+	cursor: pointer;
+	border: 0;
+	background: none;
+	color: var(--color-neutral-600);
+	font: inherit;
+	font-size: 0.75rem;
+	padding: 0;
+}
+.vai-field__c:hover {
+	color: var(--color-neutral-100);
+}
+
+.vai-hint {
+	margin-top: 0.9rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.vai-load[data-phase='run'] .vai-load__title::after {
+		animation: none;
+		opacity: 0.8;
+	}
+	.vai-fade {
+		animation: none;
+	}
+	.vai-tier,
+	.vai-drop,
+	.vai-btn,
+	.vai-tab,
+	.vai-load__bar {
+		transition: none;
+	}
+}
+
+/* -------------------------------------------------------------------------
+   TOOL BUTTONS — the three calculators as they appear on /microtools.
+   Deliberately small. The full canvas preview belongs on each tool's own
+   page, next to the thing it explains; here the job is only to say what
+   exists and get out of the way, so each button carries a line drawing
+   that compresses its preview into one static mark.
+   ------------------------------------------------------------------------- */
+
+.tool-btn {
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+	padding: 1.4rem 1.5rem 1.5rem;
+	border: 1px solid rgba(255, 255, 255, 0.07);
+	border-radius: 1rem;
+	transition:
+		border-color 0.25s ease,
+		background-color 0.25s ease;
+}
+.tool-btn:hover {
+	border-color: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.02);
+}
+/* The mark is a canvas, authored at 64 and shown at 40, so it is oversampled
+   on every display. Brightness is animated inside the canvas rather than with
+   a CSS filter — a filter would wash the one mark that is deliberately
+   coloured (Colourway) along with the five that aren't. */
+.tool-btn__mark {
+	width: 2.5rem;
+	height: 2.5rem;
+	display: block;
+}
+.tool-btn__name {
+	font-size: var(--text-body);
+	font-weight: 500;
+	color: var(--color-neutral-100);
+}
+.tool-btn__sub {
+	margin-top: 0.3rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+}
+.tool-btn__go {
+	margin-top: 0.9rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+	transition: color 0.25s ease;
+}
+.tool-btn:hover .tool-btn__go {
+	color: var(--color-neutral-100);
+}
+.tool-btn__go span {
+	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tool-btn:hover .tool-btn__go span {
+	transform: translateX(0.25rem);
+}
+
+/* Keyboard parity: a focused button should look like a pointed-at one, since
+   the mark's own animation already responds to focus. */
+.tool-btn:focus-visible {
+	outline: 2px solid rgba(255, 255, 255, 0.45);
+	outline-offset: 3px;
+	border-color: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.02);
+}
+.tool-btn:focus-visible .tool-btn__go {
+	color: var(--color-neutral-100);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tool-btn,
+	.tool-btn__go span {
+		transition: none;
+	}
+	.tool-btn:hover .tool-btn__go span {
+		transform: none;
+	}
+}
+
+/* -------------------------------------------------------------------------
+   CALCULATORS — the three microtools (concrete, electrical, HVAC).
+   One set of controls shared by all three, so a number entered on one page
+   behaves exactly like a number entered on another. Everything here is
+   `.calc-` prefixed and used only by /microtools/*-calc.
+   ------------------------------------------------------------------------- */
+
+/* A calculator block: inputs on the left, the answer on the right, and the
+   formula underneath both. Collapses to one column early — these get used on
+   a phone at a merchant's counter more than on a desktop. */
+.calc {
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	padding-top: 3rem;
+}
+.calc + .calc {
+	margin-top: 4.5rem;
+}
+.calc__head {
+	margin-bottom: 2.25rem;
+}
+.calc__title {
+	font-size: var(--text-h3);
+	line-height: var(--text-h3--line-height);
+	letter-spacing: var(--text-h3--letter-spacing);
+	font-weight: 500;
+	color: var(--color-neutral-50);
+}
+.calc__lede {
+	margin-top: 0.65rem;
+	max-width: 46rem;
+	font-size: var(--text-body);
+	line-height: var(--text-body--line-height);
+	color: var(--color-neutral-400);
+}
+.calc__body {
+	display: grid;
+	gap: 1.75rem;
+	align-items: start;
+}
+@media (min-width: 900px) {
+	.calc__body {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 20.5rem);
+		gap: 2.5rem;
+	}
+}
+
+/* --- inputs --- */
+
+.calc-fields {
+	display: grid;
+	gap: 1.1rem;
+}
+@media (min-width: 560px) {
+	.calc-fields--2 {
+		grid-template-columns: 1fr 1fr;
+	}
+	.calc-fields--3 {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+.calc-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}
+.calc-field--wide {
+	grid-column: 1 / -1;
+}
+.calc-label {
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+}
+.calc-label span {
+	color: var(--color-neutral-600);
+}
+
+/* The control shell. Inputs are dark-on-dark, so the border does all the
+   work of saying "you can type here" — it lifts on focus rather than
+   painting a coloured ring, which would be the only saturated thing on the
+   page. */
+.calc-control {
+	position: relative;
+	display: flex;
+	align-items: center;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.75rem;
+	background: rgba(255, 255, 255, 0.02);
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+.calc-control:focus-within {
+	border-color: rgba(255, 255, 255, 0.32);
+	background: rgba(255, 255, 255, 0.04);
+}
+.calc-input,
+.calc-select {
+	width: 100%;
+	min-width: 0;
+	appearance: none;
+	background: none;
+	border: none;
+	outline: none;
+	color: var(--color-neutral-50);
+	font: inherit;
+	font-size: var(--text-body);
+	font-variant-numeric: tabular-nums;
+	padding: 0.7rem 0.9rem;
+}
+.calc-input::-webkit-outer-spin-button,
+.calc-input::-webkit-inner-spin-button {
+	appearance: none;
+	margin: 0;
+}
+.calc-input[type='number'] {
+	-moz-appearance: textfield;
+}
+/* The unit sits inside the control, greyed, so it reads as part of the field
+   rather than as another thing to fill in. */
+.calc-unit {
+	flex-shrink: 0;
+	padding-right: 0.9rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+	pointer-events: none;
+}
+.calc-select {
+	padding-right: 2.2rem;
+	cursor: pointer;
+}
+.calc-select option {
+	background: #14161a;
+	color: var(--color-neutral-100);
+}
+/* Caret for the select, drawn rather than left to the platform. */
+.calc-control--select::after {
+	content: '';
+	position: absolute;
+	right: 1rem;
+	top: 50%;
+	width: 0.45rem;
+	height: 0.45rem;
+	border-right: 1.5px solid var(--color-neutral-500);
+	border-bottom: 1.5px solid var(--color-neutral-500);
+	transform: translateY(-70%) rotate(45deg);
+	pointer-events: none;
+}
+
+/* Segmented control — unit switches, and anything else with two or three
+   mutually exclusive answers. Built on real radios so it is keyboard- and
+   screen-reader-navigable without any script. */
+.calc-seg {
+	display: inline-flex;
+	padding: 0.2rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.02);
+}
+.calc-seg label {
+	position: relative;
+	cursor: pointer;
+}
+.calc-seg input {
+	position: absolute;
+	opacity: 0;
+	width: 100%;
+	height: 100%;
+	inset: 0;
+	cursor: pointer;
+}
+.calc-seg span {
+	display: block;
+	padding: 0.4rem 0.95rem;
+	border-radius: 999px;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+.calc-seg input:checked + span {
+	background: rgba(255, 255, 255, 0.09);
+	color: var(--color-neutral-100);
+}
+.calc-seg input:focus-visible + span {
+	outline: 2px solid rgba(255, 255, 255, 0.4);
+	outline-offset: 2px;
+}
+
+/* A switch for one-off booleans (the waste allowance). */
+.calc-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	cursor: pointer;
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+}
+.calc-toggle input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.calc-toggle__track {
+	position: relative;
+	width: 2.4rem;
+	height: 1.35rem;
+	flex-shrink: 0;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	transition: background-color 0.2s ease;
+}
+.calc-toggle__track::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 0.18rem;
+	width: 0.9rem;
+	height: 0.9rem;
+	border-radius: 999px;
+	background: var(--color-neutral-400);
+	transform: translateY(-50%);
+	transition:
+		transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+		background-color 0.2s ease;
+}
+.calc-toggle input:checked + .calc-toggle__track {
+	background: rgba(242, 181, 60, 0.28);
+}
+.calc-toggle input:checked + .calc-toggle__track::after {
+	transform: translateY(-50%) translateX(1.02rem);
+	background: #f2b53c;
+}
+.calc-toggle input:focus-visible + .calc-toggle__track {
+	outline: 2px solid rgba(255, 255, 255, 0.4);
+	outline-offset: 2px;
+}
+
+/* --- appliance picker (electrical) --- */
+
+.calc-picker {
+	display: grid;
+	gap: 0.5rem;
+}
+@media (min-width: 640px) {
+	.calc-picker {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+/* The row is a container, not a label — the quantity field lives inside it,
+   and a number input nested in a label toggles the checkbox every time you
+   click into it. So the label wraps only the tickable part. */
+.calc-pick {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.6rem 0.85rem;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 0.7rem;
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+.calc-pick:hover {
+	border-color: rgba(255, 255, 255, 0.14);
+}
+.calc-pick__main {
+	display: flex;
+	align-items: center;
+	gap: 0.7rem;
+	flex: 1;
+	min-width: 0;
+	cursor: pointer;
+}
+.calc-pick input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.calc-pick__box {
+	position: relative;
+	width: 1.05rem;
+	height: 1.05rem;
+	flex-shrink: 0;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 0.3rem;
+	transition:
+		background-color 0.18s ease,
+		border-color 0.18s ease;
+}
+.calc-pick__box::after {
+	content: '';
+	position: absolute;
+	left: 0.3rem;
+	top: 0.12rem;
+	width: 0.3rem;
+	height: 0.55rem;
+	border-right: 2px solid #0a0b0d;
+	border-bottom: 2px solid #0a0b0d;
+	transform: rotate(45deg) scale(0.4);
+	opacity: 0;
+	transition:
+		opacity 0.16s ease,
+		transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.calc-pick input:checked + .calc-pick__box {
+	background: #8ba6ff;
+	border-color: #8ba6ff;
+}
+.calc-pick input:checked + .calc-pick__box::after {
+	opacity: 1;
+	transform: rotate(45deg) scale(1);
+}
+.calc-pick input:focus-visible + .calc-pick__box {
+	outline: 2px solid rgba(255, 255, 255, 0.4);
+	outline-offset: 2px;
+}
+.calc-pick input:checked ~ .calc-pick__name {
+	color: var(--color-neutral-100);
+}
+.calc-pick__name {
+	flex: 1;
+	min-width: 0;
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+	transition: color 0.2s ease;
+}
+.calc-pick__w {
+	flex-shrink: 0;
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-neutral-600);
+	white-space: nowrap;
+}
+/* The starting figure, shown only where it differs from the running one — so
+   the rows that surge are visibly different from the rows that don't. */
+.calc-pick__surge {
+	margin-left: 0.35rem;
+	color: rgba(242, 181, 60, 0.65);
+}
+
+/* Plain text button — used for the select-all / clear row, where a bordered
+   button would compete with the fields it sits above. */
+.calc-textbtn {
+	font-size: var(--text-small);
+	color: var(--color-neutral-400);
+	border: none;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease;
+}
+.calc-textbtn:hover {
+	color: var(--color-neutral-100);
+	border-color: rgba(255, 255, 255, 0.5);
+}
+.calc-textbtn:focus-visible {
+	outline: 2px solid rgba(255, 255, 255, 0.4);
+	outline-offset: 3px;
+}
+/* The count control that lets one line stand for three of the same lamp. */
+.calc-pick__qty {
+	width: 2.6rem;
+	flex-shrink: 0;
+	appearance: none;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.4rem;
+	background: rgba(255, 255, 255, 0.03);
+	color: var(--color-neutral-300);
+	font: inherit;
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	padding: 0.2rem 0;
+	outline: none;
+}
+.calc-pick__qty:focus {
+	border-color: rgba(255, 255, 255, 0.32);
+}
+.calc-pick__qty::-webkit-outer-spin-button,
+.calc-pick__qty::-webkit-inner-spin-button {
+	appearance: none;
+	margin: 0;
+}
+.calc-group {
+	margin-top: 1.5rem;
+}
+.calc-group:first-child {
+	margin-top: 0;
+}
+.calc-group__name {
+	font-size: var(--text-eyebrow);
+	letter-spacing: var(--text-eyebrow--letter-spacing);
+	text-transform: uppercase;
+	color: var(--color-neutral-600);
+	margin-bottom: 0.7rem;
+}
+
+/* --- output --- */
+
+.calc-out {
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 1rem;
+	background: rgba(255, 255, 255, 0.015);
+	padding: 1.5rem;
+	position: sticky;
+	top: 6.5rem;
+}
+/* Sticky is only ever right on a screen tall enough to hold the panel and
+   still show the inputs moving under it. */
+@media (max-width: 899px), (max-height: 720px) {
+	.calc-out {
+		position: static;
+	}
+}
+.calc-out__label {
+	font-size: var(--text-eyebrow);
+	letter-spacing: var(--text-eyebrow--letter-spacing);
+	text-transform: uppercase;
+	color: var(--color-neutral-500);
+}
+.calc-figure {
+	margin-top: 0.85rem;
+	display: flex;
+	align-items: baseline;
+	gap: 0.45rem;
+	flex-wrap: wrap;
+}
+.calc-figure__n {
+	font-size: clamp(2.1rem, 1.8rem + 1.4vw, 2.75rem);
+	line-height: 1.05;
+	letter-spacing: -0.02em;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-neutral-50);
+}
+.calc-figure__u {
+	font-size: var(--text-body);
+	color: var(--color-neutral-500);
+}
+.calc-figure__sub {
+	margin-top: 0.4rem;
+	font-size: var(--text-small);
+	color: var(--color-neutral-500);
+	font-variant-numeric: tabular-nums;
+}
+
+/* The secondary numbers under the headline one. */
+.calc-rows {
+	margin-top: 1.4rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.calc-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.62rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+	font-size: var(--text-small);
+}
+.calc-row:last-child {
+	border-bottom: none;
+}
+.calc-row__k {
+	color: var(--color-neutral-500);
+	min-width: 0;
+}
+.calc-row__v {
+	color: var(--color-neutral-200);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	flex-shrink: 0;
+}
+.calc-row__v em {
+	font-style: normal;
+	color: var(--color-neutral-500);
+}
+.calc-row--lead .calc-row__v {
+	color: var(--color-neutral-50);
+	font-weight: 500;
+}
+
+/* Status colours. Used for one thing only — whether a number is inside its
+   limit — so they never become decoration. */
+.calc-v-warn {
+	color: #f2b53c !important;
+}
+.calc-v-bad {
+	color: #e8564a !important;
+}
+.calc-v-good {
+	color: #3fa96a !important;
+}
+
+/* A flag that appears only when a number needs a caveat: over the aspect
+   ratio, under the code minimum, past the point bags stop making sense. */
+.calc-flag {
+	margin-top: 1.1rem;
+	border-radius: 0.7rem;
+	border: 1px solid rgba(242, 181, 60, 0.22);
+	background: rgba(242, 181, 60, 0.045);
+	padding: 0.8rem 0.95rem;
+	font-size: var(--text-small);
+	line-height: 1.55;
+	color: var(--color-neutral-300);
+}
+.calc-flag b {
+	font-weight: 500;
+	color: #f2b53c;
+}
+.calc-flag[hidden] {
+	display: none;
+}
+.calc-flag--info {
+	border-color: rgba(139, 166, 255, 0.22);
+	background: rgba(139, 166, 255, 0.04);
+}
+.calc-flag--info b {
+	color: #8ba6ff;
+}
+
+/* --- formula --- */
+/* Shown under every calculator, always visible rather than behind a
+   disclosure — the arithmetic is the point of a tool like this, and hiding it
+   turns a calculator into something you have to take on trust. */
+.calc-formula {
+	margin-top: 2rem;
+	border-radius: 0.85rem;
+	border: 1px solid rgba(255, 255, 255, 0.055);
+	padding: 1.15rem 1.3rem;
+}
+.calc-formula__label {
+	font-size: var(--text-eyebrow);
+	letter-spacing: var(--text-eyebrow--letter-spacing);
+	text-transform: uppercase;
+	color: var(--color-neutral-600);
+}
+.calc-formula__eq {
+	margin-top: 0.85rem;
+	font-size: 0.95rem;
+	line-height: 1.75;
+	color: var(--color-neutral-300);
+	font-variant-numeric: tabular-nums;
+	overflow-x: auto;
+}
+.calc-formula__eq div + div {
+	margin-top: 0.35rem;
+}
+.calc-formula__eq b {
+	font-weight: 500;
+	color: var(--color-neutral-100);
+}
+.calc-formula__eq i {
+	font-style: normal;
+	color: var(--color-neutral-500);
+}
+.calc-formula__note {
+	margin-top: 0.9rem;
+	font-size: var(--text-small);
+	line-height: 1.6;
+	color: var(--color-neutral-500);
+}
+
+/* --- reference tables --- */
+
+.calc-tablewrap {
+	margin-top: 1.25rem;
+	overflow-x: auto;
+	border: 1px solid rgba(255, 255, 255, 0.055);
+	border-radius: 0.85rem;
+}
+.calc-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--text-small);
+	font-variant-numeric: tabular-nums;
+	min-width: 30rem;
+}
+.calc-table th {
+	text-align: left;
+	font-weight: 500;
+	color: var(--color-neutral-400);
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	white-space: nowrap;
+}
+.calc-table td {
+	padding: 0.65rem 1rem;
+	color: var(--color-neutral-400);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.calc-table tr:last-child td {
+	border-bottom: none;
+}
+.calc-table tr[data-live='true'] td {
+	background: rgba(139, 166, 255, 0.07);
+	color: var(--color-neutral-100);
+}
+
+/* Options list for duct alternatives — a table would be overkill for three
+   rows that are really one answer expressed three ways. */
+.calc-opts {
+	display: grid;
+	gap: 0.5rem;
+	margin-top: 0.9rem;
+}
+.calc-opt {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.6rem 0.85rem;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 0.6rem;
+	font-size: var(--text-small);
+	font-variant-numeric: tabular-nums;
+}
+.calc-opt__d {
+	color: var(--color-neutral-100);
+}
+.calc-opt__m {
+	color: var(--color-neutral-500);
+	font-size: 0.8rem;
+	text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.calc-control,
+	.calc-seg span,
+	.calc-toggle__track,
+	.calc-toggle__track::after,
+	.calc-pick,
+	.calc-pick__box,
+	.calc-pick__box::after {
+		transition: none;
+	}
+}

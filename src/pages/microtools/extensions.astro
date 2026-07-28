@@ -10,7 +10,7 @@ import ExtensionPreview from '../../components/ExtensionPreview.tsx';
 // the actual effect on a loop rather than showing a recording of it.
 const extensions: {
 	name: string;
-	slug: 'colourway' | 'typeset' | 'by-hand';
+	slug: 'colourway' | 'typeset' | 'by-hand' | 'cold-read';
 	tagline: string;
 	body: string;
 	options: string;
@@ -66,12 +66,28 @@ const extensions: {
 			'Right-click the icon → Options to pick a medium and paper, then draw any page.',
 		],
 	},
+	{
+		name: 'Cold Read',
+		slug: 'cold-read',
+		tagline: 'Quiz first, then read — and read the parts you got wrong',
+		body: "The odd one out: it doesn't change the page, it covers it. A handful of questions get built from the article's own sentences, you answer them before you've read a word, and you say how sure you were about each. Then the cover lifts and every sentence a question came from is marked in place, coloured by how you did — so the article you're about to read already knows which parts matter to you. Being confidently wrong is the thing a normal quiz can't see, because a score puts you next to someone who guessed right; here it's the one marked brightest. There is no score, and there never will be. A cross isn't a failure, it's a bookmark.",
+		options:
+			'Four to eight questions, the confidence tap on or off, and whether the page is covered while you answer — off means you can scroll away and find the answers, which rather defeats it.',
+		download: '/downloads/extensions/anyrvaan-cold-read.zip',
+		size: '55 KB',
+		steps: [
+			'Unzip it somewhere you intend to keep — deleting the folder uninstalls it.',
+			'Open chrome://extensions (or edge://extensions) and turn on Developer mode.',
+			'Click “Load unpacked” and pick the unzipped folder.',
+			'Click the icon on any article to be quizzed on it; click again, or press Esc, to put it away.',
+		],
+	},
 ];
 ---
 
 <Layout
 	title="Extensions — Anyrvaan Microtools"
-	description="Three browser extensions, each one doing a single thing to whatever page you're already on. Installed by hand, so you can read every line first."
+	description="Four browser extensions, each one doing a single thing to whatever page you're already on. Installed by hand, so you can read every line first."
 >
 	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
@@ -79,13 +95,13 @@ const extensions: {
 			<PageHeader
 				eyebrow="Microtools"
 				title="Extensions"
-				intro="Three of them, each doing a single thing to whatever page you're already on. None are in a web store — you install them by hand, which means you can also read every line before you do. Chrome, Edge, Brave, or any other Chromium browser."
+				intro="Four of them, each doing a single thing to whatever page you're already on. Three change how it looks; the fourth covers it up and asks you what you already know. None are in a web store — you install them by hand, which means you can also read every line before you do. Chrome, Edge, Brave, or any other Chromium browser."
 			/>
 
 <section class="border-t border-white/5 px-6 py-24 sm:py-32">
 				<div class="mx-auto max-w-4xl">
 					<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
-						Three browser extensions, each one doing a single thing to whatever page you're
+						Four browser extensions, each one doing a single thing to whatever page you're
 						already on. None of them are in a web store — you install them by hand, which
 						means you can also read every line before you do.
 					</p>
@@ -97,7 +113,7 @@ const extensions: {
 					<div class="mt-16 space-y-24">
 						{
 							extensions.map((e) => (
-								<article class="reveal">
+								<article class="reveal scroll-mt-28" id={e.slug}>
 									{/* The preview runs the real effect on a loop — not a recording. */}
 									<div class="overflow-hidden rounded-2xl border border-white/10 bg-black">
 										<ExtensionPreview client:visible kind={e.slug} />
@@ -145,16 +161,18 @@ const extensions: {
 					<div class="reveal mt-24 rounded-2xl border border-amber-200/15 bg-amber-100/[0.03] p-8">
 						<p class="text-eyebrow uppercase text-amber-200/70">What they have in common</p>
 						<p class="mt-5 max-w-2xl text-body text-neutral-300">
-							All three are wired to notice when you stop. Leave the cursor alone and motes
+							All four are wired to notice when you stop. Leave the cursor alone and motes
 							drift in from the edges of the screen — pigment in Colourway, letterforms in
-							Typeset, graphite in By Hand — curl toward the pointer, and are taken by it.
-							They arrive on their own schedule, never the same gap twice, so you can't
-							learn to expect them.
+							Typeset, graphite in By Hand, questions in Cold Read — curl toward the pointer,
+							and are taken by it. They arrive on their own schedule, never the same gap
+							twice, so you can't learn to expect them.
 						</p>
 						<p class="mt-4 max-w-2xl text-body text-neutral-500">
-							None of them ask for network access, so none of them can phone home. Settings
-							live in your browser's own synced storage. Every one is a lens you hold up —
-							reload the page and the real site is back.
+							None of them ask for network access, so none of them can phone home — not even
+							Cold Read, which builds its questions on your machine out of the page's own
+							sentences rather than sending them anywhere. Settings live in your browser's
+							own synced storage. Every one of them is something you hold up to a page for a
+							moment: reload it and the real site is back.
 						</p>
 					</div>
 				</div>

@@ -21,7 +21,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-export type PreviewKind = 'colourway' | 'typeset' | 'by-hand';
+export type PreviewKind = 'colourway' | 'typeset' | 'by-hand' | 'cold-read';
 
 const W = 1120;
 const H = 630;
@@ -134,6 +134,26 @@ const PAGES: Record<PreviewKind, { query: string; results: Result[] }> = {
 			},
 		],
 	},
+	'cold-read': {
+		query: 'why do we forget what we just read',
+		results: [
+			{
+				site: 'Retrieval', url: 'retrieval.example › testing › effect', dot: '#4b7bec',
+				title: 'Testing yourself beats reading it twice',
+				snip: ['Trying to recall something changes what happens next —', 'and it works even when you get it wrong.'],
+			},
+			{
+				site: 'Fluency', url: 'fluency.example › illusion', dot: '#e8564a',
+				title: 'The illusion that reading it means knowing it',
+				snip: ['Familiarity feels like understanding, right up until', 'somebody asks you a question about it.'],
+			},
+			{
+				site: 'Spacing', url: 'spacing.example › intervals', dot: '#3fa96a',
+				title: 'Why the gap matters more than the hours',
+				snip: ['The forgetting is not the enemy. It is the mechanism.'],
+			},
+		],
+	},
 	'by-hand': {
 		query: 'why does handwriting look human',
 		results: [
@@ -216,6 +236,7 @@ const RECTS: Record<PreviewKind, Rect[]> = {
 	colourway: layout('colourway'),
 	typeset: layout('typeset'),
 	'by-hand': layout('by-hand'),
+	'cold-read': layout('cold-read'),
 };
 
 // ---- component -----------------------------------------------------------
@@ -311,6 +332,9 @@ const HERO: Record<PreviewKind, number> = {
 	colourway: 6200,
 	typeset: 6200,
 	'by-hand': 6600,
+	// The held frame is the trail, not the quiz card — the marks in the page
+	// are the thing worth looking at once everything has stopped moving.
+	'cold-read': 8200,
 };
 
 const LABELS: Record<PreviewKind, string> = {
@@ -320,6 +344,8 @@ const LABELS: Record<PreviewKind, string> = {
 		'A search is typed into a browser, results appear, and then the page is re-set in a different typeface as a wave passes down it.',
 	'by-hand':
 		'A search is typed into a browser, results appear, and then the whole page is redrawn in pen strokes on paper, box by box.',
+	'cold-read':
+		'A search is typed into a browser, results appear, and then the page goes behind a wash while a question is asked about it. The answer given is wrong, and when the wash lifts the sentences the questions came from are marked in the page.',
 };
 
 // ---------------------------------------------------------------------------
@@ -362,6 +388,7 @@ function draw(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number, seed:
 
 	if (kind === 'colourway') drawColourway(ctx, t, on, typed, results);
 	else if (kind === 'typeset') drawTypeset(ctx, t, rise, fall, on, typed, results);
+	else if (kind === 'cold-read') drawColdRead(ctx, t, typed, results);
 	else drawByHand(ctx, t, on, typed, results);
 
 	drawChrome(ctx, kind, typed, on);
@@ -1088,6 +1115,207 @@ function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
 	ctx.restore();
 }
 
+// ---- cold read -------------------------------------------------------------
+// The only effect in the set that doesn't change the page. It covers it,
+// asks a question, and then marks the sentences the questions came from —
+// so the "effect" is really the trail left behind once the card has gone.
+//
+// Beats sit inside the shared window: the wash arrives at 2.6s, an answer is
+// picked at 4.2s, the confidence tap at 4.8s, the verdict at 5.4s, and the
+// wash lifts at 6.6s so the marks can sweep on underneath it.
+
+const CR = {
+	stem: ['Testing yourself beats', 'reading it ______'],
+	options: ['twice', 'aloud', 'slowly', 'later'],
+	answer: 0,
+	picked: 3, // wrong, and confidently so — which is the whole point
+	WASH_A: 2560, WASH_B: 3100,
+	CARD_A: 2760, CARD_B: 3400,
+	PICK: 4200,
+	CONF_A: 4700, CONF_B: 5100,
+	SURE: 5400,
+	REVEAL: 5700,
+	LIFT_A: 6600, LIFT_B: 7150,
+	MARK_A: 6950, MARK_B: 8000,
+};
+
+function drawColdRead(ctx: CanvasRenderingContext2D, t: number, typed: number, results: number) {
+	paintPage(ctx, 'cold-read', { typed, results, t });
+
+	const rects = RECTS['cold-read'];
+	const wash =
+		easeInOut(ramp(t, CR.WASH_A, CR.WASH_B)) * (1 - easeInOut(ramp(t, CR.LIFT_A, CR.LIFT_B)));
+
+	// ---- the marks, swept on under the lifting wash ----
+	// Two of the three results: the one whose question was got wrong, in amber,
+	// and one that was guessed, in blue. The third is left clean, because a
+	// trail that covers everything is not a trail.
+	const mark = easeOut(ramp(t, CR.MARK_A, CR.MARK_B)) * (1 - easeInOut(ramp(t, OFF_A, OFF_B)));
+	if (mark > 0.01) {
+		const bands: { group: number; kinds: RectKind[]; tint: string; line: string }[] = [
+			{ group: 0, kinds: ['title'], tint: 'rgba(233,167,60,0.26)', line: '#E9A73C' },
+			{ group: 1, kinds: ['snip'], tint: 'rgba(139,166,255,0.20)', line: '#8ba6ff' },
+		];
+		let n = 0;
+		for (const band of bands) {
+			for (const r of rects) {
+				if (r.group !== band.group || !band.kinds.includes(r.kind)) continue;
+				// Each bar wipes in from its left edge, one after another.
+				const local = clamp01((mark - n * 0.12) / 0.5);
+				n++;
+				if (local <= 0.01) continue;
+				const w = r.w * easeOut(local);
+				ctx.save();
+				ctx.globalAlpha = mark;
+				ctx.fillStyle = band.tint;
+				ctx.fillRect(r.x - 3, r.y - 2, w + 6, r.h + 5);
+				ctx.fillStyle = band.line;
+				ctx.fillRect(r.x - 3, r.y + r.h + 2, w + 6, 1.6);
+				ctx.restore();
+			}
+		}
+
+		// The rail, down the right edge of the page — a minimap of the marks.
+		ctx.save();
+		ctx.globalAlpha = mark;
+		for (const band of bands) {
+			const first = rects.find((r) => r.group === band.group && band.kinds.includes(r.kind));
+			if (!first) continue;
+			ctx.fillStyle = band.line;
+			ctx.beginPath();
+			ctx.arc(PAGE.x + PAGE.w - 14, first.y + 6, 3.6, 0, Math.PI * 2);
+			ctx.fill();
+		}
+		ctx.restore();
+	}
+
+	// ---- the wash ----
+	if (wash > 0.01) {
+		ctx.save();
+		ctx.globalAlpha = wash;
+		ctx.fillStyle = 'rgba(8,8,11,0.82)';
+		ctx.fillRect(PAGE.x, PAGE.y, PAGE.w, PAGE.h);
+		ctx.restore();
+	}
+
+	// ---- the card ----
+	const card =
+		easeOut(ramp(t, CR.CARD_A, CR.CARD_B)) * (1 - easeInOut(ramp(t, CR.LIFT_A, CR.LIFT_B - 150)));
+	if (card <= 0.01) return;
+
+	const cw = 470;
+	const chh = 300;
+	const cx = PAGE.x + (PAGE.w - cw) / 2;
+	const cy = PAGE.y + (PAGE.h - chh) / 2 + (1 - easeOut(ramp(t, CR.CARD_A, CR.CARD_B))) * 22;
+
+	ctx.save();
+	ctx.globalAlpha = card;
+
+	roundRect(ctx, cx, cy, cw, chh, 10);
+	ctx.fillStyle = '#0a0a0d';
+	ctx.fill();
+	ctx.strokeStyle = 'rgba(236,230,219,0.16)';
+	ctx.lineWidth = 1;
+	ctx.stroke();
+
+	// Eyebrow and progress dots.
+	ctx.font = `500 11px ${UI}`;
+	ctx.fillStyle = 'rgba(236,230,219,0.45)';
+	ctx.fillText('COLD READ', cx + 26, cy + 26);
+	for (let i = 0; i < 6; i++) {
+		ctx.fillStyle = i === 1 ? '#E9A73C' : i < 1 ? 'rgba(236,230,219,0.5)' : 'rgba(236,230,219,0.18)';
+		ctx.beginPath();
+		ctx.arc(cx + cw - 26 - (5 - i) * 11, cy + 30, 2.6, 0, Math.PI * 2);
+		ctx.fill();
+	}
+
+	// The stem, with the blank in amber.
+	ctx.font = `400 22px ${SERIF_DISPLAY}`;
+	ctx.fillStyle = '#ECE6DB';
+	ctx.fillText(CR.stem[0], cx + 26, cy + 58);
+	const head = 'reading it ';
+	ctx.fillText(head, cx + 26, cy + 90);
+	ctx.fillStyle = '#E9A73C';
+	ctx.fillText('______', cx + 26 + ctx.measureText(head).width, cy + 90);
+
+	const revealed = t >= CR.REVEAL;
+
+	if (!revealed) {
+		// Four options, two up two across, with the picked one outlined.
+		const ow = (cw - 52 - 10) / 2;
+		for (let i = 0; i < 4; i++) {
+			const ox = cx + 26 + (i % 2) * (ow + 10);
+			const oy = cy + 138 + Math.floor(i / 2) * 44;
+			const isPicked = t >= CR.PICK && i === CR.picked;
+			roundRect(ctx, ox, oy, ow, 36, 4);
+			ctx.strokeStyle = isPicked ? '#E9A73C' : 'rgba(236,230,219,0.14)';
+			ctx.lineWidth = 1;
+			ctx.stroke();
+			ctx.font = `400 15px ${UI}`;
+			ctx.fillStyle = isPicked ? '#ECE6DB' : 'rgba(236,230,219,0.72)';
+			ctx.fillText(CR.options[i], ox + 14, oy + 12);
+		}
+
+		// The confidence row — one tap, and the reason the verdict can say
+		// "worth a read" rather than just "wrong".
+		const conf = easeOut(ramp(t, CR.CONF_A, CR.CONF_B));
+		if (conf > 0.01) {
+			ctx.save();
+			ctx.globalAlpha = card * conf;
+			ctx.strokeStyle = 'rgba(236,230,219,0.09)';
+			ctx.beginPath();
+			ctx.moveTo(cx + 26, cy + 236);
+			ctx.lineTo(cx + cw - 26, cy + 236);
+			ctx.stroke();
+			ctx.font = `400 13px ${UI}`;
+			ctx.fillStyle = 'rgba(236,230,219,0.55)';
+			ctx.fillText('How sure are you?', cx + 26, cy + 256);
+			const sure = t >= CR.SURE;
+			roundRect(ctx, cx + 178, cy + 248, 74, 30, 3);
+			ctx.strokeStyle = sure ? '#E9A73C' : 'rgba(236,230,219,0.2)';
+			ctx.stroke();
+			if (sure) {
+				ctx.fillStyle = 'rgba(233,167,60,0.14)';
+				ctx.fill();
+			}
+			ctx.fillStyle = '#ECE6DB';
+			ctx.fillText('Sure', cx + 200, cy + 258);
+			roundRect(ctx, cx + 260, cy + 248, 96, 30, 3);
+			ctx.strokeStyle = 'rgba(236,230,219,0.2)';
+			ctx.stroke();
+			ctx.fillStyle = 'rgba(236,230,219,0.72)';
+			ctx.fillText('Guessing', cx + 276, cy + 258);
+			ctx.restore();
+		}
+	} else {
+		// The verdict. Never a score — the words are the product.
+		const rv = easeOut(ramp(t, CR.REVEAL, CR.REVEAL + 420));
+		ctx.save();
+		ctx.globalAlpha = card * rv;
+		ctx.font = `400 24px ${SERIF_DISPLAY}`;
+		ctx.fillStyle = '#E9A73C';
+		ctx.fillText('✗  Worth a read', cx + 26, cy + 146);
+		ctx.font = `400 15px ${UI}`;
+		ctx.fillStyle = 'rgba(236,230,219,0.78)';
+		ctx.fillText('You said “later”. It is “twice”.', cx + 26, cy + 190);
+		ctx.font = `400 13px ${UI}`;
+		ctx.fillStyle = 'rgba(236,230,219,0.45)';
+		ctx.fillText('You were sure — so this one gets marked in the page.', cx + 26, cy + 220);
+		roundRect(ctx, cx + 26, cy + 248, 150, 32, 3);
+		ctx.strokeStyle = 'rgba(233,167,60,0.7)';
+		ctx.lineWidth = 1;
+		ctx.stroke();
+		ctx.fillStyle = 'rgba(233,167,60,0.12)';
+		ctx.fill();
+		ctx.font = `400 13px ${UI}`;
+		ctx.fillStyle = '#ECE6DB';
+		ctx.fillText('See the trail', cx + 56, cy + 258);
+		ctx.restore();
+	}
+
+	ctx.restore();
+}
+
 function cursorAt(kind: PreviewKind, t: number) {
 	const a = (t / LOOP) * Math.PI * 2;
 	if (kind === 'colourway') {
@@ -1151,6 +1379,17 @@ function drawMotes(ctx: CanvasRenderingContext2D, kind: PreviewKind, t: number, 
 			ctx.shadowBlur = 16;
 			ctx.fillStyle = `rgba(255,226,178,${a.toFixed(2)})`;
 			ctx.fillText('aegQ&¶§'[i % 7], x, y);
+			ctx.textAlign = 'left';
+			ctx.textBaseline = 'top';
+		} else if (kind === 'cold-read') {
+			// Questions, with the odd tick and cross among them.
+			ctx.font = `${(12 + hash(s0, 6) * 9) * tier + merge * 10}px ${SERIF_DISPLAY}`;
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			ctx.shadowColor = `rgba(233,167,60,${(a * 0.9).toFixed(2)})`;
+			ctx.shadowBlur = 16;
+			ctx.fillStyle = `rgba(255,238,205,${a.toFixed(2)})`;
+			ctx.fillText('?????✓✗'[i % 7], x, y);
 			ctx.textAlign = 'left';
 			ctx.textBaseline = 'top';
 		} else if (kind === 'by-hand') {

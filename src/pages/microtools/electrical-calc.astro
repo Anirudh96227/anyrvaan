@@ -1,0 +1,862 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+import ToolPreview from '../../components/ToolPreview.tsx';
+
+// Running and starting watts for the things people actually put on a generator.
+// Anything with a motor draws several times its running figure for the second
+// or so it takes to come up to speed; anything that is essentially a heating
+// element draws the same on the first cycle as the thousandth. That gap is the
+// whole reason this page exists, so both numbers are carried for every entry.
+//
+// Figures are mid-range for domestic equipment. A nameplate beats all of them.
+type Appliance = { name: string; run: number; surge: number };
+type Group = { name: string; items: Appliance[] };
+
+const GROUPS: Group[] = [
+	{
+		name: 'Kitchen',
+		items: [
+			{ name: 'Refrigerator / freezer', run: 700, surge: 2200 },
+			{ name: 'Chest freezer', run: 500, surge: 1500 },
+			{ name: 'Microwave, 1000 W', run: 1000, surge: 1000 },
+			{ name: 'Electric kettle', run: 1500, surge: 1500 },
+			{ name: 'Coffee maker', run: 1000, surge: 1000 },
+			{ name: 'Dishwasher', run: 1500, surge: 1500 },
+			{ name: 'Electric oven', run: 3000, surge: 3000 },
+		],
+	},
+	{
+		name: 'Utility',
+		items: [
+			{ name: 'Washing machine', run: 1200, surge: 2300 },
+			{ name: 'Tumble dryer, electric', run: 3000, surge: 3400 },
+			{ name: 'Water heater, storage', run: 3000, surge: 3000 },
+			{ name: 'Well pump, ½ HP', run: 1000, surge: 2100 },
+			{ name: 'Sump pump, ⅓ HP', run: 800, surge: 1300 },
+		],
+	},
+	{
+		name: 'Heating & cooling',
+		items: [
+			{ name: 'Furnace blower, ½ HP', run: 800, surge: 2350 },
+			{ name: 'Central AC, 3 ton', run: 3500, surge: 10500 },
+			{ name: 'Window AC, 12,000 BTU', run: 1200, surge: 3600 },
+			{ name: 'Portable heater', run: 1500, surge: 1500 },
+			{ name: 'Dehumidifier', run: 650, surge: 1800 },
+		],
+	},
+	{
+		name: 'Around the house',
+		items: [
+			{ name: 'Lighting, LED throughout', run: 200, surge: 200 },
+			{ name: 'Television, 55 in', run: 150, surge: 150 },
+			{ name: 'Desktop computer + monitor', run: 400, surge: 400 },
+			{ name: 'Router, modem, chargers', run: 50, surge: 50 },
+			{ name: 'Garage door opener, ½ HP', run: 600, surge: 1400 },
+		],
+	},
+	{
+		name: 'Site & tools',
+		items: [
+			{ name: 'Circular saw, 7¼ in', run: 1400, surge: 2300 },
+			{ name: 'Air compressor, 2 HP', run: 1600, surge: 4500 },
+			{ name: 'Corded drill', run: 700, surge: 1200 },
+		],
+	},
+];
+
+// Ticked on load, so the page opens on a plausible outage rather than zero.
+// These are deliberately the same six the preview animates: 2,900 W running,
+// 4,450 W the moment the blower starts. The film and the calculator agreeing
+// on the opening frame is the whole reason to put them on one page.
+const PRESET = new Set([
+	'Refrigerator / freezer',
+	'Lighting, LED throughout',
+	'Television, 55 in',
+	'Router, modem, chargers',
+	'Furnace blower, ½ HP',
+	'Well pump, ½ HP',
+]);
+
+const COUNT = GROUPS.reduce((a, g) => a + g.items.length, 0);
+---
+
+<Layout
+	title="Electrical Calculator — Anyrvaan Microtools"
+	description="Load calculation from 25 appliances with running and starting watts, generator sizing that accounts for motor surge, and NEC 80% breaker sizing with conductor and voltage drop."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Electrical Calculator"
+				intro="Add up what has to run, work out what has to start, and size the two things that follow from it — the generator and the breaker. The arithmetic is printed under each one."
+				label={`${COUNT} appliances, running and starting watts`}
+			/>
+
+			<section class="border-t border-white/5 px-6 pt-16">
+				<div class="mx-auto max-w-5xl">
+					<div class="reveal overflow-hidden rounded-2xl border border-white/10 bg-black">
+						<ToolPreview client:visible kind="electrical" />
+					</div>
+					<p class="reveal mt-5 max-w-2xl text-small text-neutral-500">
+						Five appliances, 2,900 W running — and 4,450 W for the second the blower starts.
+						Sizing to the first number is how a generator ends up stalling on the coldest night
+						of the year.
+					</p>
+				</div>
+			</section>
+
+			<section class="px-6 py-20 sm:py-24" data-calc-page="electrical">
+				<div class="mx-auto max-w-5xl">
+					<!-- ============================ LOAD ============================ -->
+					<div class="calc reveal" style="border-top: none; padding-top: 0;">
+						<div class="calc__head">
+							<h2 class="calc__title">Load</h2>
+							<p class="calc__lede">
+								Tick what has to keep working. Each entry carries a running figure and a
+								starting one — motors, compressors and pumps pull two to six times their
+								running watts for the moment they come up to speed, and that moment is what
+								everything downstream gets sized against.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="calc-fields calc-fields--2">
+									<div class="calc-field">
+										<label class="calc-label" for="e-volts">Supply voltage</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="e-volts">
+												<option value="120">120 V — North America, general</option>
+												<option value="240" selected
+													>240 V — North America, large appliance</option
+												>
+												<option value="230">230 V — UK, Europe, most of the world</option>
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="e-pf"
+											>Power factor <span>· for kVA</span></label
+										>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="e-pf">
+												<option value="1">1.00 — resistive only</option>
+												<option value="0.8" selected>0.80 — generator standard</option>
+												<option value="0.9">0.90 — mostly electronics</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="mt-7 flex flex-wrap items-center gap-4">
+									<button type="button" class="calc-textbtn" data-act="none">Clear all</button>
+									<button type="button" class="calc-textbtn" data-act="essentials"
+										>Essentials only</button
+									>
+									<button type="button" class="calc-textbtn" data-act="all">Select all</button>
+								</div>
+
+								<div class="mt-6">
+									{
+										GROUPS.map((g) => (
+											<div class="calc-group">
+												<p class="calc-group__name">{g.name}</p>
+												<div class="calc-picker">
+													{g.items.map((a) => (
+														<div class="calc-pick">
+															<label class="calc-pick__main">
+																<input
+																	type="checkbox"
+																	data-run={a.run}
+																	data-surge={a.surge}
+																	data-name={a.name}
+																	checked={PRESET.has(a.name)}
+																/>
+																<span class="calc-pick__box" />
+																<span class="calc-pick__name">{a.name}</span>
+															</label>
+															<span class="calc-pick__w">
+																{a.run.toLocaleString('en-GB')} W
+																{a.surge > a.run && (
+																	<span class="calc-pick__surge">
+																		↑{a.surge.toLocaleString('en-GB')}
+																	</span>
+																)}
+															</span>
+															<input
+																class="calc-pick__qty"
+																type="number"
+																min="1"
+																max="99"
+																step="1"
+																value="1"
+																aria-label={`How many — ${a.name}`}
+															/>
+														</div>
+													))}
+												</div>
+											</div>
+										))
+									}
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>Running</i> = sum of every running watt</div>
+										<div data-out="l-eq1">2,900 W</div>
+										<div class="pt-2">
+											<i>Peak</i> = running − that motor's running watts + its starting watts
+										</div>
+										<div data-out="l-eq2">4,450 W = 2,900 − 800 + 2,350</div>
+									</div>
+									<p class="calc-formula__note">
+										Peak is <b>not</b> the running total plus every surge added together.
+										Motors start one at a time, so only the largest single start counts — and
+										it <i>replaces</i> that motor's running figure rather than stacking on top
+										of it. Adding all the surges together is how people end up buying twice
+										the generator they need.
+									</p>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Running load</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="l-run">2,900</span>
+									<span class="calc-figure__u">W</span>
+								</div>
+								<p class="calc-figure__sub" data-out="l-run-sub">2.90 kW · 12.1 A at 240 V</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Peak on start</span>
+										<span class="calc-row__v" data-out="l-peak">4,450 W</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Started by</span>
+										<span class="calc-row__v" data-out="l-starter">Furnace blower, ½ HP</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Apparent power</span>
+										<span class="calc-row__v" data-out="l-kva">3.63 kVA</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Items selected</span>
+										<span class="calc-row__v" data-out="l-n">6</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">If it ran a full day</span>
+										<span class="calc-row__v" data-out="l-kwh">69.6 kWh</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="l-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ========================== GENERATOR ========================== -->
+					<div class="calc reveal">
+						<div class="calc__head">
+							<h2 class="calc__title">Generator</h2>
+							<p class="calc__lede">
+								Two tests, both of which have to pass. The running load has to sit inside the
+								set's continuous rating with headroom to spare, and the peak has to fit inside
+								its surge rating. Whichever is the binding one decides the size.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="calc-fields calc-fields--2">
+									<div class="calc-field">
+										<label class="calc-label" for="g-head"
+											>Continuous headroom <span>· of rated output</span></label
+										>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="g-head">
+												<option value="0.9">90% — occasional use, short runs</option>
+												<option value="0.8" selected>80% — standby, run for hours</option>
+												<option value="0.7">70% — days at a time, or hot climate</option>
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="g-surge"
+											>Surge capability <span>· above rated</span></label
+										>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="g-surge">
+												<option value="1.1">10% — small inverter sets</option>
+												<option value="1.25" selected>25% — typical portable</option>
+												<option value="1.5">50% — better open-frame sets</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>Rating needed</i> = the larger of</div>
+										<div data-out="g-eq1">running ÷ 0.80 = 3,625 W</div>
+										<div data-out="g-eq2">peak ÷ 1.25 = 3,560 W</div>
+										<div class="pt-2" data-out="g-eq3">→ next size up = 4,000 W</div>
+									</div>
+									<p class="calc-formula__note">
+										A generator held at its plate rating all night is a generator you replace
+										early. The headroom figure is what turns "it fits" into "it will still fit
+										in five years", and it is the reason the answer is rarely the size that
+										matches your total on the nose.
+									</p>
+								</div>
+
+								<div class="calc-tablewrap">
+									<table class="calc-table">
+										<thead>
+											<tr>
+												<th>Rated</th>
+												<th>Continuous, at your headroom</th>
+												<th>Surge available</th>
+												<th>Verdict</th>
+											</tr>
+										</thead>
+										<tbody data-out="g-table"></tbody>
+									</table>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Smallest set that works</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="g-size">4,000</span>
+									<span class="calc-figure__u">W</span>
+								</div>
+								<p class="calc-figure__sub" data-out="g-size-sub">4.0 kW · 5.0 kVA at 0.8 PF</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Binding test</span>
+										<span class="calc-row__v" data-out="g-bind">Continuous</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Continuous capacity</span>
+										<span class="calc-row__v" data-out="g-cont">3,200 W</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Surge capacity</span>
+										<span class="calc-row__v" data-out="g-surgecap">5,000 W</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Loaded to</span>
+										<span class="calc-row__v" data-out="g-util">73%</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Spare running capacity</span>
+										<span class="calc-row__v" data-out="g-spare">300 W</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="g-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- =========================== BREAKER =========================== -->
+					<div class="calc reveal">
+						<div class="calc__head">
+							<h2 class="calc__title">Breaker</h2>
+							<p class="calc__lede">
+								The 80% rule, which is really a 125% rule wearing a different hat. A load that
+								runs three hours or more is <em class="not-italic text-neutral-300"
+									>continuous</em
+								>, and NEC 210.20(A) wants the breaker rated at least 125% of it — the same
+								thing as saying a continuous load may not exceed 80% of the breaker.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="mb-5 flex flex-wrap items-center gap-4">
+									<div class="calc-seg" role="radiogroup" aria-label="Enter load as">
+										<label
+											><input type="radio" name="b-mode" value="w" checked /><span
+												>Watts</span
+											></label
+										>
+										<label
+											><input type="radio" name="b-mode" value="a" /><span>Amps</span></label
+										>
+									</div>
+									<label class="calc-toggle">
+										<input type="checkbox" id="b-cont" checked />
+										<span class="calc-toggle__track"></span>
+										<span>Continuous — runs 3 hours or more</span>
+									</label>
+								</div>
+
+								<div class="calc-fields calc-fields--3">
+									<div class="calc-field">
+										<label class="calc-label" for="b-load">Load</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="b-load"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="50"
+												value="2400"
+											/>
+											<span class="calc-unit" data-out="b-load-u">W</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="b-volts">Circuit voltage</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="b-volts">
+												<option value="120">120 V</option>
+												<option value="240" selected>240 V</option>
+												<option value="208">208 V</option>
+												<option value="230">230 V</option>
+												<option value="277">277 V</option>
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="b-run"
+											>Run length <span>· one way, optional</span></label
+										>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="b-run"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="5"
+												value="60"
+											/>
+											<span class="calc-unit">ft</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>Amps</i> = watts ÷ volts</div>
+										<div data-out="b-eq1">10.0 A = 2,400 ÷ 240</div>
+										<div class="pt-2">
+											<i>Breaker</i> ≥ continuous amps × 1.25 + non-continuous amps
+										</div>
+										<div data-out="b-eq2">12.5 A → next standard size = 15 A</div>
+										<div class="pt-2"><i>Drop</i> = 2 × K × I × L ÷ circular mils</div>
+										<div data-out="b-eq3">2 × 12.9 × 10.0 × 60 ÷ 4,110 = 3.8 V · 1.6%</div>
+									</div>
+									<p class="calc-formula__note">
+										Conductor sizes are 75 °C copper from NEC 310.16, with the small-conductor
+										limits of 240.4(D) applied — which is why 14 AWG is capped at 15 A even
+										though the table says 20. No derating has been applied for ambient
+										temperature or for more than three current-carrying conductors in a
+										raceway; both make the wire bigger, never smaller.
+									</p>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Breaker</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="b-size">15</span>
+									<span class="calc-figure__u">A</span>
+								</div>
+								<p class="calc-figure__sub" data-out="b-size-sub">12.5 A required · 2-pole</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Minimum conductor</span>
+										<span class="calc-row__v" data-out="b-wire">14 AWG Cu</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Load current</span>
+										<span class="calc-row__v" data-out="b-amps">10.0 A</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Continuous limit of this breaker</span>
+										<span class="calc-row__v" data-out="b-limit">12.0 A</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Voltage drop over the run</span>
+										<span class="calc-row__v" data-out="b-vd">3.8 V · 1.6%</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Headroom left</span>
+										<span class="calc-row__v" data-out="b-head">2.0 A</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="b-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ========================= WHAT THIS IS ========================= -->
+					<div class="reveal mt-24 rounded-2xl border border-amber-200/15 bg-amber-100/[0.03] p-8">
+						<p class="text-eyebrow uppercase text-amber-200/70">Read this bit</p>
+						<p class="mt-5 max-w-2xl text-body text-neutral-300">
+							This is a planning tool, not a design. It will get you to the right aisle and the
+							right shortlist — what size set to hire, whether a circuit is close to its limit,
+							roughly what cable a run wants. It is not a substitute for a licensed electrician,
+							and it does not know your local amendments, your ambient temperature, how many
+							conductors share your conduit, or what the inspector wants to see.
+						</p>
+						<p class="mt-4 max-w-2xl text-body text-neutral-500">
+							Anything that gets installed and left should be signed off by someone qualified to
+							sign it off. The formulas are printed above so you can check the working — and so
+							the person you hand it to can too.
+						</p>
+					</div>
+
+					<div class="reveal mt-10">
+						<a
+							href="/microtools"
+							class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100"
+						>
+							<span
+								aria-hidden="true"
+								class="transition-transform group-hover:-translate-x-1">&larr;</span
+							>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	// Standard sizes, in the order you meet them on a shelf.
+	const GEN_SIZES = [
+		1000, 1600, 2000, 2200, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6500, 7000, 7500, 8000,
+		9000, 10000, 11000, 12000, 13000, 14000, 16000, 18000, 20000, 22000, 24000,
+	];
+	const BREAKERS = [15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 125, 150, 175, 200];
+
+	// NEC 310.16, 75 °C copper, with the 240.4(D) small-conductor limits already
+	// applied — the reason 14 AWG stops at 15 A and 12 AWG at 20.
+	const WIRE: { breaker: number; awg: string; cmil: number }[] = [
+		{ breaker: 15, awg: '14 AWG', cmil: 4110 },
+		{ breaker: 20, awg: '12 AWG', cmil: 6530 },
+		{ breaker: 25, awg: '10 AWG', cmil: 10380 },
+		{ breaker: 30, awg: '10 AWG', cmil: 10380 },
+		{ breaker: 35, awg: '8 AWG', cmil: 16510 },
+		{ breaker: 40, awg: '8 AWG', cmil: 16510 },
+		{ breaker: 45, awg: '8 AWG', cmil: 16510 },
+		{ breaker: 50, awg: '8 AWG', cmil: 16510 },
+		{ breaker: 60, awg: '6 AWG', cmil: 26240 },
+		{ breaker: 70, awg: '4 AWG', cmil: 41740 },
+		{ breaker: 80, awg: '4 AWG', cmil: 41740 },
+		{ breaker: 90, awg: '3 AWG', cmil: 52620 },
+		{ breaker: 100, awg: '3 AWG', cmil: 52620 },
+		{ breaker: 110, awg: '2 AWG', cmil: 66360 },
+		{ breaker: 125, awg: '1 AWG', cmil: 83690 },
+		{ breaker: 150, awg: '1/0 AWG', cmil: 105600 },
+		{ breaker: 175, awg: '2/0 AWG', cmil: 133100 },
+		{ breaker: 200, awg: '3/0 AWG', cmil: 167800 },
+	];
+
+	const K_CU = 12.9; // ohm-circular-mils per foot, copper
+
+	const ESSENTIALS = [
+		'Refrigerator / freezer',
+		'Lighting, LED throughout',
+		'Router, modem, chargers',
+		'Furnace blower, ½ HP',
+		'Well pump, ½ HP',
+		'Sump pump, ⅓ HP',
+	];
+
+	function initElectrical() {
+		const found = document.querySelector<HTMLElement>(
+			'[data-calc-page="electrical"]:not([data-calc-ready])'
+		);
+		if (!found) return;
+		// Re-declared as non-nullable: the calculators below are hoisted function
+		// declarations, and TypeScript drops the null-narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.calcReady = 'true';
+
+		const el = <T extends HTMLElement>(sel: string) => root.querySelector(sel) as T | null;
+		const set = (key: string, v: string) => {
+			const n = root.querySelector(`[data-out="${key}"]`);
+			if (n) n.textContent = v;
+		};
+		const flag = (key: string, html: string | null, kind = '') => {
+			const n = root.querySelector(`[data-out="${key}"]`) as HTMLElement | null;
+			if (!n) return;
+			n.className = `calc-flag${kind ? ` calc-flag--${kind}` : ''}`;
+			if (html) {
+				n.innerHTML = html;
+				n.hidden = false;
+			} else {
+				n.hidden = true;
+			}
+		};
+		const num = (sel: string) => {
+			const n = Number((el<HTMLInputElement>(sel) as HTMLInputElement | null)?.value);
+			return Number.isFinite(n) ? n : 0;
+		};
+		const pick = (sel: string, fb: number) => {
+			const n = Number((el<HTMLSelectElement>(sel) as HTMLSelectElement | null)?.value);
+			return Number.isFinite(n) ? n : fb;
+		};
+		const w = (n: number) => `${Math.round(n).toLocaleString('en-GB')} W`;
+		const a = (n: number) => `${n.toFixed(1)} A`;
+		const nextUp = (list: number[], v: number) => list.find((s) => s >= v) ?? list[list.length - 1];
+
+		const rows = () => Array.from(root.querySelectorAll<HTMLElement>('.calc-pick'));
+
+		/** One pass over the ticked rows — everything on the page derives from this. */
+		function tally() {
+			let run = 0;
+			let n = 0;
+			let starter = { name: '—', run: 0, surge: 0, delta: 0 };
+			for (const row of rows()) {
+				const box = row.querySelector<HTMLInputElement>('input[type="checkbox"]');
+				const qtyEl = row.querySelector<HTMLInputElement>('.calc-pick__qty');
+				if (!box || !box.checked) continue;
+				const qty = Math.max(1, Math.min(99, Math.round(Number(qtyEl?.value) || 1)));
+				const r = Number(box.dataset.run) || 0;
+				const s = Number(box.dataset.surge) || r;
+				run += r * qty;
+				n += qty;
+				// Only one motor starts at a time, so we want the single biggest
+				// *step up* from running to starting, not the biggest surge figure.
+				const delta = s - r;
+				if (delta > starter.delta) {
+					starter = { name: box.dataset.name || '—', run: r, surge: s, delta };
+				}
+			}
+			return { run, n, starter, peak: run + starter.delta };
+		}
+
+		function load() {
+			const t = tally();
+			const volts = pick('#e-volts', 240);
+			const pf = pick('#e-pf', 0.8);
+
+			set('l-run', Math.round(t.run).toLocaleString('en-GB'));
+			set(
+				'l-run-sub',
+				`${(t.run / 1000).toFixed(2)} kW · ${(t.run / volts).toFixed(1)} A at ${volts} V`
+			);
+			set('l-peak', w(t.peak));
+			set('l-starter', t.starter.delta > 0 ? t.starter.name : 'nothing with a motor');
+			set('l-kva', `${(t.run / 1000 / pf).toFixed(2)} kVA`);
+			set('l-n', String(t.n));
+			set('l-kwh', `${((t.run * 24) / 1000).toFixed(1)} kWh`);
+
+			set('l-eq1', `${Math.round(t.run).toLocaleString('en-GB')} W`);
+			set(
+				'l-eq2',
+				t.starter.delta > 0
+					? `${Math.round(t.peak).toLocaleString('en-GB')} W = ${Math.round(t.run).toLocaleString('en-GB')} − ${t.starter.run.toLocaleString('en-GB')} + ${t.starter.surge.toLocaleString('en-GB')}`
+					: `${Math.round(t.peak).toLocaleString('en-GB')} W — nothing here surges`
+			);
+
+			if (t.n === 0) {
+				flag('l-flag', 'Nothing ticked yet — the numbers below are waiting on this one.', 'info');
+			} else if (t.starter.delta > 0) {
+				const lift = ((t.peak / t.run - 1) * 100).toFixed(0);
+				flag(
+					'l-flag',
+					`<b>${lift}% above the running total.</b> The ${t.starter.name.toLowerCase()} is the biggest single start here, and it is what the generator has to survive.`,
+					'info'
+				);
+			} else {
+				flag('l-flag', null);
+			}
+			return t;
+		}
+
+		function generator(t: ReturnType<typeof tally>) {
+			const head = pick('#g-head', 0.8);
+			const surgeK = pick('#g-surge', 1.25);
+			const pf = pick('#e-pf', 0.8);
+
+			// Both tests expressed as "what rated output would satisfy this".
+			const needCont = t.run / head;
+			const needSurge = t.peak / surgeK;
+			const need = Math.max(needCont, needSurge);
+			const size = nextUp(GEN_SIZES, need);
+			const binding = needCont >= needSurge ? 'Continuous' : 'Surge on start';
+
+			set('g-size', t.n ? Math.round(size).toLocaleString('en-GB') : '—');
+			set(
+				'g-size-sub',
+				t.n ? `${(size / 1000).toFixed(1)} kW · ${(size / 1000 / pf).toFixed(1)} kVA at ${pf.toFixed(2)} PF` : '—'
+			);
+			set('g-bind', t.n ? binding : '—');
+			set('g-cont', t.n ? w(size * head) : '—');
+			set('g-surgecap', t.n ? w(size * surgeK) : '—');
+			set('g-util', t.n ? `${((t.run / size) * 100).toFixed(0)}%` : '—');
+			set('g-spare', t.n ? w(Math.max(0, size * head - t.run)) : '—');
+
+			set('g-eq1', `running ÷ ${head.toFixed(2)} = ${w(needCont)}`);
+			set('g-eq2', `peak ÷ ${surgeK.toFixed(2)} = ${w(needSurge)}`);
+			set('g-eq3', `→ next size up = ${t.n ? w(size) : '—'}`);
+
+			// Five candidate sizes around the answer, so the choice has context.
+			const body = root.querySelector('[data-out="g-table"]');
+			if (body) {
+				const i = GEN_SIZES.indexOf(size);
+				const from = Math.max(0, i - 2);
+				const slice = GEN_SIZES.slice(from, from + 5);
+				body.innerHTML = slice
+					.map((s) => {
+						const okC = s * head >= t.run;
+						const okS = s * surgeK >= t.peak;
+						const ok = okC && okS;
+						const verdict = !t.n
+							? '—'
+							: ok
+								? 'Works'
+								: !okC && !okS
+									? 'Too small both ways'
+									: !okC
+										? 'Runs too hot'
+										: 'Will stall on start';
+						return `<tr data-live="${t.n > 0 && s === size}"><td>${w(s)}</td><td>${w(s * head)}</td><td>${w(s * surgeK)}</td><td>${verdict}</td></tr>`;
+					})
+					.join('');
+			}
+
+			if (!t.n) {
+				flag('g-flag', null);
+			} else if (binding === 'Surge on start' && needSurge > needCont * 1.15) {
+				flag(
+					'g-flag',
+					`<b>Sized by the start, not the load.</b> You are buying ${w(size)} to run ${w(t.run)}. A soft starter on the ${t.starter.name.toLowerCase()} would cut the surge and could drop you a size or two.`
+				);
+			} else if (size * head - t.run < size * 0.05) {
+				flag(
+					'g-flag',
+					'<b>Not much left over.</b> This set has almost no spare capacity — add one more thing and it moves up a size.'
+				);
+			} else {
+				flag('g-flag', null);
+			}
+		}
+
+		function breaker() {
+			const mode =
+				(root.querySelector('input[name="b-mode"]:checked') as HTMLInputElement | null)?.value ??
+				'w';
+			const volts = pick('#b-volts', 240);
+			const raw = num('#b-load');
+			const amps = mode === 'a' ? raw : volts > 0 ? raw / volts : 0;
+			const cont = (el<HTMLInputElement>('#b-cont') as HTMLInputElement | null)?.checked ?? false;
+			const runFt = num('#b-run');
+
+			set('b-load-u', mode === 'a' ? 'A' : 'W');
+
+			// The rule itself: 125% of a continuous load, 100% of everything else.
+			const required = cont ? amps * 1.25 : amps;
+			const size = nextUp(BREAKERS, required);
+			const wire = WIRE.find((x) => x.breaker === size) ?? WIRE[WIRE.length - 1];
+			const poles = volts > 130 ? '2-pole' : '1-pole';
+
+			set('b-size', amps > 0 ? String(size) : '—');
+			set('b-size-sub', amps > 0 ? `${required.toFixed(1)} A required · ${poles}` : '—');
+			set('b-wire', amps > 0 ? `${wire.awg} Cu` : '—');
+			set('b-amps', amps > 0 ? a(amps) : '—');
+			set('b-limit', amps > 0 ? a(size * 0.8) : '—');
+			set('b-head', amps > 0 ? a(Math.max(0, (cont ? size * 0.8 : size) - amps)) : '—');
+
+			// Voltage drop over the run, single phase, one-way length doubled.
+			const vd = runFt > 0 && wire.cmil ? (2 * K_CU * amps * runFt) / wire.cmil : 0;
+			const vdPct = volts > 0 ? (vd / volts) * 100 : 0;
+			set('b-vd', runFt > 0 && amps > 0 ? `${vd.toFixed(1)} V · ${vdPct.toFixed(1)}%` : '—');
+
+			set('b-eq1', mode === 'a' ? `${a(amps)} — entered directly` : `${a(amps)} = ${raw.toLocaleString('en-GB')} ÷ ${volts}`);
+			set(
+				'b-eq2',
+				`${required.toFixed(1)} A ${cont ? '(× 1.25 continuous)' : '(non-continuous)'} → next standard size = ${amps > 0 ? size : '—'} A`
+			);
+			set(
+				'b-eq3',
+				runFt > 0 && amps > 0
+					? `2 × ${K_CU} × ${amps.toFixed(1)} × ${runFt} ÷ ${wire.cmil.toLocaleString('en-GB')} = ${vd.toFixed(1)} V · ${vdPct.toFixed(1)}%`
+					: 'add a run length to see this'
+			);
+
+			// Voltage drop is the thing that quietly makes the wire bigger than the
+			// breaker table says, so it gets the flag when it bites.
+			if (amps <= 0) {
+				flag('b-flag', null);
+			} else if (required > BREAKERS[BREAKERS.length - 1]) {
+				// Past the top of the table the answer stops being a breaker size.
+				flag(
+					'b-flag',
+					`<b>${required.toFixed(0)} A is past the end of this table.</b> Above 200 A you are sizing a service rather than a circuit, and the conductor is chosen from a different set of rules than the one used here.`
+				);
+			} else if (vdPct > 3) {
+				const better = WIRE.filter((x) => x.cmil > wire.cmil).find(
+					(x) => ((2 * K_CU * amps * runFt) / x.cmil / volts) * 100 <= 3
+				);
+				flag(
+					'b-flag',
+					`<b>${vdPct.toFixed(1)}% drop over ${runFt} ft.</b> The recommended limit for a branch circuit is 3%. ${
+						better
+							? `Going up to ${better.awg} brings it to ${(((2 * K_CU * amps * runFt) / better.cmil / volts) * 100).toFixed(1)}%.`
+							: 'This run wants rethinking rather than re-wiring.'
+					}`
+				);
+			} else if (size >= 100) {
+				flag(
+					'b-flag',
+					'<b>This is service-sized.</b> Past 100 A you are into feeder and service rules, where a different set of tables applies — including the 83% allowance for dwelling services.',
+					'info'
+				);
+			} else {
+				flag('b-flag', null);
+			}
+		}
+
+		function recalc() {
+			const t = load();
+			generator(t);
+			breaker();
+		}
+
+		// Preset buttons — the fastest way to get to a realistic starting point.
+		root.addEventListener('click', (e) => {
+			const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
+			if (!btn) return;
+			const act = btn.dataset.act;
+			for (const row of rows()) {
+				const box = row.querySelector<HTMLInputElement>('input[type="checkbox"]');
+				if (!box) continue;
+				box.checked =
+					act === 'all' ? true : act === 'essentials' ? ESSENTIALS.includes(box.dataset.name || '') : false;
+			}
+			recalc();
+		});
+
+		root.addEventListener('input', recalc);
+		root.addEventListener('change', recalc);
+		recalc();
+	}
+
+	document.addEventListener('astro:page-load', initElectrical);
+	initElectrical();
+</script>

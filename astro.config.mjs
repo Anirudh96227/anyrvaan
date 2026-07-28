@@ -20,6 +20,19 @@ export default defineConfig({
   },
   integrations: [sitemap(), react()],
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    // Transformers.js ships its own onnxruntime-web WASM binaries and resolves
+    // them relative to its own module URL. Vite's dependency pre-bundling
+    // rewrites that URL and the runtime then looks for the .wasm files in the
+    // wrong place, so the library has to be left alone.
+    optimizeDeps: {
+      exclude: ['@huggingface/transformers'],
+    },
+    // onnxruntime-node is the server-side backend. It gets pulled in by the
+    // package's entry point but is useless in a browser build, and Rollup
+    // fails on its .node binary if it is followed.
+    ssr: {
+      external: ['onnxruntime-node'],
+    },
   }
 });

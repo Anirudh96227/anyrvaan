@@ -1,0 +1,681 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+import ToolPreview from '../../components/ToolPreview.tsx';
+
+// Air change rates by room type. These are the working figures the trade uses
+// rather than anything one standard hands down — ASHRAE 62.1 and 62.2 mostly
+// specify outdoor air per person and per square foot, and the ACH numbers that
+// get quoted on site are the practical translation of that.
+//
+// `min` is different in kind: those are hard floors from ASHRAE 62.2 and the
+// IMC, and they beat the ACH arithmetic whenever the room is small enough for
+// the arithmetic to come out under them. That collision is the one genuinely
+// non-obvious thing on this page, so the calculator calls it out.
+type Room = { name: string; ach: number; min?: number; minNote?: string };
+
+const ROOMS: Room[] = [
+	{ name: 'Bedroom', ach: 5 },
+	{ name: 'Living room', ach: 6 },
+	{ name: 'Home office', ach: 6 },
+	{ name: 'Kitchen, domestic', ach: 8, min: 100, minNote: 'intermittent, vented outside' },
+	{ name: 'Bathroom', ach: 8, min: 50, minNote: 'intermittent — 20 CFM if it runs continuously' },
+	{ name: 'Toilet / WC', ach: 10, min: 50, minNote: 'intermittent' },
+	{ name: 'Laundry', ach: 8, min: 50, minNote: 'intermittent' },
+	{ name: 'Utility / boiler room', ach: 10 },
+	{ name: 'Basement', ach: 4 },
+	{ name: 'Garage', ach: 8 },
+	{ name: 'Workshop', ach: 10 },
+	{ name: 'Open office', ach: 6 },
+	{ name: 'Conference room', ach: 10 },
+	{ name: 'Classroom', ach: 6 },
+	{ name: 'Retail floor', ach: 8 },
+	{ name: 'Restaurant dining', ach: 9 },
+	{ name: 'Commercial kitchen', ach: 20 },
+	{ name: 'Gym / studio', ach: 8 },
+	{ name: 'Server room', ach: 12 },
+	{ name: 'Warehouse', ach: 5 },
+];
+
+// Design velocities in FPM. The residential figures are low on purpose — past
+// about 900 FPM a branch duct stops being something you can ignore in a quiet
+// room, which is the constraint that actually decides domestic duct size.
+const ROLES = [
+	{ name: 'Supply branch — residential', fpm: 600 },
+	{ name: 'Supply main — residential', fpm: 900 },
+	{ name: 'Return — residential', fpm: 700 },
+	{ name: 'Supply branch — commercial', fpm: 1000 },
+	{ name: 'Supply main — commercial', fpm: 1500 },
+	{ name: 'Return — commercial', fpm: 1200 },
+];
+---
+
+<Layout
+	title="HVAC Calculator — Anyrvaan Microtools"
+	description="Room ventilation in CFM from air changes per hour by room type, and duct sizing — round diameter plus rectangular equivalents from the ASHRAE equal-friction equation."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="HVAC Calculator"
+				intro="How much air a room wants, and how big a duct has to be to carry it without anyone noticing. The second half is where most of the judgement lives — a duct that is one size small still moves the air, it just does it loudly enough that someone turns the system off."
+			/>
+
+			<section class="border-t border-white/5 px-6 pt-16">
+				<div class="mx-auto max-w-5xl">
+					<div class="reveal overflow-hidden rounded-2xl border border-white/10 bg-black">
+						<ToolPreview client:visible kind="hvac" />
+					</div>
+					<p class="reveal mt-5 max-w-2xl text-small text-neutral-500">
+						The same 151 CFM through a 5 inch duct and a 7 inch one. Two inches of diameter,
+						half the velocity — which is the difference between a system you hear and one you
+						don't.
+					</p>
+				</div>
+			</section>
+
+			<section class="px-6 py-20 sm:py-24" data-calc-page="hvac">
+				<div class="mx-auto max-w-5xl">
+					<!-- ======================== VENTILATION ======================== -->
+					<div class="calc reveal" style="border-top: none; padding-top: 0;">
+						<div class="calc__head">
+							<h2 class="calc__title">Room ventilation</h2>
+							<p class="calc__lede">
+								Air changes per hour turned into the number a fan is actually specified by.
+								Picking a room type sets a starting rate; you can overwrite it, and a lot of the
+								time you should — a rate is a convention, not a measurement.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="mb-5 flex flex-wrap items-center gap-4">
+									<span class="text-small text-neutral-500">Room dimensions in</span>
+									<div class="calc-seg" role="radiogroup" aria-label="Dimension units">
+										<label
+											><input type="radio" name="v-units" value="ft" checked /><span
+												>Feet</span
+											></label
+										>
+										<label
+											><input type="radio" name="v-units" value="m" /><span>Metres</span></label
+										>
+									</div>
+								</div>
+
+								<div class="calc-fields calc-fields--2">
+									<div class="calc-field calc-field--wide">
+										<label class="calc-label" for="v-type">Room type</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="v-type">
+												{
+													ROOMS.map((r, i) => (
+														<option
+															value={r.ach}
+															data-name={r.name}
+															data-min={r.min ?? ''}
+															data-minnote={r.minNote ?? ''}
+															selected={i === 1}
+														>
+															{r.name} — {r.ach} ACH
+														</option>
+													))
+												}
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="v-len">Length</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="v-len"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.5"
+												value="14"
+												data-dim
+											/>
+											<span class="calc-unit" data-unit>ft</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="v-wid">Width</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="v-wid"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.5"
+												value="12"
+												data-dim
+											/>
+											<span class="calc-unit" data-unit>ft</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="v-hgt">Ceiling height</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="v-hgt"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.5"
+												value="9"
+												data-dim
+											/>
+											<span class="calc-unit" data-unit>ft</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="v-ach"
+											>Air changes <span>· per hour</span></label
+										>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="v-ach"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="0.5"
+												value="6"
+											/>
+											<span class="calc-unit">ACH</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>CFM</i> = volume × ACH ÷ 60</div>
+										<div data-out="v-eq1">151 CFM = 1,512 ft³ × 6 ÷ 60</div>
+										<div class="pt-2"><i>Volume</i> = length × width × height</div>
+										<div data-out="v-eq2">1,512 ft³ = 14.0 × 12.0 × 9.0</div>
+									</div>
+									<p class="calc-formula__note">
+										The ÷ 60 is the only awkward part: ACH is per <i>hour</i> and CFM is per
+										<i>minute</i>, so the whole conversion is that one division. For a whole
+										dwelling rather than a single room, ASHRAE 62.2 asks for
+										<b>0.03 × floor area + 7.5 × (bedrooms + 1)</b> CFM continuously, which is
+										a different question from the one this answers.
+									</p>
+								</div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Extract / supply</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="v-cfm">151</span>
+									<span class="calc-figure__u">CFM</span>
+								</div>
+								<p class="calc-figure__sub" data-out="v-cfm-alt">257 m³/h · 71 L/s</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Room volume</span>
+										<span class="calc-row__v" data-out="v-vol">1,512 ft³</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Rate applied</span>
+										<span class="calc-row__v" data-out="v-ach-out">6 ACH</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Code minimum</span>
+										<span class="calc-row__v" data-out="v-min">none for this room</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Air changes in 10 min</span>
+										<span class="calc-row__v" data-out="v-ten">1.0</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Full change takes</span>
+										<span class="calc-row__v" data-out="v-time">10 min</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="v-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ========================= DUCT SIZING ========================= -->
+					<div class="calc reveal">
+						<div class="calc__head">
+							<h2 class="calc__title">Duct sizing</h2>
+							<p class="calc__lede">
+								Round first, because round is what the arithmetic gives you, then rectangular
+								equivalents for when there is a joist bay in the way. The two are not the same
+								size — a rectangular duct has more wall per unit of air, so it has to be bigger
+								to carry the same flow at the same friction.
+							</p>
+						</div>
+
+						<div class="calc__body">
+							<div>
+								<div class="calc-fields calc-fields--3">
+									<div class="calc-field">
+										<label class="calc-label" for="d-cfm">Airflow</label>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="d-cfm"
+												type="number"
+												inputmode="decimal"
+												min="0"
+												step="10"
+												value="151"
+											/>
+											<span class="calc-unit">CFM</span>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="d-role">Duct role</label>
+										<div class="calc-control calc-control--select">
+											<select class="calc-select" id="d-role">
+												{
+													ROLES.map((r, i) => (
+														<option value={r.fpm} selected={i === 0}>
+															{r.name} — {r.fpm} FPM
+														</option>
+													))
+												}
+											</select>
+										</div>
+									</div>
+									<div class="calc-field">
+										<label class="calc-label" for="d-fpm"
+											>Design velocity <span>· overwrite</span></label
+										>
+										<div class="calc-control">
+											<input
+												class="calc-input"
+												id="d-fpm"
+												type="number"
+												inputmode="decimal"
+												min="50"
+												step="50"
+												value="600"
+											/>
+											<span class="calc-unit">FPM</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="mt-5">
+									<label class="calc-toggle">
+										<input type="checkbox" id="d-link" checked />
+										<span class="calc-toggle__track"></span>
+										<span>Take the airflow from the room above</span>
+									</label>
+								</div>
+
+								<div class="calc-formula">
+									<p class="calc-formula__label">Formula</p>
+									<div class="calc-formula__eq">
+										<div><i>Area</i> = CFM ÷ velocity, then <i>d</i> = 2 × √(area ÷ π)</div>
+										<div data-out="d-eq1">6.79 in = 2 × √(36.2 ÷ π)</div>
+										<div class="pt-2">
+											<i>Rectangular equivalent</i> = 1.30 × (a·b)<sup>0.625</sup> ÷
+											(a+b)<sup>0.250</sup>
+										</div>
+										<div data-out="d-eq2">8 × 5 in → 6.87 in equivalent</div>
+									</div>
+									<p class="calc-formula__note">
+										That second one is the Huebscher equation, and it is the reason you cannot
+										just match cross-sectional areas — an 8 × 5 duct has 40 in² against a 7
+										inch round's 38, and still only just keeps up. Rectangular options below
+										are the tightest-fitting ones that clear the round equivalent, capped at
+										4:1 because past that the friction penalty stops being worth the space
+										saved.
+									</p>
+								</div>
+
+								<p class="mt-8 text-eyebrow uppercase text-neutral-500">Rectangular options</p>
+								<div class="calc-opts" data-out="d-opts"></div>
+							</div>
+
+							<div class="calc-out">
+								<p class="calc-out__label">Round duct</p>
+								<div class="calc-figure">
+									<span class="calc-figure__n" data-out="d-dia">7</span>
+									<span class="calc-figure__u">in</span>
+								</div>
+								<p class="calc-figure__sub" data-out="d-dia-alt">178 mm · 6.79 in calculated</p>
+
+								<div class="calc-rows">
+									<div class="calc-row calc-row--lead">
+										<span class="calc-row__k">Velocity in that size</span>
+										<span class="calc-row__v" data-out="d-vel">565 FPM</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Free area required</span>
+										<span class="calc-row__v" data-out="d-area">36.2 in²</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Actual free area</span>
+										<span class="calc-row__v" data-out="d-areaact">38.5 in²</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">One size down</span>
+										<span class="calc-row__v" data-out="d-down">6 in · 769 FPM</span>
+									</div>
+									<div class="calc-row">
+										<span class="calc-row__k">Best rectangular</span>
+										<span class="calc-row__v" data-out="d-rect">8 × 5 in</span>
+									</div>
+								</div>
+
+								<div class="calc-flag" data-out="d-flag" hidden></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ========================= ASSUMPTIONS ========================= -->
+					<div class="reveal mt-24 rounded-2xl border border-white/5 p-8">
+						<p class="text-eyebrow uppercase text-neutral-500">What this assumes</p>
+						<ul class="mt-6 space-y-3 text-body text-neutral-400">
+							<li>
+								Standard air — sea level, around 70 °F. At altitude the same duct moves less
+								mass, and above about 2,000 ft that starts to matter enough to correct for.
+							</li>
+							<li>
+								Velocity sizing, not a full friction-rate design. It gets a branch right and it
+								gets you close on a main, but a whole system wants the pressure losses added up
+								along the longest run — every elbow, every fitting, every transition.
+							</li>
+							<li>
+								Sheet metal, or flex pulled properly taut. Flex duct left with slack in it can
+								cost several times the friction of the same duct pulled tight, which no
+								calculator can account for and every installation should.
+							</li>
+							<li>
+								Air-change rates are the working conventions for each room type. Where a code
+								floor exists it is shown alongside, and the larger of the two is the one to
+								build to.
+							</li>
+						</ul>
+					</div>
+
+					<div class="reveal mt-10">
+						<a
+							href="/microtools"
+							class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100"
+						>
+							<span
+								aria-hidden="true"
+								class="transition-transform group-hover:-translate-x-1">&larr;</span
+							>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	// Spiral pipe as it is actually stocked.
+	const ROUND = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36];
+	// Rectangular duct comes in even inches through most of the range, with the
+	// odd sizes only common at the small end.
+	const RECT = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
+	const FT_PER_M = 3.280839895;
+
+	/** Huebscher: the round duct that loses the same pressure per foot as an
+	 *  a × b rectangular one carrying the same air. ASHRAE's equation, and the
+	 *  reason equal areas are not equal ducts. */
+	const equivDia = (a: number, b: number) =>
+		(1.3 * Math.pow(a * b, 0.625)) / Math.pow(a + b, 0.25);
+
+	/** Velocity in FPM through a round duct of `d` inches. */
+	const velRound = (cfm: number, d: number) => cfm / (Math.PI * Math.pow(d / 2, 2) / 144);
+
+	function initHvac() {
+		const found = document.querySelector<HTMLElement>(
+			'[data-calc-page="hvac"]:not([data-calc-ready])'
+		);
+		if (!found) return;
+		// Re-declared as non-nullable: the calculators below are hoisted function
+		// declarations, and TypeScript drops the null-narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.calcReady = 'true';
+
+		const el = <T extends HTMLElement>(sel: string) => root.querySelector(sel) as T | null;
+		const set = (key: string, v: string) => {
+			const n = root.querySelector(`[data-out="${key}"]`);
+			if (n) n.textContent = v;
+		};
+		const flag = (key: string, html: string | null, kind = '') => {
+			const n = root.querySelector(`[data-out="${key}"]`) as HTMLElement | null;
+			if (!n) return;
+			n.className = `calc-flag${kind ? ` calc-flag--${kind}` : ''}`;
+			if (html) {
+				n.innerHTML = html;
+				n.hidden = false;
+			} else {
+				n.hidden = true;
+			}
+		};
+		const num = (sel: string) => {
+			const n = Number((el<HTMLInputElement>(sel) as HTMLInputElement | null)?.value);
+			return Number.isFinite(n) ? n : 0;
+		};
+		const int = (n: number) =>
+			Number.isFinite(n) ? Math.round(n).toLocaleString('en-GB') : '—';
+
+		let metric = false;
+		/** A room dimension, entered in feet or metres, always returned in feet. */
+		const asFt = (sel: string) => (metric ? num(sel) * FT_PER_M : num(sel));
+
+		// ---- room ventilation ----
+		function vent() {
+			const L = asFt('#v-len');
+			const W = asFt('#v-wid');
+			const H = asFt('#v-hgt');
+			const ach = num('#v-ach');
+			const ft3 = L * W * H;
+			const cfm = (ft3 * ach) / 60;
+
+			const opt = (el<HTMLSelectElement>('#v-type') as HTMLSelectElement | null)?.selectedOptions[0];
+			const min = Number(opt?.dataset.min || 0);
+			const minNote = opt?.dataset.minnote || '';
+			const roomName = opt?.dataset.name || 'this room';
+
+			// The floor wins whenever the arithmetic falls under it. This is the
+			// case people miss — a small bathroom's ACH figure lands well below
+			// the 50 CFM the code asks for regardless of how small it is.
+			const governed = Math.max(cfm, min);
+
+			set('v-cfm', int(governed));
+			set(
+				'v-cfm-alt',
+				`${int(governed * 1.699)} m³/h · ${int(governed * 0.4719)} L/s`
+			);
+			set('v-vol', metric ? `${(ft3 / 35.3147).toFixed(1)} m³` : `${int(ft3)} ft³`);
+			set('v-ach-out', `${ach} ACH`);
+			set('v-min', min ? `${min} CFM — ${minNote}` : 'none for this room');
+			set('v-ten', ach > 0 ? (ach / 6).toFixed(1) : '—');
+			set('v-time', ach > 0 ? `${(60 / ach).toFixed(0)} min` : '—');
+
+			set('v-eq1', `${int(cfm)} CFM = ${int(ft3)} ft³ × ${ach} ÷ 60`);
+			set(
+				'v-eq2',
+				`${int(ft3)} ft³ = ${L.toFixed(1)} × ${W.toFixed(1)} × ${H.toFixed(1)}`
+			);
+
+			if (min && cfm < min) {
+				flag(
+					'v-flag',
+					`<b>The floor beats the arithmetic here.</b> ${roomName} works out at ${int(cfm)} CFM by air changes, but the code minimum is ${min} CFM — so ${min} is the number to build to.`
+				);
+			} else if (ach > 0 && ft3 > 0 && ach >= 15) {
+				flag(
+					'v-flag',
+					`<b>${ach} ACH is a lot of air.</b> At this rate the makeup air matters as much as the extract — pull ${int(governed)} CFM out of a sealed room and it will fight you for it.`,
+					'info'
+				);
+			} else {
+				flag('v-flag', null);
+			}
+			return governed;
+		}
+
+		// ---- duct sizing ----
+		function duct(roomCfm: number) {
+			const linked = (el<HTMLInputElement>('#d-link') as HTMLInputElement | null)?.checked ?? false;
+			const cfmInput = el<HTMLInputElement>('#d-cfm') as HTMLInputElement | null;
+			if (linked && cfmInput && document.activeElement !== cfmInput) {
+				cfmInput.value = String(Math.round(roomCfm));
+			}
+			if (cfmInput) cfmInput.readOnly = linked;
+
+			const cfm = num('#d-cfm');
+			const fpm = Math.max(1, num('#d-fpm'));
+
+			const areaFt2 = cfm / fpm;
+			const areaIn2 = areaFt2 * 144;
+			const exact = 2 * Math.sqrt(areaIn2 / Math.PI);
+			const dia = ROUND.find((d) => d >= exact) ?? ROUND[ROUND.length - 1];
+			const actual = velRound(cfm, dia);
+			const actualArea = (Math.PI * Math.pow(dia / 2, 2));
+
+			set('d-dia', cfm > 0 ? String(dia) : '—');
+			set(
+				'd-dia-alt',
+				cfm > 0 ? `${int(dia * 25.4)} mm · ${exact.toFixed(2)} in calculated` : '—'
+			);
+			set('d-vel', cfm > 0 ? `${int(actual)} FPM` : '—');
+			set('d-area', cfm > 0 ? `${areaIn2.toFixed(1)} in²` : '—');
+			set('d-areaact', cfm > 0 ? `${actualArea.toFixed(1)} in²` : '—');
+
+			const iDown = ROUND.indexOf(dia) - 1;
+			const down = iDown >= 0 ? ROUND[iDown] : null;
+			set(
+				'd-down',
+				down && cfm > 0 ? `${down} in · ${int(velRound(cfm, down))} FPM` : '—'
+			);
+
+			// Every rectangular pair that clears the round equivalent, kept under
+			// 4:1, sorted by cross-section so the tightest fits come first.
+			const opts: { w: number; h: number; de: number; ar: number; area: number }[] = [];
+			for (const a of RECT) {
+				for (const b of RECT) {
+					if (b > a) continue;
+					const ar = a / b;
+					if (ar > 4) continue;
+					const de = equivDia(a, b);
+					if (de < exact) continue;
+					opts.push({ w: a, h: b, de, ar, area: a * b });
+				}
+			}
+			opts.sort((x, y) => x.area - y.area || x.ar - y.ar);
+			const best = opts.slice(0, 4);
+
+			const box = root.querySelector('[data-out="d-opts"]');
+			if (box) {
+				box.innerHTML =
+					cfm > 0 && best.length
+						? best
+								.map(
+									(o) =>
+										`<div class="calc-opt"><span class="calc-opt__d">${o.w} × ${o.h} in</span><span class="calc-opt__m">${o.de.toFixed(2)} in equivalent · ${o.ar.toFixed(1)}:1 · ${int(velRound(cfm, o.de))} FPM</span></div>`
+								)
+								.join('')
+						: `<div class="calc-opt"><span class="calc-opt__m">${cfm > 0 ? 'Nothing under 4:1 fits this — it wants round, or two ducts.' : 'Enter an airflow to see options.'}</span></div>`;
+			}
+
+			set('d-rect', best.length && cfm > 0 ? `${best[0].w} × ${best[0].h} in` : '—');
+
+			set('d-eq1', cfm > 0 ? `${exact.toFixed(2)} in = 2 × √(${areaIn2.toFixed(1)} ÷ π)` : '—');
+			set(
+				'd-eq2',
+				best.length && cfm > 0
+					? `${best[0].w} × ${best[0].h} in → ${best[0].de.toFixed(2)} in equivalent`
+					: '—'
+			);
+
+			if (cfm <= 0) {
+				flag('d-flag', null);
+			} else if (actual > 900 && fpm <= 900) {
+				flag(
+					'd-flag',
+					`<b>${int(actual)} FPM in a ${dia} in duct.</b> Past about 900 FPM a branch is audible in a quiet room — worth going up a size if the space is there.`
+				);
+			} else if (best.length && best[0].ar > 3) {
+				flag(
+					'd-flag',
+					`<b>${best[0].ar.toFixed(1)}:1 is a flat duct.</b> It fits, but the extra wall costs friction and material. Round, or something squarer, does the same job with less fan behind it.`,
+					'info'
+				);
+			} else if (down && velRound(cfm, down) <= fpm) {
+				flag(
+					'd-flag',
+					`<b>${down} in would also work.</b> It comes out at ${int(velRound(cfm, down))} FPM, still inside your design velocity — worth knowing if the space is tight.`,
+					'info'
+				);
+			} else {
+				flag('d-flag', null);
+			}
+		}
+
+		function recalc() {
+			duct(vent());
+		}
+
+		// The room-type select seeds the ACH field; it does not lock it. Anyone
+		// who knows their room better than a table does should be able to say so.
+		el<HTMLSelectElement>('#v-type')?.addEventListener('change', (e) => {
+			const v = (e.target as HTMLSelectElement).value;
+			const achEl = el<HTMLInputElement>('#v-ach') as HTMLInputElement | null;
+			if (achEl) achEl.value = v;
+			recalc();
+		});
+		// Same relationship between duct role and design velocity.
+		el<HTMLSelectElement>('#d-role')?.addEventListener('change', (e) => {
+			const v = (e.target as HTMLSelectElement).value;
+			const fpmEl = el<HTMLInputElement>('#d-fpm') as HTMLInputElement | null;
+			if (fpmEl) fpmEl.value = v;
+			recalc();
+		});
+
+		root.addEventListener('input', (e) => {
+			const t = e.target as HTMLElement;
+			if (t instanceof HTMLInputElement && t.name === 'v-units') {
+				const next = t.value === 'm';
+				if (next !== metric) {
+					// Convert what is already entered rather than relabelling it.
+					root.querySelectorAll<HTMLInputElement>('input[data-dim]').forEach((input) => {
+						const val = Number(input.value);
+						if (!Number.isFinite(val)) return;
+						const conv = next ? val / FT_PER_M : val * FT_PER_M;
+						input.value = String(Math.round(conv * 100) / 100);
+						input.step = next ? '0.1' : '0.5';
+					});
+					metric = next;
+					root.querySelectorAll<HTMLElement>('[data-unit]').forEach((n) => {
+						n.textContent = next ? 'm' : 'ft';
+					});
+				}
+			}
+			recalc();
+		});
+		root.addEventListener('change', recalc);
+		recalc();
+	}
+
+	document.addEventListener('astro:page-load', initHvac);
+	initHvac();
+</script>

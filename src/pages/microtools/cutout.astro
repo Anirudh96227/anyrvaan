@@ -1,0 +1,369 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Footer from '../../components/Footer.astro';
+
+// Segment Anything, driven by clicks. The encoder runs once per image and its
+// output is cached in the worker; each click after that only runs the decoder,
+// which is why pointing at things feels instant instead of costing seconds.
+---
+
+<Layout
+	title="Click-to-Cutout — Anyrvaan Microtools"
+	description="Point at something in a photograph and cut it out. Segment Anything runs in your browser — the encoder once per image, the decoder on every click."
+>
+	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
+		<Nav />
+		<main>
+			<PageHeader
+				eyebrow="Microtools"
+				title="Click-to-Cutout"
+				intro="Click a thing and it gets selected. Click again somewhere it went wrong and tell it no. Segment Anything is unusual in that the expensive part depends only on the image, so once that's done every click is close to free — which is what makes pointing at things a workable way to select them."
+			/>
+
+			<section class="px-6 py-16 sm:py-20" data-vai="sam">
+				<div class="mx-auto max-w-5xl">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">Model</p>
+					<div class="reveal vai-tiers">
+						<button type="button" class="vai-tier" data-tier="sleek">
+							<span class="vai-tier__n">Sleek — SlimSAM</span>
+							<span class="vai-tier__d">A pruned SAM. Fast to fetch and fast to encode, and fine for most subjects.</span>
+							<span class="vai-tier__mb">~28 MB</span>
+						</button>
+						<button type="button" class="vai-tier" data-tier="accurate">
+							<span class="vai-tier__n">Accurate — SAM ViT-B</span>
+							<span class="vai-tier__d">The full base model. Tighter masks where edges are complicated.</span>
+							<span class="vai-tier__mb">~180 MB</span>
+						</button>
+					</div>
+
+					<div class="reveal vai-drop" data-drop>
+						<p class="vai-drop__t">Drop an image, paste one, or click to choose</p>
+						<p class="vai-drop__s">Then click the thing you want. Nothing leaves your device.</p>
+					</div>
+
+					<div class="vai-load" data-load data-phase="idle"></div>
+
+					<div class="vai-stage vai-stage--two" data-stage hidden>
+						<div class="vai-panel">
+							<div class="vai-panel__h">
+								<span>Click to select</span>
+								<span data-mode-label>adding</span>
+							</div>
+							<canvas class="vai-canvas vai-canvas--plain vai-canvas--pick" data-pick></canvas>
+						</div>
+						<div class="vai-panel">
+							<div class="vai-panel__h"><span>Cutout</span><span data-count></span></div>
+							<canvas class="vai-canvas" data-out></canvas>
+						</div>
+					</div>
+
+					<div class="vai-controls vai-controls--3" data-controls hidden>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Point mode</span>
+							<select class="vai-select" data-mode>
+								<option value="1">Add to selection</option>
+								<option value="0">Remove from selection</option>
+							</select>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Edge feather <b data-v-feather>0 px</b></span>
+							<input class="vai-range" type="range" data-feather min="0" max="10" step="1" value="0" />
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Background</span>
+							<div style="display:flex; gap:.5rem; align-items:center">
+								<select class="vai-select" data-bg>
+									<option value="none">Transparent</option>
+									<option value="solid">Solid colour</option>
+									<option value="white">White</option>
+								</select>
+								<input class="vai-color" type="color" data-bgcolor value="#0a0b0d" />
+							</div>
+						</div>
+						<div class="vai-ctl">
+							<span class="vai-ctl__l">Selection</span>
+							<label class="vai-check"><input type="checkbox" data-invert /> Keep the background instead</label>
+						</div>
+					</div>
+
+					<div class="vai-bar" data-bar hidden>
+						<button type="button" class="vai-btn vai-btn--go" data-keep>Add another object</button>
+						<button type="button" class="vai-btn" data-undo>Clear points</button>
+						<button type="button" class="vai-btn" data-dl>Download PNG</button>
+						<button type="button" class="vai-btn" data-another>Try another image</button>
+					</div>
+					<p class="vai-hint" data-note>
+						On a mouse, right-click subtracts. On a touch screen, switch the point mode above.
+					</p>
+
+					<div class="reveal mt-20 rounded-2xl border border-white/5 p-8">
+						<p class="text-eyebrow uppercase text-neutral-500">How to get a good cut</p>
+						<ul class="mt-6 space-y-3 text-body text-neutral-400">
+							<li>
+								One click in the middle of a thing usually gets it. If it grabs too much —
+								the whole person when you wanted the jacket — subtract a point from the part
+								you don't want rather than starting again.
+							</li>
+							<li>
+								Two or three points is normally the whole job. Past about six the mask stops
+								improving and starts oscillating between interpretations.
+							</li>
+							<li>
+								"Add another object" banks the current mask and starts a fresh set of points,
+								so several things can be cut into one image.
+							</li>
+						</ul>
+					</div>
+
+					<div class="reveal mt-10">
+						<a href="/microtools" class="group inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100">
+							<span aria-hidden="true" class="transition-transform group-hover:-translate-x-1">&larr;</span>
+							All microtools
+						</a>
+					</div>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>
+
+<script>
+	import {
+		makeWorker, mountDropzone, mountChooser, readImage, fitTo,
+		Loader, downloadCanvas, $, getTier,
+	} from '../../scripts/visual-tools';
+
+	type Pt = { x: number; y: number; label: number };
+
+	function initSam() {
+		const found = document.querySelector<HTMLElement>('[data-vai="sam"]:not([data-ready])');
+		if (!found) return;
+		// Non-nullable rebinding: the helpers below are hoisted function
+		// declarations, and TypeScript drops the narrowing inside those.
+		const root: HTMLElement = found;
+		root.dataset.ready = 'true';
+
+		const loader = new Loader($(root, '[data-load]')!);
+		const pickCv = $<HTMLCanvasElement>(root, '[data-pick]')!;
+		const outCv = $<HTMLCanvasElement>(root, '[data-out]')!;
+		const stage = $(root, '[data-stage]')!;
+		const controls = $(root, '[data-controls]')!;
+		const bar = $(root, '[data-bar]')!;
+
+		let tier = getTier();
+		let worker: Worker | null = null;
+		let blob: Blob | null = null;
+		let source: HTMLCanvasElement | null = null;
+		let points: Pt[] = [];
+		/** The mask being edited, plus any banked ones from "add another". */
+		let live: Uint8Array | null = null;
+		let liveDims = { w: 0, h: 0 };
+		let banked: Uint8Array | null = null;
+
+		mountChooser(root, (t) => {
+			tier = t;
+			points = []; live = null; banked = null;
+			if (blob) embed();
+		});
+
+		function ensureWorker() {
+			if (worker) return worker;
+			worker = makeWorker('sam');
+			worker.onmessage = (e) => {
+				const m = e.data;
+				if (m.type === 'progress') loader.progress(m.p, tier === 'accurate' ? 'SAM ViT-B' : 'SlimSAM');
+				else if (m.type === 'running') loader.running('Reading the image once, so clicks are free after');
+				else if (m.type === 'embedded') {
+					loader.done();
+					stage.hidden = false; controls.hidden = false; bar.hidden = false;
+					drawPick();
+				} else if (m.type === 'mask') {
+					// Several candidate masks come back; the scores say which.
+					const { width: w, height: h, channels, scores, data } = m;
+					let best = 0;
+					for (let i = 1; i < scores.length; i++) if (scores[i] > scores[best]) best = i;
+					const flat = new Uint8Array(w * h);
+					for (let i = 0; i < w * h; i++) flat[i] = data[i * channels + best] ? 255 : 0;
+					live = flat; liveDims = { w, h };
+					drawPick(); compose();
+				} else if (m.type === 'error') loader.fail(m.message, () => embed());
+			};
+			worker.onerror = (e) => loader.fail(e.message || 'The worker stopped.', () => embed());
+			return worker;
+		}
+
+		function embed() {
+			if (!blob) return;
+			ensureWorker().postMessage({ type: 'embed', blob, tier });
+		}
+
+		function decode() {
+			if (!points.length) { live = null; drawPick(); compose(); return; }
+			ensureWorker().postMessage({ type: 'decode', points });
+		}
+
+		mountDropzone($(root, '[data-drop]')!, async (file) => {
+			const { img } = await readImage(file);
+			const fit = fitTo(img.naturalWidth, img.naturalHeight, 1024);
+			const c = document.createElement('canvas');
+			c.width = fit.w; c.height = fit.h;
+			c.getContext('2d')!.drawImage(img, 0, 0, fit.w, fit.h);
+			source = c;
+			points = []; live = null; banked = null;
+			blob = await new Promise<Blob>((res) => c.toBlob((b) => res(b!), 'image/png'));
+			embed();
+		});
+
+		// ---- picking ----
+
+		function addPoint(e: PointerEvent, label: number) {
+			if (!source) return;
+			const r = pickCv.getBoundingClientRect();
+			points.push({
+				x: (e.clientX - r.left) / r.width,
+				y: (e.clientY - r.top) / r.height,
+				label,
+			});
+			drawPick();
+			decode();
+		}
+
+		pickCv.addEventListener('pointerdown', (e) => {
+			if (e.button === 2) return; // handled by contextmenu
+			const mode = Number(($<HTMLSelectElement>(root, '[data-mode]')!).value);
+			addPoint(e, mode);
+		});
+		pickCv.addEventListener('contextmenu', (e) => {
+			e.preventDefault();
+			addPoint(e as unknown as PointerEvent, 0);
+		});
+
+		/** The source image, the live mask tinted over it, and the point markers. */
+		function drawPick() {
+			if (!source) return;
+			pickCv.width = source.width; pickCv.height = source.height;
+			const ctx = pickCv.getContext('2d')!;
+			ctx.drawImage(source, 0, 0);
+
+			if (live) {
+				const tmp = document.createElement('canvas');
+				tmp.width = liveDims.w; tmp.height = liveDims.h;
+				const id = new ImageData(liveDims.w, liveDims.h);
+				for (let i = 0; i < live.length; i++) {
+					if (!live[i]) continue;
+					id.data[i*4] = 139; id.data[i*4+1] = 166; id.data[i*4+2] = 255; id.data[i*4+3] = 110;
+				}
+				tmp.getContext('2d')!.putImageData(id, 0, 0);
+				ctx.drawImage(tmp, 0, 0, pickCv.width, pickCv.height);
+			}
+
+			for (const p of points) {
+				const x = p.x * pickCv.width, y = p.y * pickCv.height;
+				ctx.beginPath();
+				ctx.arc(x, y, 7, 0, Math.PI * 2);
+				ctx.fillStyle = p.label ? 'rgba(63,169,106,0.9)' : 'rgba(232,86,74,0.9)';
+				ctx.fill();
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+				ctx.stroke();
+			}
+			$(root, '[data-count]')!.textContent = points.length ? `${points.length} point${points.length === 1 ? '' : 's'}` : '';
+		}
+
+		// ---- output ----
+
+		function maskCanvas(mask: Uint8Array, w: number, h: number) {
+			const c = document.createElement('canvas');
+			c.width = w; c.height = h;
+			const id = new ImageData(w, h);
+			for (let i = 0; i < mask.length; i++) {
+				const v = mask[i];
+				id.data[i*4] = 255; id.data[i*4+1] = 255; id.data[i*4+2] = 255; id.data[i*4+3] = v;
+			}
+			c.getContext('2d')!.putImageData(id, 0, 0);
+			return c;
+		}
+
+		function compose() {
+			if (!source) return;
+			const W = source.width, H = source.height;
+			outCv.width = W; outCv.height = H;
+			const ctx = outCv.getContext('2d')!;
+			ctx.clearRect(0, 0, W, H);
+
+			// Everything selected so far: banked objects plus whatever is live.
+			let merged: Uint8Array | null = null;
+			if (banked) merged = banked.slice();
+			if (live) {
+				if (!merged) merged = live.slice();
+				else for (let i = 0; i < merged.length; i++) merged[i] = Math.max(merged[i], live[i]);
+			}
+			if (!merged) return;
+
+			const invert = ($<HTMLInputElement>(root, '[data-invert]')!).checked;
+			if (invert) for (let i = 0; i < merged.length; i++) merged[i] = 255 - merged[i];
+
+			let mask = maskCanvas(merged, liveDims.w || W, liveDims.h || H);
+			const px = Number(($<HTMLInputElement>(root, '[data-feather]')!).value);
+			if (px > 0) {
+				const soft = document.createElement('canvas');
+				soft.width = mask.width; soft.height = mask.height;
+				const sc = soft.getContext('2d')!;
+				sc.filter = `blur(${px}px)`;
+				sc.drawImage(mask, 0, 0);
+				mask = soft;
+			}
+
+			const mode = ($<HTMLSelectElement>(root, '[data-bg]')!).value;
+			if (mode === 'solid' || mode === 'white') {
+				ctx.fillStyle = mode === 'white' ? '#ffffff' : ($<HTMLInputElement>(root, '[data-bgcolor]')!).value;
+				ctx.fillRect(0, 0, W, H);
+			}
+
+			// Subject cut by the mask, then laid over whatever background there is.
+			const layer = document.createElement('canvas');
+			layer.width = W; layer.height = H;
+			const lc = layer.getContext('2d')!;
+			lc.drawImage(source, 0, 0);
+			lc.globalCompositeOperation = 'destination-in';
+			lc.drawImage(mask, 0, 0, W, H);
+			ctx.drawImage(layer, 0, 0);
+			outCv.classList.add('vai-fade');
+		}
+
+		for (const sel of ['[data-feather]', '[data-bg]', '[data-bgcolor]', '[data-invert]']) {
+			$(root, sel)!.addEventListener('input', () => {
+				$(root, '[data-v-feather]')!.textContent = `${($<HTMLInputElement>(root, '[data-feather]')!).value} px`;
+				compose();
+			});
+		}
+		$(root, '[data-mode]')!.addEventListener('change', () => {
+			$(root, '[data-mode-label]')!.textContent =
+				($<HTMLSelectElement>(root, '[data-mode]')!).value === '1' ? 'adding' : 'removing';
+		});
+
+		$(root, '[data-keep]')!.addEventListener('click', () => {
+			if (!live) return;
+			banked = banked ? banked.map((v, i) => Math.max(v, live![i])) : live.slice();
+			points = []; live = null;
+			drawPick(); compose();
+		});
+		$(root, '[data-undo]')!.addEventListener('click', () => {
+			points = []; live = null;
+			drawPick(); compose();
+		});
+		$(root, '[data-dl]')!.addEventListener('click', () => downloadCanvas(outCv, 'cutout.png'));
+		$(root, '[data-another]')!.addEventListener('click', () => {
+			stage.hidden = true; controls.hidden = true; bar.hidden = true;
+			blob = null; source = null; points = []; live = null; banked = null;
+			worker?.postMessage({ type: 'reset' });
+			$(root, '[data-drop]')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+	}
+
+	document.addEventListener('astro:page-load', initSam);
+	initSam();
+</script>

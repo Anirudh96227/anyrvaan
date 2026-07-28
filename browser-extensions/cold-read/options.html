@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Cold Read — settings</title>
+<style>
+	:root { color-scheme: dark; }
+	body {
+		margin: 0;
+		padding: 28px 30px 34px;
+		width: 380px;
+		background: #0a0a0d;
+		color: #ECE6DB;
+		font: 14px/1.55 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+	}
+	h1 {
+		margin: 0 0 4px;
+		font: 400 24px/1.15 Georgia, "Iowan Old Style", serif;
+		letter-spacing: -0.01em;
+	}
+	.sub { margin: 0 0 26px; color: rgba(236,230,219,0.5); font-size: 13px; }
+	fieldset { border: 0; margin: 0 0 24px; padding: 0; }
+	legend {
+		padding: 0 0 10px;
+		font: 500 11px/1 ui-monospace, "Cascadia Mono", monospace;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: rgba(236,230,219,0.45);
+	}
+	label.row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+		padding: 9px 0;
+		border-bottom: 1px solid rgba(236,230,219,0.07);
+	}
+	label.row:last-child { border-bottom: 0; }
+	.row span { color: rgba(236,230,219,0.85); }
+	.row small { display: block; color: rgba(236,230,219,0.42); font-size: 12px; }
+	input[type="range"] { width: 130px; accent-color: #E9A73C; }
+	input[type="checkbox"] { accent-color: #E9A73C; width: 16px; height: 16px; }
+	output {
+		display: inline-block; min-width: 18px; text-align: right;
+		font: 500 13px/1 ui-monospace, monospace; color: #E9A73C;
+	}
+	.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+	.key {
+		border: 1px solid rgba(236,230,219,0.12);
+		padding: 9px 6px 8px;
+		text-align: center;
+		font-size: 10.5px;
+		color: rgba(236,230,219,0.6);
+		letter-spacing: 0.04em;
+	}
+	.key i { display: block; height: 4px; margin-bottom: 8px; }
+	.note {
+		margin-top: 22px;
+		padding-top: 16px;
+		border-top: 1px solid rgba(236,230,219,0.09);
+		color: rgba(236,230,219,0.4);
+		font-size: 12px;
+	}
+	.saved {
+		color: #E9A73C;
+		font: 500 11px/1 ui-monospace, monospace;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		opacity: 0;
+		transition: opacity 400ms ease;
+	}
+	.saved[data-on="1"] { opacity: 1; }
+</style>
+</head>
+<body>
+	<h1>Cold Read</h1>
+	<p class="sub">Answer questions about an article before you read it. What you got wrong becomes a highlighted trail through the page — a map of your own blind spots, laid over the source.</p>
+
+	<fieldset>
+		<legend>The quiz</legend>
+		<label class="row">
+			<span>Questions<small>Fewer, better ones beat more. Six is the sweet spot.</small></span>
+			<span><input type="range" id="count" min="4" max="8" step="1" /> <output id="countOut">6</output></span>
+		</label>
+		<label class="row">
+			<span>Ask how sure you are<small>One extra tap. It's what separates "wrong" from "confidently wrong".</small></span>
+			<input type="checkbox" id="confidence" />
+		</label>
+		<label class="row">
+			<span>Cover the page while answering<small>Off means you can scroll away and find the answers, which rather defeats it.</small></span>
+			<input type="checkbox" id="dim" />
+		</label>
+	</fieldset>
+
+	<fieldset>
+		<legend>The trail</legend>
+		<div class="grid">
+			<div class="key"><i style="background:#E9A73C"></i>Worth a read</div>
+			<div class="key"><i style="background:#8ba6ff"></i>New to you</div>
+			<div class="key"><i style="background:rgba(139,166,255,0.5)"></i>Lucky</div>
+			<div class="key"><i style="background:#3fa96a"></i>Knew it</div>
+		</div>
+		<label class="row" style="margin-top:14px">
+			<span>Mark what you already knew<small>Off keeps the page clean and shows only what's worth your time.</small></span>
+			<input type="checkbox" id="showKnown" />
+		</label>
+		<label class="row">
+			<span>Questions in the air<small>Question marks drift in from the edges and merge into the cursor.</small></span>
+			<input type="checkbox" id="motes" />
+		</label>
+	</fieldset>
+
+	<p class="note">There is no score, and there never will be. A cross isn't a failure — it's a bookmark. <span class="saved" id="saved">saved</span></p>
+	<script src="options.js"></script>
+</body>
+</html>
