@@ -2,8 +2,9 @@
 title: "Motion, Made with Code"
 summary: "Small animations built with code instead of a camera — counters and charts, sacred patterns, old computer screens, everyday apps faked to the pixel. Four collections of short films, gathered into one place."
 year: "2026"
-order: 5
+order: 3
 tags: ["Animation", "Made with Code", "Collections"]
+coverMotion: "four-collections"
 cover: "../../assets/work/effects-index.jpg"
 coverAlt: "Effects Index title card: a huge cobalt 12 beside three liquid-fill pillar gauges"
 thesis: "One way of working, pointed at four very different worlds — and it held up in every one."

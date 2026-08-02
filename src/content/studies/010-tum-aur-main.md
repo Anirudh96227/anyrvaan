@@ -1,5 +1,5 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 2
 title: "Tenderness, Before You Check What's Under the Fur"
@@ -7,8 +7,10 @@ creator: "Kshyv"
 thread: "Tenderness, tested"
 video: "https://youtube.com/shorts/WZy2bNJfjN8"
 companion: "./_companions/02-tum-aur-main-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief describing a sunset meadow, two round, faceless-looking creatures, and a late turn that reframes what's actually being watched."
   - step: "Generation"

@@ -7,4 +7,4 @@ thread: "A building the cliff grew"
 behanceId: "235527441"
 ---
 
-Phugtal is the monastery that looks like the mountain decided to have one — honeycomb rooms spilling out of a cave mouth on a Zanskar cliff, reachable only on foot. In real life, the long hike is what earns you the view.
+A monastery spilling out of a cave mouth on a Zanskar cliff, reachable only on foot. The hike is what earns you the view.

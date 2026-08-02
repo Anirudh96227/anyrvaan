@@ -4,6 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import Footer from '../../components/Footer.astro';
+import PostHero from '../../components/PostHero.tsx';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
@@ -15,6 +16,10 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // A newspaper, not a stack of identical cards: the newest post leads large,
 // the rest sit in a dense dated index below.
+//
+// Each row's face is that post's own coded hero, run in card mode — the same
+// motif that opens the post, not a separate thumbnail. Posts without a `hero`
+// simply keep the older text-only row, so the page degrades cleanly.
 const [lead, ...rest] = posts;
 ---
 
@@ -33,6 +38,13 @@ const [lead, ...rest] = posts;
 				lead && (
 					<section class="mx-auto max-w-5xl px-6">
 						<a href={`/blog/${lead.id}/`} class="reveal group block border-t border-white/10 pt-10">
+							{lead.data.hero && (
+								<div class="mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black">
+									<div class="transition-transform duration-700 ease-out group-hover:scale-[1.02]">
+										<PostHero client:visible variant={lead.data.hero} compact />
+									</div>
+								</div>
+							)}
 							<div class="flex flex-wrap items-center justify-between gap-2">
 								<span class="text-eyebrow uppercase text-neutral-400">
 									{lead.data.tags[0] ? capitalize(lead.data.tags[0]) : 'Journal'}
@@ -65,11 +77,20 @@ const [lead, ...rest] = posts;
 							<li class="reveal border-b border-white/5">
 								<a
 									href={`/blog/${post.id}/`}
-									class="group grid grid-cols-1 gap-x-8 gap-y-2 py-7 sm:grid-cols-[9rem_1fr_auto] sm:items-baseline"
+									class="group grid grid-cols-1 gap-x-8 gap-y-4 py-7 sm:grid-cols-[11rem_1fr_auto] sm:items-start"
 								>
-									<span class="text-small uppercase tracking-wide text-neutral-500">
-										{post.data.tags[0] ? capitalize(post.data.tags[0]) : 'Journal'}
-									</span>
+									<div>
+										{post.data.hero && (
+											<div class="mb-3 overflow-hidden rounded-lg border border-white/10 bg-black">
+												<div class="transition-transform duration-700 ease-out group-hover:scale-[1.04]">
+													<PostHero client:visible variant={post.data.hero} compact />
+												</div>
+											</div>
+										)}
+										<span class="text-small uppercase tracking-wide text-neutral-500">
+											{post.data.tags[0] ? capitalize(post.data.tags[0]) : 'Journal'}
+										</span>
+									</div>
 									<div>
 										<h3 class="text-h3 text-neutral-100 transition-colors group-hover:text-neutral-50">
 											{post.data.title}

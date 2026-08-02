@@ -60,6 +60,39 @@ const work = defineCollection({
 			// without one render as compact text rows (reference works).
 			cover: image().optional(),
 			coverAlt: z.string().optional(),
+			// A card that dissolves from `cover` into this second image, on a slow
+			// loop — for a project whose subject is the change between two states.
+			// Sketch to Video uses it for drawing → finished frame. Ranks below
+			// `coverVideo` and `coverMotion`: real footage or a drawn face beats a
+			// dissolve wherever one exists.
+			coverFadeTo: image().optional(),
+			// A card face drawn in code rather than photographed — the WorkCover
+			// React island renders in place of `cover` on the /work index and the
+			// homepage. For projects whose subject is the renderer itself, so the
+			// card demonstrates the claim instead of showing one still the system
+			// happened to produce. `cover` is still authored alongside it: it stays
+			// the share/OG image, which has to be a real file.
+			// A short silent loop used as the card face instead of a still —
+			// a base path with no extension; `.webm`, `.mp4` and `.jpg` (poster)
+			// are expected alongside each other in public/. Takes precedence over
+			// `cover` and `coverMotion` wherever a card is drawn.
+			coverVideo: z.string().optional(),
+			// By default a `coverVideo` is only a card face. Set this to also lead
+			// the case study with it. Explicit rather than inferred: Miniature
+			// wants the loop on its card and nothing at the top of its page.
+			coverVideoHero: z.boolean().default(false),
+			coverMotion: z
+				.enum([
+					'render-mandala',
+					'diorama-shelf',
+					'four-collections',
+					'orb-witness',
+					'cut-early',
+					'atlas-index',
+					'almost-nothing',
+					'night-planting',
+				])
+				.optional(),
 			// 16:9 stills pulled from the films — shown as a "Stills" strip under
 			// the narrative so a case study about screen work actually shows the
 			// screens, not just describes them. Run through the image pipeline.

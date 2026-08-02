@@ -7,4 +7,4 @@ thread: "Color as terrain"
 behanceId: "235527383"
 ---
 
-For most of the year this Himalayan valley is just a valley. Then the monsoon flips a switch and the whole floor turns into color — an entire landscape blooming at once, the kind of sight that makes walkers slow down mid-step.
+For most of the year it is just a valley. Then the monsoon turns the whole floor to colour at once.

@@ -1,13 +1,15 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 8
 title: "Good Mood, Bad Mood, Same Frame"
 thread: "Transformation, slowed down"
 video: "https://youtube.com/shorts/aCMun8Mvt9U"
 companion: "./_companions/08-burning-up-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief describing the bleed between two states — blue spirit and fire-lit heat visible together, not a hard cut between them."
   - step: "Generation"

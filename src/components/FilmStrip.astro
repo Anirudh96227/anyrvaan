@@ -1,0 +1,297 @@
+---
+import YouTubeFacade from './YouTubeFacade.astro';
+
+/**
+ * FILM STRIP
+ * -------------------------------------------------------------------------
+ * A long set of vertical films shown as one horizontal strip that travels
+ * sideways while the page scrolls down. The card in the centre is full size
+ * and full colour and owns the copy beside it; its neighbours sit back, dimmed
+ * and scaled down, so twenty-three films never read as twenty-three equals.
+ *
+ * There is no map and no drawn train — the strip itself is the thing moving
+ * past, which is closer to how any of this is actually seen.
+ *
+ * Progressive: with no JS the strip is a plain horizontally-scrollable row and
+ * every film is still reachable. The pinning, the travel and the focus states
+ * are all enhancement layered on top of that.
+ */
+interface Film {
+	number: number;
+	title: string;
+	video: string;
+	poster?: string;
+	body: string;
+}
+interface Props {
+	films: Film[];
+	eyebrow?: string;
+	heading?: string;
+	intro?: string;
+}
+const { films, eyebrow, heading, intro } = Astro.props;
+---
+
+<section class="filmstrip border-t border-white/5 pt-24 sm:pt-32" style={`--n:${films.length}`}>
+	<div class="mx-auto max-w-5xl px-6">
+		<p class="reveal text-eyebrow uppercase text-neutral-400">{eyebrow ?? 'The Set'}</p>
+		<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">{heading ?? 'One after another.'}</h2>
+		{intro && <p class="reveal mt-6 max-w-2xl text-body text-neutral-400">{intro}</p>}
+	</div>
+
+	<!-- Tall enough to give every film a stretch of scroll to travel through. -->
+	<div class="filmstrip__scroll" data-strip-scroll>
+		<div class="filmstrip__pin">
+			<div class="filmstrip__track-wrap">
+				<ol class="filmstrip__track" data-strip-track>
+					{
+						films.map((f, i) => (
+							<li class="filmstrip__card" data-strip-card={i} data-body={f.body}>
+								{f.poster ? (
+									<YouTubeFacade
+										youtube={f.video}
+										poster={f.poster}
+										posterAlt={f.title}
+										title={f.title}
+										aspect="aspect-9/16"
+									/>
+								) : (
+									<div class="glow-frame rounded-2xl">
+										<div class="glow-frame__inner aspect-9/16 border border-white/10 bg-black" />
+									</div>
+								)}
+								<p class="filmstrip__card-title">{f.title}</p>
+							</li>
+						))
+					}
+				</ol>
+			</div>
+
+			<!-- The copy for whichever film is centred. One block, rewritten as
+			     the strip travels, rather than twenty-three stacked paragraphs. -->
+			<div class="filmstrip__meta" data-strip-meta>
+				<p class="filmstrip__count">
+					<span data-strip-num>01</span><span class="filmstrip__count-total"> / {films.length}</span>
+				</p>
+				<h3 class="filmstrip__title" data-strip-title>{films[0]?.title}</h3>
+				<p class="filmstrip__body" data-strip-body>{films[0]?.body}</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.filmstrip {
+		--card-h: min(58vh, 30rem);
+		--card-w: calc(var(--card-h) * 9 / 16);
+		--gap: clamp(0.9rem, 2vw, 1.75rem);
+	}
+
+	/* Height drives how much scroll the strip gets. One viewport to arrive,
+	   then a stretch per film. */
+	.filmstrip__scroll {
+		position: relative;
+		height: calc(100vh + var(--n) * 46vh);
+	}
+	.filmstrip__pin {
+		position: sticky;
+		top: 0;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: clamp(1.25rem, 3vh, 2.5rem);
+		overflow: hidden;
+	}
+
+	.filmstrip__track-wrap {
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: none;
+	}
+	.filmstrip__track-wrap::-webkit-scrollbar {
+		display: none;
+	}
+	/* Once JS is driving, the row stops being natively scrollable and is moved
+	   by transform instead. */
+	.filmstrip[data-driven] .filmstrip__track-wrap {
+		overflow: hidden;
+	}
+
+	.filmstrip__track {
+		display: flex;
+		align-items: center;
+		gap: var(--gap);
+		list-style: none;
+		margin: 0;
+		padding: 0 max(1.5rem, calc(50vw - var(--card-w) / 2));
+		will-change: transform;
+	}
+
+	.filmstrip__card {
+		flex: 0 0 var(--card-w);
+		width: var(--card-w);
+		/* --f is 1 for the centred card, easing to 0 for its neighbours; the
+		   script sets it per card each frame. */
+		--f: 0;
+		opacity: calc(0.3 + 0.7 * var(--f));
+		transform: scale(calc(0.84 + 0.16 * var(--f)));
+		transition:
+			opacity 0.25s ease,
+			transform 0.25s ease;
+	}
+	/* Without JS every card sits at full strength — a plain scrollable row. */
+	.filmstrip:not([data-driven]) .filmstrip__card {
+		--f: 1;
+	}
+	.filmstrip__card-title {
+		margin-top: 0.85rem;
+		font-size: var(--text-small);
+		color: var(--color-neutral-400);
+		text-align: center;
+		opacity: calc(0.15 + 0.85 * var(--f));
+		transition: opacity 0.25s ease;
+	}
+	.filmstrip[data-driven] .filmstrip__card-title {
+		opacity: 0;
+	}
+
+	.filmstrip__meta {
+		margin: 0 auto;
+		width: 100%;
+		max-width: 34rem;
+		padding: 0 1.5rem;
+		text-align: center;
+		min-height: 7.5rem;
+	}
+	.filmstrip__count {
+		font-size: var(--text-eyebrow);
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--color-neutral-100);
+	}
+	.filmstrip__count-total {
+		color: var(--color-neutral-500);
+	}
+	.filmstrip__title {
+		margin-top: 0.6rem;
+		font-size: var(--text-h3);
+		line-height: 1.2;
+		color: var(--color-neutral-50);
+	}
+	.filmstrip__body {
+		margin-top: 0.75rem;
+		font-size: var(--text-small);
+		line-height: 1.6;
+		color: var(--color-neutral-400);
+	}
+	/* The copy swaps as the strip passes the halfway point between two films,
+	   so it never reads as a caption sliding around. */
+	.filmstrip__meta {
+		transition: opacity 0.18s ease;
+	}
+	.filmstrip__meta[data-swapping] {
+		opacity: 0;
+	}
+
+	@media (max-width: 639px) {
+		.filmstrip {
+			--card-h: 52vh;
+		}
+		.filmstrip__scroll {
+			height: calc(100vh + var(--n) * 38vh);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.filmstrip__card,
+		.filmstrip__card-title,
+		.filmstrip__meta {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	// Turns vertical scroll through the tall wrapper into horizontal travel of
+	// the strip. Everything here is enhancement — the markup is a scrollable row
+	// on its own.
+	function initFilmStrip() {
+		const root = document.querySelector<HTMLElement>('.filmstrip:not([data-strip-init])');
+		if (!root) return;
+		root.dataset.stripInit = 'true';
+
+		const scroller = root.querySelector<HTMLElement>('[data-strip-scroll]');
+		const track = root.querySelector<HTMLElement>('[data-strip-track]');
+		const meta = root.querySelector<HTMLElement>('[data-strip-meta]');
+		const numEl = root.querySelector<HTMLElement>('[data-strip-num]');
+		const titleEl = root.querySelector<HTMLElement>('[data-strip-title]');
+		const bodyEl = root.querySelector<HTMLElement>('[data-strip-body]');
+		const cards = [...root.querySelectorAll<HTMLElement>('[data-strip-card]')];
+		if (!scroller || !track || !cards.length) return;
+
+		// The copy lives on the cards' own markup, so no data has to be duplicated
+		// into the script.
+		const films = cards.map((c) => ({
+			title: c.querySelector('.filmstrip__card-title')?.textContent ?? '',
+			label: c.querySelector('button')?.getAttribute('data-title') ?? '',
+		}));
+
+		root.dataset.driven = 'true';
+
+		let raf = 0;
+		let current = -1;
+		let step = 0;
+
+		function measure() {
+			const a = cards[0];
+			const b = cards[1] ?? cards[0];
+			step = Math.abs(b.offsetLeft - a.offsetLeft) || a.offsetWidth;
+		}
+
+		function update() {
+			raf = 0;
+			const rect = scroller!.getBoundingClientRect();
+			const travel = rect.height - window.innerHeight;
+			// 0 at the moment the strip pins, 1 when it unpins.
+			const p = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+			const pos = p * (cards.length - 1);
+
+			track!.style.transform = `translate3d(${-pos * step}px, 0, 0)`;
+
+			// Per-card focus falls off with distance from centre, so the change is
+			// continuous rather than a class flipping on and off.
+			for (let i = 0; i < cards.length; i++) {
+				const d = Math.abs(i - pos);
+				const f = d >= 1.35 ? 0 : 1 - d / 1.35;
+				cards[i].style.setProperty('--f', (f * f).toFixed(3));
+			}
+
+			const idx = Math.round(pos);
+			if (idx !== current) {
+				current = idx;
+				if (numEl) numEl.textContent = String(idx + 1).padStart(2, '0');
+				if (titleEl) titleEl.textContent = films[idx].title || films[idx].label;
+				if (bodyEl) bodyEl.textContent = cards[idx].dataset.body ?? bodyEl.textContent;
+			}
+		}
+
+		const onScroll = () => {
+			if (!raf) raf = requestAnimationFrame(update);
+		};
+		const onResize = () => {
+			measure();
+			onScroll();
+		};
+
+		measure();
+		update();
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', onResize);
+		// Card widths depend on fonts/layout settling; re-measure once that's done.
+		if (document.fonts?.ready) document.fonts.ready.then(onResize).catch(() => {});
+	}
+
+	document.addEventListener('astro:page-load', initFilmStrip);
+	initFilmStrip();
+</script>

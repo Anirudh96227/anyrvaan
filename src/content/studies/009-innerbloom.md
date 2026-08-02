@@ -1,5 +1,5 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 1
 title: "Enlightenment, Rough Cut"
@@ -7,8 +7,10 @@ creator: "Kshyv"
 thread: "Wonder, before it has a name"
 video: "https://youtube.com/shorts/EulZoT1qjwo"
 companion: "./_companions/01-innerbloom-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A written brief describing the sage, the mid-bloom lotus, and the rule the whole reel follows: hold before the arrival, never show it finished."
   - step: "Generation"

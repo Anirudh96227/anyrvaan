@@ -1,9 +1,10 @@
 ---
-title: "Automating devotion"
+title: "Automating Devotion"
 summary: "Three hundred devotional songs, each needing its own visual treatment — too many to animate by hand, so I built a system that renders them from code."
 year: "2026"
-order: 0
+order: 5
 tags: ["Animation", "Made with Code", "Remotion"]
+coverMotion: "render-mandala"
 cover: "../../assets/work/effects-library-cover.jpg"
 coverAlt: "The flagship film's thumbnail — the composed motion-effects piece"
 thesis: "One system, shown three ways — a composed film, and two generations of the library it was built from."

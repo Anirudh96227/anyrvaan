@@ -5,6 +5,9 @@ import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import ExperimentCard from '../components/ExperimentCard.astro';
+import WorkCover from '../components/WorkCover.tsx';
+import LoopVideo from '../components/LoopVideo.astro';
+import CoverFade from '../components/CoverFade.astro';
 import { experiments } from '../data/experiments';
 
 const latestPosts = (await getCollection('blog', ({ data }) => !data.draft))
@@ -14,15 +17,20 @@ const latestPosts = (await getCollection('blog', ({ data }) => !data.draft))
 const formatDate = (d: Date) =>
 	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 
-// Hand-picked, not first-N: one from each side of the practice — miniature
-// art, devotional motion, code-made films, UI history — so the first screen
-// of work shows the range instead of one flavor four times. Each carries a
-// one-line whisper so a visitor knows what they're looking at without
-// clicking through; the case-study summary is too long for a card.
+// Hand-picked, not first-N: one from each side of the practice — short films
+// off the commute, miniature art, code-made collections, a single long-form 3D
+// piece — so the first screen of work shows the range instead of one flavour
+// four times. Order here is the order on the page. The devotional and spiritual
+// work is deliberately not among them; it's the loudest imagery in the set and
+// it crowds out everything else when it leads, so it sits lower on /work
+// instead. Each pick carries a one-line whisper so a visitor knows what they're
+// looking at without clicking through; the case-study summary is too long for
+// a card.
 const FEATURED: Record<string, string> = {
+	metro: 'Twenty-three rides across Delhi, each with one thing in frame that has no business being there.',
 	'miniature-india': 'India rebuilt at the scale of a keepsake — thirteen places, hand-lit.',
-	'rough-cut-divinity': 'Eight films that stay one breath before the finish.',
 	'motion-made-with-code': 'Four collections made with code — counters, mandalas, old machines, faked apps.',
+	'echoes-of-eternity': 'One orb watches the whole history of everything, then stops watching.',
 };
 const allWork = await getCollection('work', ({ data }) => !data.draft);
 const featuredWork = Object.keys(FEATURED)
@@ -80,13 +88,34 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 						featuredWork.map((p) => (
 							<a href={`/work/${p.id}/`} class="reveal group block">
 								<div class="overflow-hidden rounded-2xl border border-white/10 bg-black">
-									<Image
-										src={p.data.cover!}
-										alt={p.data.coverAlt ?? p.data.title}
-										widths={[480, 800, 1200]}
-										sizes="(max-width: 640px) 100vw, 512px"
-										class="aspect-video w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-									/>
+									{p.data.coverVideo ? (
+										<LoopVideo
+											src={p.data.coverVideo}
+											label={p.data.coverAlt ?? p.data.title}
+											class="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+										/>
+									) : p.data.coverMotion ? (
+										<WorkCover
+											client:visible
+											motif={p.data.coverMotion}
+											className="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+										/>
+									) : p.data.coverFadeTo ? (
+										<CoverFade
+											from={p.data.cover!}
+											to={p.data.coverFadeTo}
+											alt={p.data.coverAlt ?? p.data.title}
+											class="transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+										/>
+									) : (
+										<Image
+											src={p.data.cover!}
+											alt={p.data.coverAlt ?? p.data.title}
+											widths={[480, 800, 1200]}
+											sizes="(max-width: 640px) 100vw, 512px"
+											class="aspect-video w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+										/>
+									)}
 								</div>
 								<div class="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
 									<h3 class="text-h3 text-neutral-50">{p.data.title}</h3>
@@ -230,7 +259,8 @@ const labPicks = experiments.filter((e) => LAB_IDS.includes(e.slug));
 	   Baseline (below) is what reduced-motion users see: a still, bright,
 	   perfectly legible wordmark. All motion + light live in the media query. */
 	.hero-wordmark {
-		font-size: clamp(3rem, 19vw, 16rem);
+		/* Half the size it was. It no longer has to fill the screen to land. */
+		font-size: clamp(2rem, 9.5vw, 8rem);
 		line-height: 1;
 		letter-spacing: -0.03em;
 		/* Descenders (the 'y' tail) hang below the line box; background-clip: text

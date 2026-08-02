@@ -1,0 +1,62 @@
+---
+// A short, silent, self-hosted loop — used where a moving image is the point
+// but a player is not: work card faces and case-study heroes.
+//
+// Deliberately NOT a YouTube embed. An embed costs a megabyte of iframe and
+// script before it paints anything, shows chrome we don't want, and can't be
+// relied on to loop seamlessly. YouTube stays for the full films, where the
+// visitor actually wants a player.
+//
+// `src` is a base path with no extension; `<base>.webm`, `<base>.mp4` and
+// `<base>.jpg` are expected to sit alongside each other in public/.
+interface Props {
+	src: string;
+	label: string;
+	aspect?: string;
+	class?: string;
+}
+const { src, label, aspect = 'aspect-video', class: className = '' } = Astro.props;
+---
+
+<video
+	class:list={['loop-video block w-full object-cover', aspect, className]}
+	poster={`${src}.jpg`}
+	autoplay
+	muted
+	loop
+	playsinline
+	preload="metadata"
+	aria-label={label}
+>
+	<source src={`${src}.webm`} type="video/webm" />
+	<source src={`${src}.mp4`} type="video/mp4" />
+</video>
+
+<script>
+	// Two rules, same as every other moving thing on this site: nothing plays
+	// off-screen, and nothing plays for a visitor who asked for no motion —
+	// they get the poster frame, which is a real frame of the film.
+	function initLoopVideos() {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+		document.querySelectorAll<HTMLVideoElement>('.loop-video:not([data-loop-init])').forEach((v) => {
+			v.dataset.loopInit = 'true';
+			if (reduce.matches) {
+				v.autoplay = false;
+				v.pause();
+				v.removeAttribute('autoplay');
+				return;
+			}
+			if (!('IntersectionObserver' in window)) return;
+			const io = new IntersectionObserver(
+				([e]) => {
+					if (e.isIntersecting) void v.play().catch(() => {});
+					else v.pause();
+				},
+				{ threshold: 0.15 }
+			);
+			io.observe(v);
+		});
+	}
+	document.addEventListener('astro:page-load', initLoopVideos);
+	initLoopVideos();
+</script>

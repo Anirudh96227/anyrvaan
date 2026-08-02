@@ -22,4 +22,4 @@ Some of these genuinely can't be pinned down. Who first made the little "genie" 
 
 ## A list that stays useful
 
-What makes it more than a dead list is that each entry points at where I actually used it, so the reference and the real work stay tied together instead of drifting apart. And it has a twin pointed the other way — [a field guide to quiet apps](/work/anti-ui-atlas/) — for all the ways a screen can stay calm instead of reaching for your eye. The full thing is [the field guide to app animations](/work/ui-animation-atlas/).
+What makes it more than a dead list is that each entry points at where I actually used it, so the reference and the real work stay tied together instead of drifting apart. The full thing is [the field guide to app animations](/work/ui-animation-atlas/).

@@ -5,7 +5,7 @@ year: "2026"
 order: 11
 tags: ["Research", "Calm Design", "Reference"]
 thesis: "A good tool disappears in your hand. You only notice it when it breaks."
-draft: false
+draft: true
 ---
 
 This is the mirror image of [the field guide to app animations](/work/ui-animation-atlas/). That one collects the moments where an app moves to catch your eye; this one collects a hundred ways an app can do the opposite — stay quiet, wait in the background, and handle things without making you stop and deal with them.

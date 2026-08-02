@@ -1,0 +1,346 @@
+---
+import { getCollection, render } from 'astro:content';
+
+/**
+ * STAMP SHEET
+ * -------------------------------------------------------------------------
+ * Thirteen places across India, issued as thirteen stamps. A stamp is already
+ * what this project is: somewhere enormous, reproduced small enough to hold,
+ * printed and postmarked and kept. So the page stops being a list of videos
+ * and becomes a collector's page.
+ *
+ * Every part of the stamp is CSS — the perforated edge, the paper, the caption
+ * strip, the postmark. The only image on the page is the work itself, sitting
+ * in the stamp's window where the engraving would be.
+ *
+ * Arrangement is an album spread rather than a table: two columns, the right
+ * one dropped half a stamp so the eye travels diagonally, and each stamp set
+ * at its own slight angle as though it were laid down by hand.
+ */
+interface Props {
+	projectId: string;
+	eyebrow?: string;
+	heading?: string;
+	intro?: string;
+}
+const { projectId, eyebrow, heading, intro } = Astro.props;
+
+const studies = (await getCollection('studies', (s) => s.data.project === projectId && !s.data.draft)).sort(
+	(a, b) => a.data.number - b.data.number
+);
+
+// Titles are authored "Place, Region" — split so the region can sit on the
+// stamp's caption line where a country name usually goes.
+const stamps = await Promise.all(
+	studies.map(async (s) => {
+		const i = s.data.title.lastIndexOf(',');
+		return {
+			data: s.data,
+			place: i > 0 ? s.data.title.slice(0, i).trim() : s.data.title,
+			region: i > 0 ? s.data.title.slice(i + 1).trim() : '',
+			Content: (await render(s)).Content,
+		};
+	})
+);
+---
+
+<section class="stamp-sheet border-t border-white/5 px-6 py-24 sm:py-32">
+	<div class="mx-auto max-w-5xl">
+		<p class="reveal text-eyebrow uppercase text-neutral-400">{eyebrow ?? 'The Set'}</p>
+		<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">{heading ?? 'Thirteen issues.'}</h2>
+		{intro && <p class="reveal mt-6 max-w-2xl text-body text-neutral-400">{intro}</p>}
+
+		<ol class="stamp-sheet__album mt-24">
+			{
+				stamps.map((s, i) => (
+					<li class="stamp-item reveal" style={`--tilt:${i % 2 ? 0.7 : -0.9}deg; --i:${i}`}>
+						<figure>
+							<div class="stamp">
+								<div class="stamp__inner">
+									<div class="stamp__window">
+										{s.data.behanceId ? (
+											<iframe
+												src=""
+												data-lazy-src={`https://www.behance.net/embed/project/${s.data.behanceId}?ilo0=1`}
+												title={s.data.title}
+												loading="lazy"
+												allow="clipboard-write"
+												allowfullscreen
+												referrerpolicy="strict-origin-when-cross-origin"
+											/>
+										) : (
+											<div class="stamp__window-empty" />
+										)}
+									</div>
+									<div class="stamp__caption">
+										<span class="stamp__place">{s.place}</span>
+										{s.region && <span class="stamp__region">{s.region}</span>}
+										<span class="stamp__value">{String(s.data.number).padStart(2, '0')}</span>
+									</div>
+								</div>
+								<!-- Punched last so it sits over the paper, in the page's own
+								     colour — the bites read as holes rather than dots. -->
+								<span class="stamp__perf" aria-hidden="true" />
+							</div>
+							<figcaption class="stamp-item__note">
+								{s.data.thread && <p class="stamp-item__thread">{s.data.thread}</p>}
+								<div class="prose prose--study mt-3">
+									<s.Content />
+								</div>
+							</figcaption>
+						</figure>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+</section>
+
+<style>
+	/* The page colour the perforations are punched in. Kept as a variable so
+	   the stamp can move to another background without the holes going wrong. */
+	.stamp-sheet {
+		--page: #0a0a0a;
+		--paper: #efe7d8;
+		--ink: #2b2721;
+		--perf-r: 6px;
+		--perf-gap: 22px;
+	}
+
+	.stamp-sheet__album {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 7rem 4.5rem;
+	}
+	@media (min-width: 768px) {
+		.stamp-sheet__album {
+			grid-template-columns: 1fr 1fr;
+			gap: 9rem 6rem;
+		}
+		/* The right column sits half a stamp lower, so the eye travels down the
+		   spread diagonally instead of reading it as a table. */
+		.stamp-item:nth-child(even) {
+			transform: translateY(5rem);
+		}
+	}
+
+	.stamp-item {
+		position: relative;
+	}
+	.stamp-item figure {
+		margin: 0;
+		position: relative;
+		z-index: 1;
+	}
+
+	/* Each stamp rises and settles on its own slow cycle. Staggered off the
+	   index so the sheet never pulses in unison — thirteen things breathing
+	   together would read as a loading state, not as paper. */
+	@keyframes stamp-breathe {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-3px);
+		}
+	}
+
+	.stamp {
+		position: relative;
+		background: var(--paper);
+		/* A generous paper margin is most of what separates a stamp from a
+		   bordered photograph. */
+		padding: 20px 20px 16px;
+		rotate: var(--tilt, 0deg);
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.25) inset,
+			0 18px 45px -18px rgba(0, 0, 0, 0.9);
+		transition:
+			rotate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+			translate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+			box-shadow 0.6s ease;
+		/* `rotate` and `translate` are their own properties, so the breathing
+		   animation can own `transform` without fighting the hover state. */
+		animation: stamp-breathe 9s ease-in-out infinite;
+		animation-delay: calc(var(--i, 0) * -0.83s);
+	}
+	/* Picked up off the album page. */
+	.stamp-item:hover .stamp {
+		rotate: 0deg;
+		translate: 0 -6px;
+		animation-play-state: paused;
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.3) inset,
+			0 26px 60px -20px rgba(0, 0, 0, 0.95);
+	}
+
+	.stamp__inner {
+		position: relative;
+		z-index: 1;
+	}
+	.stamp__window {
+		position: relative;
+		aspect-ratio: 404 / 316;
+		background: #100f0d;
+		border: 1px solid rgba(43, 39, 33, 0.35);
+		overflow: hidden;
+	}
+	.stamp__window iframe,
+	.stamp__window-empty {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+
+	.stamp__caption {
+		display: flex;
+		align-items: baseline;
+		gap: 0.85rem;
+		padding: 1.15rem 0.2rem 0.2rem;
+		color: var(--ink);
+	}
+	.stamp__place {
+		font-size: 0.9rem;
+		font-weight: 500;
+		letter-spacing: 0.01em;
+		line-height: 1.15;
+		flex: 1;
+	}
+	.stamp__region {
+		font-size: 0.66rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		opacity: 0.55;
+	}
+	/* The catalogue number, set the way a denomination sits on a real stamp. */
+	.stamp__value {
+		font-size: 0.66rem;
+		letter-spacing: 0.1em;
+		opacity: 0.45;
+		white-space: nowrap;
+	}
+
+	/* Perforations: four repeating rows of page-coloured circles straddling the
+	   edges. Drawn over the paper rather than masked out of it, so they hold up
+	   against any solid background and cost nothing to render. */
+	.stamp__perf {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		pointer-events: none;
+		background-image:
+			radial-gradient(circle var(--perf-r) at calc(var(--perf-gap) / 2) 0, var(--page) 96%, transparent 97%),
+			radial-gradient(
+				circle var(--perf-r) at calc(var(--perf-gap) / 2) calc(var(--perf-r) * 2),
+				var(--page) 96%,
+				transparent 97%
+			),
+			radial-gradient(circle var(--perf-r) at 0 calc(var(--perf-gap) / 2), var(--page) 96%, transparent 97%),
+			radial-gradient(
+				circle var(--perf-r) at calc(var(--perf-r) * 2) calc(var(--perf-gap) / 2),
+				var(--page) 96%,
+				transparent 97%
+			);
+		background-size:
+			var(--perf-gap) calc(var(--perf-r) * 2),
+			var(--perf-gap) calc(var(--perf-r) * 2),
+			calc(var(--perf-r) * 2) var(--perf-gap),
+			calc(var(--perf-r) * 2) var(--perf-gap);
+		background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+		background-position:
+			0 0,
+			0 100%,
+			0 0,
+			100% 0;
+	}
+
+	/* A light that gathers behind the stamp when you reach for it — the same
+	   warm lamp the dioramas themselves were staged under. Sits behind the
+	   paper, spreads past its edges, and is the only thing on the page that
+	   answers to the pointer. */
+	.stamp-item::before {
+		content: '';
+		position: absolute;
+		z-index: 0;
+		inset: -14% -10%;
+		pointer-events: none;
+		opacity: 0;
+		background: radial-gradient(
+			ellipse at 50% 45%,
+			rgba(240, 219, 176, 0.2),
+			rgba(240, 219, 176, 0.06) 45%,
+			transparent 72%
+		);
+		transition: opacity 0.6s ease;
+	}
+	.stamp-item:hover::before {
+		opacity: 1;
+	}
+
+	.stamp-item__note {
+		margin-top: 2.5rem;
+		padding-left: 0.25rem;
+		max-width: 26rem;
+	}
+	.stamp-item__thread {
+		font-size: var(--text-eyebrow);
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--color-neutral-500);
+	}
+	/* Two lines each, and set small. The stamps are the page; this is the
+	   annotation under them, not the argument. */
+	.stamp-item__note .prose {
+		font-size: var(--text-small);
+		line-height: 1.75;
+		color: var(--color-neutral-400);
+		margin-top: 0.9rem;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.stamp,
+		.stamp-item:hover .stamp {
+			transition: none;
+			animation: none;
+			rotate: 0deg;
+			translate: none;
+		}
+		.stamp-item::before {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	// The embeds stay out of the document until a stamp is close to being
+	// looked at — thirteen third-party iframes on load is the one thing that
+	// would make this page feel heavy.
+	function initStampSheet() {
+		const frames = document.querySelectorAll<HTMLIFrameElement>(
+			'.stamp__window iframe[data-lazy-src]:not([data-stamp-init])'
+		);
+		if (!frames.length) return;
+		const io = new IntersectionObserver(
+			(entries, obs) => {
+				for (const e of entries) {
+					if (!e.isIntersecting) continue;
+					const f = e.target as HTMLIFrameElement;
+					f.src = f.dataset.lazySrc ?? '';
+					obs.unobserve(f);
+				}
+			},
+			{ rootMargin: '300px 0px' }
+		);
+		frames.forEach((f) => {
+			f.dataset.stampInit = 'true';
+			io.observe(f);
+		});
+	}
+	document.addEventListener('astro:page-load', initStampSheet);
+	initStampSheet();
+</script>

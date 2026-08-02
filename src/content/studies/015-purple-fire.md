@@ -1,13 +1,15 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 7
 title: "Nobody, on Fire"
 thread: "Mystery, without a face"
 video: "https://youtube.com/shorts/4pNF0WvF6b8"
 companion: "./_companions/07-purple-fire-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief specifying pure silhouette and unstable, shifting flame color — no face, no defining feature to name."
   - step: "Generation"

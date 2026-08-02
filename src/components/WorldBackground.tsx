@@ -10,8 +10,6 @@ import { BREATH_MS, timeSinceInput } from '../scripts/stillness';
  *   dashboard     — a faint data grid with a scan pulse sweeping across
  *   ui            — a cell grid lit by a slow-drifting cursor of light
  *   effects       — sparse particles drifting like the homepage field
- *   held-breath   — one near-motionless breathing glow + rare embers
- *                   (awakening-of-mahakal: the world gone still)
  *   orb-trail     — a single point on a long slow loop, trailing behind it
  *                   (echoes-of-eternity: the witness that keeps moving)
  *   grid-swarm    — a dense field of cells lighting in a traveling wave
@@ -23,7 +21,9 @@ import { BREATH_MS, timeSinceInput } from '../scripts/stillness';
  *   code-pulse    — thin lines flickering on/off like a terminal cursor
  *                   (motion-made-with-code: many small builds, one method)
  *   suspended-arc — short arcs that swing toward completion and stop early,
- *                   every time (rough-cut-divinity: cut a beat before the end)
+ *                   every time (sketch-to-video: the films stop before they land)
+ *   dusk-to-night — one field of lamps carried from warm dusk to moonlight as
+ *                   you scroll (childrens-stories: two films, two hours)
  *
  * Contract (same as the rest of the site): static under prefers-reduced-motion,
  * paused when the tab is hidden, thinner on coarse pointers / low-core devices,
@@ -35,18 +35,19 @@ export type World =
 	| 'dashboard'
 	| 'ui'
 	| 'effects'
-	| 'held-breath'
 	| 'orb-trail'
 	| 'grid-swarm'
 	| 'diorama-drift'
 	| 'almost-nothing'
 	| 'code-pulse'
 	| 'suspended-arc'
-	| 'enso';
+	| 'enso'
+	| 'dusk-to-night';
 
 const COBALT = '96, 165, 250'; // the site's one signal blue, rgb
 const PHOSPHOR = '110, 231, 183'; // faint CRT green, retro only
-const AMBER = '240, 190, 120'; // warm ember — held-breath + diorama-drift only
+const AMBER = '240, 190, 120'; // warm ember — diorama-drift only
+const MOON = '186, 205, 240'; // cool moonlight — dusk-to-night only
 
 export default function WorldBackground({ theme }: { theme: World }) {
 	const ref = useRef<HTMLCanvasElement>(null);
@@ -92,18 +93,6 @@ export default function WorldBackground({ theme }: { theme: World }) {
 		const trailY = new Float32Array(TRAIL_LEN);
 		let trailFilled = false;
 
-		// held-breath: a handful of rare embers, seeded once so they don't
-		// reshuffle every render.
-		const EMBER_N = 6;
-		const emberX = new Float32Array(EMBER_N);
-		const emberY = new Float32Array(EMBER_N);
-		const emberSeed = new Float32Array(EMBER_N);
-		for (let i = 0; i < EMBER_N; i++) {
-			emberX[i] = Math.random() * w;
-			emberY[i] = Math.random() * h;
-			emberSeed[i] = Math.random() * 1000;
-		}
-
 		// diorama-drift: fixed warm points (one per "diorama"), a spotlight
 		// sweeps past and lights whichever it's nearest.
 		const DIO_N = 13;
@@ -114,21 +103,10 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			dioY[i] = Math.random() * h;
 		}
 
-		// suspended-arc: a handful of arcs, each on its own slow clock, that
-		// always swing toward completion and stop just short of it.
-		const ARC_N = 8;
-		const arcX = new Float32Array(ARC_N);
-		const arcY = new Float32Array(ARC_N);
-		const arcR = new Float32Array(ARC_N);
-		const arcStart = new Float32Array(ARC_N);
-		const arcSeed = new Float32Array(ARC_N);
-		for (let i = 0; i < ARC_N; i++) {
-			arcX[i] = Math.random() * w;
-			arcY[i] = Math.random() * h;
-			arcR[i] = 30 + Math.random() * 70;
-			arcStart[i] = Math.random() * Math.PI * 2;
-			arcSeed[i] = Math.random() * 1000;
-		}
+		// suspended-arc: two rings, centred and concentric, on the same clock a
+		// third of a cycle apart. An earlier version scattered eight small arcs at
+		// random positions, which read as busy rather than withheld — and the
+		// project is about one decision, made once. So: one gesture, held.
 
 		// enso: the site's own mark, drawn slowly and left open. Each one takes
 		// most of a minute to come round, rests, and lifts — the case study
@@ -143,6 +121,21 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			ensoY[i] = (0.12 + Math.random() * 0.76) * h;
 			ensoR[i] = 46 + Math.random() * 74;
 			ensoSeed[i] = Math.random() * 1000;
+		}
+
+		// dusk-to-night: a field of lamps, seeded low in the frame — diyas on
+		// steps, lanterns along a bank. They never move. What changes across the
+		// page is the hour they're burning in.
+		const LAMP_N = lowTier ? 13 : 21;
+		const lampX = new Float32Array(LAMP_N);
+		const lampY = new Float32Array(LAMP_N);
+		const lampSeed = new Float32Array(LAMP_N);
+		for (let i = 0; i < LAMP_N; i++) {
+			lampX[i] = Math.random() * w;
+			// Weighted toward the lower half: light sits on the ground here, it
+			// isn't scattered through the sky.
+			lampY[i] = h * (0.38 + Math.pow(Math.random(), 0.7) * 0.56);
+			lampSeed[i] = Math.random() * 1000;
 		}
 
 		// almost-nothing: very few, very faint, very slow.
@@ -270,25 +263,6 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						ctx!.fill();
 					}
 				}
-			} else if (theme === 'held-breath') {
-				// one near-motionless breathing glow — a 22s cycle, barely there —
-				// plus rare embers that flare and fade one at a time
-				const breath = 0.5 + 0.5 * Math.sin(t * 0.00029);
-				const g = ctx!.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h) * 0.5);
-				g.addColorStop(0, `rgba(${AMBER}, ${(0.1 + 0.07 * breath).toFixed(3)})`);
-				g.addColorStop(1, `rgba(${AMBER}, 0)`);
-				ctx!.fillStyle = g;
-				ctx!.fillRect(0, 0, w, h);
-				for (let i = 0; i < EMBER_N; i++) {
-					const cycle = 9000 + emberSeed[i] * 11; // each ember on its own slow clock
-					const phase = ((t + emberSeed[i] * 37) % cycle) / cycle;
-					const flare = Math.max(0, Math.sin(phase * Math.PI)) ** 6; // long dark, brief flare
-					if (flare <= 0.01) continue;
-					ctx!.fillStyle = `rgba(${AMBER}, ${(0.5 * flare).toFixed(3)})`;
-					ctx!.beginPath();
-					ctx!.arc(emberX[i], emberY[i], 1.2 + flare * 1.4, 0, Math.PI * 2);
-					ctx!.fill();
-				}
 			} else if (theme === 'orb-trail') {
 				// a single witness point on a long, slow, non-repeating loop —
 				// the same dot-and-trail language as the SignalDot lineage
@@ -379,42 +353,75 @@ export default function WorldBackground({ theme }: { theme: World }) {
 					ctx!.stroke();
 				}
 			} else if (theme === 'suspended-arc') {
-				// each arc swings toward closing and stops a beat early, holds,
-				// fades, and starts again — never once completes the circle
-				const STOP_AT = 0.82; // never reaches 1
-				for (let i = 0; i < ARC_N; i++) {
-					const cycle = 5200 + arcSeed[i] * 5; // each arc its own pace
-					const phase = ((t + arcSeed[i] * 41) % cycle) / cycle;
-					// swing (0 → STOP_AT) then hold then fade, as one 0..1 cycle
-					const swingEnd = 0.4;
-					const holdEnd = 0.75;
+				// One ring, drawn at a constant rate and stopped dead a beat before
+				// it closes. Constant rate is the whole point: nothing here eases,
+				// because an eased stroke reads as a hand lifting, and this has to
+				// read as a machine that was stopped. The ensō elsewhere on the site
+				// is the opposite gesture and must not be confused with it.
+				//
+				// The part that never gets drawn is shown as a faint dotted phantom,
+				// so the missing ending is visible rather than merely absent.
+				const STOP_AT = 0.86; // never reaches 1
+				const CYCLE = BREATH_MS * 4;
+				const R = Math.min(w, h) * 0.3;
+
+				for (let ring = 0; ring < 2; ring++) {
+					// The second ring is larger, fainter, and a third of a cycle
+					// behind — so the frame is never empty and never doubled.
+					const rad = R * (ring === 0 ? 1 : 1.42);
+					const weight = ring === 0 ? 1 : 0.34;
+					const phase = ((t + ring * CYCLE * 0.34) % CYCLE) / CYCLE;
+
+					const travelEnd = 0.34;
+					const holdEnd = 0.82;
 					let sweep: number;
 					let alpha: number;
-					if (phase < swingEnd) {
-						const p = phase / swingEnd;
-						sweep = STOP_AT * (1 - Math.pow(1 - p, 3)); // ease-out, arrested
-						alpha = Math.min(1, p * 3);
+					if (phase < travelEnd) {
+						sweep = STOP_AT * (phase / travelEnd); // linear — mechanical
+						alpha = Math.min(1, (phase / travelEnd) * 5);
 					} else if (phase < holdEnd) {
-						sweep = STOP_AT;
+						sweep = STOP_AT; // the hold, which is most of the cycle
 						alpha = 1;
 					} else {
-						const p = (phase - holdEnd) / (1 - holdEnd);
 						sweep = STOP_AT;
-						alpha = 1 - p;
+						alpha = 1 - (phase - holdEnd) / (1 - holdEnd);
 					}
-					ctx!.strokeStyle = `rgba(${COBALT}, ${(0.4 * alpha).toFixed(3)})`;
-					ctx!.lineWidth = 1.6;
+					if (alpha <= 0.01) continue;
+
+					// Start at the top and travel clockwise, so the gap that's left
+					// sits at twelve o'clock and reads as deliberate.
+					const start = -Math.PI / 2;
+					const end = start + sweep * Math.PI * 2;
+
+					// the ending that never arrives
+					ctx!.setLineDash([2, 7]);
+					ctx!.strokeStyle = `rgba(235,235,235, ${(0.07 * alpha * weight).toFixed(3)})`;
+					ctx!.lineWidth = 1;
 					ctx!.beginPath();
-					ctx!.arc(arcX[i], arcY[i], arcR[i], arcStart[i], arcStart[i] + sweep * Math.PI * 2);
+					ctx!.arc(cx, cy, rad, end, start + Math.PI * 2);
 					ctx!.stroke();
-					// the arrested tip — where it always stops
-					if (alpha > 0.05) {
-						const tipA = arcStart[i] + sweep * Math.PI * 2;
-						ctx!.fillStyle = `rgba(235,235,235, ${(0.6 * alpha).toFixed(3)})`;
-						ctx!.beginPath();
-						ctx!.arc(arcX[i] + Math.cos(tipA) * arcR[i], arcY[i] + Math.sin(tipA) * arcR[i], 1.8, 0, Math.PI * 2);
-						ctx!.fill();
-					}
+					ctx!.setLineDash([]);
+
+					ctx!.lineCap = 'round';
+					ctx!.strokeStyle = `rgba(${COBALT}, ${(0.34 * alpha * weight).toFixed(3)})`;
+					ctx!.lineWidth = ring === 0 ? 1.8 : 1.2;
+					ctx!.beginPath();
+					ctx!.arc(cx, cy, rad, start, end);
+					ctx!.stroke();
+
+					// The arrested head. It stops with the stroke and stays lit
+					// through the hold — the only bright thing in the frame, sitting
+					// exactly where the film would have finished.
+					const hx = cx + Math.cos(end) * rad;
+					const hy = cy + Math.sin(end) * rad;
+					ctx!.fillStyle = `rgba(235,235,235, ${(0.16 * alpha * weight).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(hx, hy, 7, 0, Math.PI * 2);
+					ctx!.fill();
+					ctx!.fillStyle = `rgba(235,235,235, ${(0.7 * alpha * weight).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(hx, hy, 2, 0, Math.PI * 2);
+					ctx!.fill();
 				}
 			} else if (theme === 'enso') {
 				// Each circle draws itself brush-like — the stroke swells through
@@ -464,6 +471,102 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						ctx!.stroke();
 					}
 				}
+			} else if (theme === 'dusk-to-night') {
+				// The hour changes, not the subject. One field of lamps is carried
+				// from the last of the daylight into full moonlight, and the thing
+				// driving the clock is the visitor's own scroll: the top of the page
+				// is dusk, the bottom is after dark. Smoothstepped so neither end
+				// arrives in a rush.
+				const night = prog * prog * (3 - 2 * prog);
+				// The two hours overlap rather than hand off. Straight crossfading
+				// them leaves a dead middle — the warmth gone, the moon not yet up —
+				// so the warm ground is held past halfway and the moon is brought in
+				// early. For a while both are in the sky, which is what dusk is.
+				const warm = Math.pow(1 - night, 0.65);
+				const risen = Math.pow(night, 0.6);
+
+				// This world must not dim at the page's ends the way the shared
+				// `ignite` bell does — the night has to be fully present at the
+				// bottom, which is exactly where that curve bottoms out. Keeps the
+				// breath and the stillness swell, drops the bell.
+				ctx!.globalAlpha = Math.min(1, (0.9 + 0.1 * worldBreath) * (0.92 + 0.08 * stillness));
+
+				// The warm ground: low and to one side, the way the last light
+				// actually falls — and gone by the time the moon is up.
+				if (warm > 0.02) {
+					const glow = ctx!.createRadialGradient(w * 0.3, h * 0.94, 0, w * 0.3, h * 0.94, Math.max(w, h) * 0.8);
+					glow.addColorStop(0, `rgba(${AMBER}, ${(0.15 * warm).toFixed(3)})`);
+					glow.addColorStop(1, `rgba(${AMBER}, 0)`);
+					ctx!.fillStyle = glow;
+					ctx!.fillRect(0, 0, w, h);
+				}
+
+				// The moon rises as the page darkens — off the top edge at dusk, well
+				// up by the end. One disc and its halo; nothing else in the sky.
+				if (risen > 0.02) {
+					const moonX = w * 0.76;
+					const moonY = h * (-0.16 + 0.42 * risen);
+					const halo = ctx!.createRadialGradient(moonX, moonY, 0, moonX, moonY, Math.min(w, h) * 0.62);
+					halo.addColorStop(0, `rgba(${MOON}, ${(0.16 * risen).toFixed(3)})`);
+					halo.addColorStop(1, `rgba(${MOON}, 0)`);
+					ctx!.fillStyle = halo;
+					ctx!.fillRect(0, 0, w, h);
+					// The disc itself is drawn soft rather than as a flat fill — a
+					// hard-edged grey circle up there reads as a UI element, not as
+					// the moon.
+					const rad = 24 + 10 * risen;
+					const disc = ctx!.createRadialGradient(moonX, moonY, 0, moonX, moonY, rad);
+					disc.addColorStop(0, `rgba(${MOON}, ${(0.2 * risen).toFixed(3)})`);
+					disc.addColorStop(0.62, `rgba(${MOON}, ${(0.15 * risen).toFixed(3)})`);
+					disc.addColorStop(1, `rgba(${MOON}, 0)`);
+					ctx!.fillStyle = disc;
+					ctx!.beginPath();
+					ctx!.arc(moonX, moonY, rad, 0, Math.PI * 2);
+					ctx!.fill();
+				}
+
+				// The lamps, travelling warm → silver with the hour. Mixed once per
+				// frame rather than per lamp: they're all burning in the same evening.
+				const mix = (a: number, b: number) => Math.round(a + (b - a) * night);
+				const lamp = `${mix(240, 186)}, ${mix(190, 205)}, ${mix(120, 240)}`;
+
+				for (let i = 0; i < LAMP_N; i++) {
+					const s = lampSeed[i];
+					// Two sines that never come back into phase, so the field flickers
+					// like a row of candles rather than pulsing in unison.
+					const flame = 0.72 + 0.18 * Math.sin(t * 0.0021 + s) + 0.1 * Math.sin(t * 0.0053 + s * 2.3);
+					const x = lampX[i];
+					const y = lampY[i];
+					const r = 1.4 + 1.5 * flame;
+
+					ctx!.fillStyle = `rgba(${lamp}, ${(0.09 * flame).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(x, y, r * 4.2, 0, Math.PI * 2);
+					ctx!.fill();
+					// A flame reads brighter than a reflection of one, so the cores give
+					// a little of themselves up to the night.
+					ctx!.fillStyle = `rgba(${lamp}, ${(0.55 * flame * (1 - 0.3 * night)).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(x, y, r, 0, Math.PI * 2);
+					ctx!.fill();
+
+					// After dark the lamps find water under them: the light breaks into
+					// a few short rungs that slide with the current. It only exists at
+					// night, because at dusk you'd never notice it.
+					if (risen > 0.12) {
+						ctx!.lineWidth = 1.1;
+						for (let k = 1; k <= 4; k++) {
+							const ry = y + k * 9;
+							if (ry > h) break;
+							const wob = Math.sin(t * 0.0011 + s + k * 1.7) * (2 + k);
+							ctx!.strokeStyle = `rgba(${lamp}, ${(0.26 * risen * flame * (1 - k / 5)).toFixed(3)})`;
+							ctx!.beginPath();
+							ctx!.moveTo(x - 4 - k + wob, ry);
+							ctx!.lineTo(x + 4 + k + wob, ry);
+							ctx!.stroke();
+						}
+					}
+				}
 			} else {
 				// effects — sparse particles drifting slowly upward
 				for (let i = 0; i < N; i++) {
@@ -479,9 +582,11 @@ export default function WorldBackground({ theme }: { theme: World }) {
 				}
 			}
 
-			// the horizon: a low cobalt glow that rises as you near the page's end
+			// the horizon: a low cobalt glow that rises as you near the page's end.
+			// dusk-to-night sits this one out — it paints its own sky, and a cobalt
+			// band coming up under a moon would read as a second, competing hour.
 			ctx!.globalAlpha = 1;
-			if (prog > 0.55) {
+			if (prog > 0.55 && theme !== 'dusk-to-night') {
 				const rise = (prog - 0.55) / 0.45;
 				const g = ctx!.createLinearGradient(0, h, 0, h - 260 * rise);
 				g.addColorStop(0, `rgba(${COBALT}, ${(0.16 * rise).toFixed(3)})`);
@@ -508,8 +613,22 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			raf = 0;
 		};
 
+		// Under reduced motion there's no loop — but the scroll-driven part of a
+		// world isn't animation, it's position, and freezing it would leave
+		// dusk-to-night stuck at dusk for the whole page. So the frame is redrawn
+		// on scroll instead: still nothing moves on its own.
+		let staticRaf = 0;
+		const onStaticScroll = () => {
+			if (staticRaf) return;
+			staticRaf = requestAnimationFrame(() => {
+				staticRaf = 0;
+				draw(0);
+			});
+		};
+
 		if (reduce) {
 			draw(0); // one static frame, no loop
+			window.addEventListener('scroll', onStaticScroll, { passive: true });
 		} else {
 			startLoop();
 		}
@@ -535,6 +654,8 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			stopLoop();
 			document.removeEventListener('visibilitychange', onVis);
 			window.removeEventListener('resize', onResize);
+			window.removeEventListener('scroll', onStaticScroll);
+			if (staticRaf) cancelAnimationFrame(staticRaf);
 			clearTimeout(rt);
 		};
 	}, [theme]);

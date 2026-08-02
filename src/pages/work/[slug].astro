@@ -10,6 +10,10 @@ import YouTubeFacade from '../../components/YouTubeFacade.astro';
 import WorldBackground, { type World } from '../../components/WorldBackground.tsx';
 
 import ConceptHero, { type ConceptPreset } from '../../components/ConceptHero.tsx';
+import LoopVideo from '../../components/LoopVideo.astro';
+import NewForests from '../../components/NewForests.tsx';
+import FilmStrip from '../../components/FilmStrip.astro';
+import StampSheet from '../../components/StampSheet.astro';
 
 export async function getStaticPaths() {
 	const projects = await getCollection('work', ({ data }) => !data.draft);
@@ -95,6 +99,47 @@ const platesWithCaption = galleryPlates.map((img) => {
 
 const frames = project.data.frames ?? [];
 
+// A closing plate, after the films rather than before them: the last line of
+// The Sky Dancers, left running. Opt in by id, like the sheet and the strip
+// below — a piece this specific belongs to one project.
+const FOREST_PROJECTS = ['childrens-stories'];
+const newForests = FOREST_PROJECTS.includes(project.id);
+
+// Thirteen places, issued as thirteen stamps — see StampSheet.
+const STAMP_SHEET_PROJECTS = ['miniature-india'];
+const stampSheet = STAMP_SHEET_PROJECTS.includes(project.id);
+
+// The film strip is Metro Monster's own layout: twenty-three vertical films are
+// too many to stack. Opt in by project id, deliberately — an earlier version
+// triggered on "12 or more studies" and quietly converted Miniature Magical
+// India (13 studies) to the same layout.
+const FILM_STRIP_PROJECTS = ['metro', 'sketch-to-video'];
+const stripCandidates = FILM_STRIP_PROJECTS.includes(project.id)
+	? (await getCollection('studies', (s) => s.data.project === project.id && !s.data.draft)).sort(
+			(a, b) => a.data.number - b.data.number
+		)
+	: [];
+const stripFilms = await Promise.all(
+	stripCandidates.map(async (s) => ({
+		number: s.data.number,
+		title: s.data.title,
+		video: s.data.video ?? '',
+		// Metro ships plain `poster` paths. Sketch to Video has no posters and
+		// doesn't need them: the drawing each film was made from is the right
+		// face for the card. Run it through the image pipeline so the strip gets
+		// a sized WebP rather than the original.
+		poster:
+			s.data.poster ??
+			(s.data.companion
+				? (await getImage({ src: s.data.companion, width: 720, format: 'webp' })).src
+				: undefined),
+		// The strip shows one short block beside the centred card, so only the
+		// opening paragraph travels — the rest of the study's prose would be a
+		// wall of text at this size. Authored as plain prose, so no markdown.
+		body: (s.body ?? '').trim().split(/\n\s*\n/)[0].trim(),
+	}))
+);
+
 // Share preview: use the case study's own cover so a shared work link previews
 // with its still, not the site-wide default. JPEG for the widest scraper support.
 const ogImage = project.data.cover
@@ -108,14 +153,15 @@ const WORLDS: Record<string, World> = {
 	'spiritual-series': 'spiritual',
 	'retro-computing': 'retro',
 	'ui-replicas': 'ui',
-	'awakening-of-mahakal': 'held-breath',
 	'echoes-of-eternity': 'orb-trail',
 	'effects-library': 'grid-swarm',
 	'miniature-india': 'diorama-drift',
 	'anti-ui-atlas': 'almost-nothing',
 	'ui-animation-atlas': 'ui',
 	'motion-made-with-code': 'code-pulse',
-	'rough-cut-divinity': 'suspended-arc',
+	'sketch-to-video': 'suspended-arc',
+	// two stories, two hours — the page travels from dusk to moonlight
+	'childrens-stories': 'dusk-to-night',
 	// the case study about this site gets the mark this site keeps drawing
 	'anyrvaan-site': 'enso',
 };
@@ -179,7 +225,18 @@ const world = WORLDS[project.id];
 			}
 
 			{
-				conceptPreset ? (
+				/* A `coverVideo` is a card face; leading the page with it as well is
+				   opted into per entry, so Echoes keeps its Behance embed as the hero
+				   and Miniature keeps no hero at all. */
+				project.data.coverVideo && project.data.coverVideoHero ? (
+					<div class="mx-auto max-w-5xl px-6 pb-16">
+						<div class="glow-frame reveal rounded-2xl">
+							<div class="glow-frame__inner overflow-hidden border border-white/10 bg-black">
+								<LoopVideo src={project.data.coverVideo} label={project.data.coverAlt ?? project.data.title} />
+							</div>
+						</div>
+					</div>
+				) : conceptPreset ? (
 					<ConceptHero client:visible preset={conceptPreset} title={project.data.title} />
 				) : facade ? (
 					<div class="mx-auto max-w-4xl px-6 pb-16">
@@ -327,13 +384,46 @@ const world = WORLDS[project.id];
 						</section>
 					))
 				) : (
-					<StudiesSection
-						projectId={project.id}
-						title={project.data.title}
-						eyebrow={project.data.studiesEyebrow}
-						heading={project.data.studiesHeading}
-						intro={project.data.studiesIntro}
-					/>
+					stripFilms.length > 0 ? (
+						<FilmStrip
+							films={stripFilms}
+							eyebrow={project.data.studiesEyebrow}
+							heading={project.data.studiesHeading}
+							intro={project.data.studiesIntro}
+						/>
+					) : stampSheet ? (
+						<StampSheet
+							projectId={project.id}
+							eyebrow={project.data.studiesEyebrow}
+							heading={project.data.studiesHeading}
+							intro={project.data.studiesIntro}
+						/>
+					) : (
+						<StudiesSection
+							projectId={project.id}
+							title={project.data.title}
+							eyebrow={project.data.studiesEyebrow}
+							heading={project.data.studiesHeading}
+							intro={project.data.studiesIntro}
+						/>
+					)
+				)
+			}
+
+			{
+				newForests && (
+					<section class="border-t border-white/5 px-6 py-24 sm:py-32">
+						<div class="mx-auto max-w-5xl">
+							<p class="reveal text-eyebrow uppercase text-neutral-400">After the Film</p>
+							<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">They drop seeds. New forests begin.</h2>
+							<p class="reveal mt-6 max-w-2xl text-body text-neutral-400">
+								The last line of the second film, left running. Whatever grows here stays grown.
+							</p>
+							<div class="mt-16">
+								<NewForests client:visible />
+							</div>
+						</div>
+					</section>
 				)
 			}
 

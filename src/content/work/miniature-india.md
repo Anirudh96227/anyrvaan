@@ -2,9 +2,10 @@
 title: "Miniature Magical India"
 summary: "Thirteen places across India, each rebuilt as a hand-lit diorama the size of a palm — one landmark at a time, the whole country at the scale of a keepsake."
 year: "2025"
-order: 1
+order: 2
 tags: ["Miniature Art", "AI Art Direction", "Environment Design"]
 cover: "../../assets/work/miniature-india.jpg"
+coverVideo: "/videos/miniature/miniature-hero"
 coverAlt: "Monks holding candles at the mouth of a cave below Phugtal Monastery, rebuilt as a hand-lit miniature"
 studiesEyebrow: "The Set"
 studiesHeading: "Thirteen dioramas, one country."

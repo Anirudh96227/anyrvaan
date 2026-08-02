@@ -1,5 +1,5 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 4
 title: "A Merge in Progress"
@@ -7,8 +7,10 @@ creator: "Kshyv"
 thread: "Identity, still choosing"
 video: "https://youtu.be/mUcfRkpGF48"
 companion: "./_companions/04-ardhnarishwar-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief describing the dissolve itself as the subject — both forms visible together, no completed 'after' state."
   - step: "Generation"

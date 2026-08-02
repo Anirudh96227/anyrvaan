@@ -1,13 +1,15 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 6
 title: "Weather With a Career Plan"
 thread: "Potential, a second before purpose"
 video: "https://youtube.com/shorts/XOCLsF6YJ1M"
 companion: "./_companions/06-thunder-sword-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief describing the catch and the start of the forge, with an explicit instruction to cut before the sword fully forms."
   - step: "Generation"

@@ -7,4 +7,4 @@ thread: "Light that feeds people"
 behanceId: "235127347"
 ---
 
-The Harmandir Sahib is gold on water — but ask anyone who's been, and what stays isn't the shimmer. It's the langar: tens of thousands of strangers fed daily, sitting on the same floor, served by volunteers. The most beautiful building in Punjab doubles as the world's largest free kitchen.
+Gold on water, but what stays is the langar — tens of thousands fed daily on the same floor. The building doubles as the world's largest free kitchen.

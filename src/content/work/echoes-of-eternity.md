@@ -5,7 +5,8 @@ year: "2026"
 order: 4
 tags: ["Motion Design", "3D Animation", "Visual Effects"]
 cover: "../../assets/work/echoes-of-eternity.jpg"
-coverAlt: "A glowing golden figure walking out of a dark mountain horizon at dawn"
+coverVideo: "/videos/echoes/echoes-hero"
+coverAlt: "The reflective orb travelling, catching whatever is in front of it"
 behanceId: "235954251"
 thesis: "Something that only ever watches eventually has to become part of what it's watching."
 draft: false

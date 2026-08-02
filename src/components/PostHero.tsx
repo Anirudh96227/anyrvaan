@@ -22,6 +22,13 @@ export type PostHeroVariant =
 
 interface PostHeroProps {
 	variant: PostHeroVariant;
+	/**
+	 * Card mode: the same motif, sized as a 16:9 thumbnail with the HUD caption
+	 * dropped. Used on the Journal index so a post's face on the list is the
+	 * exact visual that opens the post — no second artwork to keep in sync, and
+	 * nothing invented for the card that the piece doesn't already claim.
+	 */
+	compact?: boolean;
 }
 
 // Site palette, as raw channel strings so alpha can be composed inline.
@@ -968,7 +975,7 @@ const FACTORIES: Record<PostHeroVariant, (c: HTMLCanvasElement) => Engine> = {
 	'strata-dig': strataDig,
 };
 
-export default function PostHero({ variant }: PostHeroProps) {
+export default function PostHero({ variant, compact = false }: PostHeroProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const caption = CAPTIONS[variant];
 
@@ -1078,7 +1085,7 @@ export default function PostHero({ variant }: PostHeroProps) {
 	}, [variant]);
 
 	return (
-		<div className="post-hero" data-variant={variant}>
+		<div className={`post-hero${compact ? ' post-hero--compact' : ''}`} data-variant={variant}>
 			<canvas
 				ref={canvasRef}
 				className="post-hero__canvas"
@@ -1089,10 +1096,12 @@ export default function PostHero({ variant }: PostHeroProps) {
 				suppressHydrationWarning
 				style={{ touchAction: 'none', cursor: 'pointer' }}
 			/>
-			<div className="post-hero__caption">
-				<span className="post-hero__verb">{caption.verb}</span>
-				<span className="post-hero__hint">{caption.hint}</span>
-			</div>
+			{!compact && (
+				<div className="post-hero__caption">
+					<span className="post-hero__verb">{caption.verb}</span>
+					<span className="post-hero__hint">{caption.hint}</span>
+				</div>
+			)}
 		</div>
 	);
 }

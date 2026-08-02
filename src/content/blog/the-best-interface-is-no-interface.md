@@ -6,7 +6,7 @@ tags: ["calm design", "interfaces", "research"]
 hero: "vanishing-ui"
 ---
 
-Making [a field guide to quiet apps](/work/anti-ui-atlas/) meant sitting with an idea that's easy to say and hard to take seriously: the best app is often the one you barely notice. Not a minimal one — a quiet one, that does its job and then leaves you alone. It sounds soft and a little precious. But there's a genuinely sharp idea underneath, and I want to lay it out in plain words, including the part where I admit what it isn't.
+I spent a while gathering the other kind of list — the ways an app can stay out of your way — and it meant sitting with an idea that's easy to say and hard to take seriously: the best app is often the one you barely notice. Not a minimal one — a quiet one, that does its job and then leaves you alone. It sounds soft and a little precious. But there's a genuinely sharp idea underneath, and I want to lay it out in plain words, including the part where I admit what it isn't.
 
 ## First, the caveat
 
@@ -22,4 +22,4 @@ The thing I respect most in the sources is that they police their own evidence, 
 
 ## Where it shows up
 
-This is the thinking behind the quietest moments in my work — the stretches where a screen says nothing and just lets a rising line do the talking. It's also the deliberate flip side of [the field guide to app animations](/work/ui-animation-atlas/), which collects all the ways a screen *does* reach for your eye. Same subject, opposite directions. The full collection of quiet ideas is [a field guide to quiet apps](/work/anti-ui-atlas/).
+This is the thinking behind the quietest moments in my work — the stretches where a screen says nothing and just lets a rising line do the talking. It's also the deliberate flip side of [the field guide to app animations](/work/ui-animation-atlas/), which collects all the ways a screen *does* reach for your eye. Same subject, opposite directions.

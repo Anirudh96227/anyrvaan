@@ -7,4 +7,4 @@ thread: "History at desk scale"
 behanceId: "235128131"
 ---
 
-The Red Fort is the schoolbook chapter you can walk through — sandstone ramparts that have watched over Delhi for nearly four centuries and still anchor the country's biggest speeches every August. Few walls anywhere carry this much remembered weight.
+Sandstone ramparts that have watched Delhi for four centuries. Few walls anywhere carry this much remembered weight.

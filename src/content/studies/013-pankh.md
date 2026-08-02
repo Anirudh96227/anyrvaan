@@ -1,5 +1,5 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 5
 title: "Three Minutes of Not Getting There"
@@ -7,8 +7,10 @@ creator: "Kshyv"
 thread: "Patience, held at length"
 video: "https://youtu.be/F3oGlG17G7k"
 companion: "./_companions/05-pankh-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief built around the feather and flute as recurring images, with no depicted miracle or narrative climax."
   - step: "Generation"

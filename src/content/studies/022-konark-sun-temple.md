@@ -7,4 +7,4 @@ thread: "Carving carved smaller"
 behanceId: "235129385"
 ---
 
-Konark is a temple built as a chariot for the sun god — twelve pairs of carved stone wheels, each one a sundial, every surface worked by hands that finished their shift seven centuries ago. Walking around it, the detail is the whole story.
+A temple built as a chariot for the sun — twelve pairs of stone wheels, each one a sundial. The detail is the whole story.

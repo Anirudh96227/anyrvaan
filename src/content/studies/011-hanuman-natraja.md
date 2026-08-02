@@ -1,5 +1,5 @@
 ---
-project: "rough-cut-divinity"
+project: "sketch-to-video"
 draft: false
 number: 3
 title: "The Bow That Hasn't Landed Yet"
@@ -7,8 +7,10 @@ creator: "Kshyv"
 thread: "Devotion, mid-descent"
 video: "https://youtube.com/shorts/P7MioN6NVzg"
 companion: "./_companions/03-hanuman-natraja-companion.jpeg"
-companionLabel: "A graphite-style companion rendering of the same scene"
+companionLabel: "The graphite drawing this film was made from"
 toolChain:
+  - step: "Sketch"
+    detail: "A graphite drawing of the scene, made first — it fixes the pose, the light, the crop and how much of the figure you see."
   - step: "Direction"
     detail: "A brief specifying the kneel held mid-descent — reverence as a verb, not a finished bow."
   - step: "Generation"
