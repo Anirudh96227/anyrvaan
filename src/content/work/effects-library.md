@@ -2,7 +2,7 @@
 title: "Automating Devotion"
 summary: "Three hundred devotional songs, each needing its own visual treatment — too many to animate by hand, so I built a system that renders them from code."
 year: "2026"
-order: 5
+order: 7
 tags: ["Animation", "Made with Code", "Remotion"]
 coverMotion: "render-mandala"
 cover: "../../assets/work/effects-library-cover.jpg"

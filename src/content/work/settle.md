@@ -2,7 +2,7 @@
 title: "Settle"
 summary: "A thirty-six second film for a payments product, built around one overdue invoice and the tax already paid on money that never arrived."
 year: "2026"
-order: 2
+order: 3
 tags: ["Product Film", "Motion Design", "Fintech"]
 # The card runs the opening beat forwards and then backwards: the invoice
 # prints itself out of the light bar, then unprints. `cover` stays underneath

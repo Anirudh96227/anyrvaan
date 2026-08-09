@@ -2,7 +2,7 @@
 title: "Echoes of Eternity"
 summary: "A single reflective orb travels through the entire history of existence — witnessing, never interfering — until it can no longer stay just an observer."
 year: "2026"
-order: 4
+order: 6
 tags: ["Motion Design", "3D Animation", "Visual Effects"]
 cover: "../../assets/work/echoes-of-eternity.jpg"
 coverVideo: "/videos/echoes/echoes-hero"

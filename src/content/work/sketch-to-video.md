@@ -2,7 +2,7 @@
 title: "Sketch to Video"
 summary: "Eight graphite drawings, each one turned into a few seconds of film — the same moment made twice, once still and once moving."
 year: "2026"
-order: 6
+order: 8
 tags: ["Motion Design", "Drawing", "AI Art Direction"]
 cover: "../../assets/work/sketch-to-video.jpg"
 coverFadeTo: "../../assets/work/sketch-to-video-frame.jpg"

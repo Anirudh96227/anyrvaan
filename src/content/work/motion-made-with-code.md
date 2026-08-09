@@ -2,7 +2,7 @@
 title: "Motion, Made with Code"
 summary: "Small animations built with code instead of a camera — counters and charts, sacred patterns, old computer screens, everyday apps faked to the pixel. Four collections of short films, gathered into one place."
 year: "2026"
-order: 3
+order: 9
 tags: ["Animation", "Made with Code", "Collections"]
 coverMotion: "four-collections"
 cover: "../../assets/work/effects-index.jpg"

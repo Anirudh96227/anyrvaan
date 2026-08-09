@@ -2,7 +2,7 @@
 title: "The Wish Vending Machine"
 summary: "A thirty-second film with no dialogue — three friends, one coin between them, three different wishes, and a prize that gets handed to somebody else."
 year: "2026"
-order: 5
+order: 2
 tags: ["Story Films", "3D Animation", "AI Art Direction"]
 # The card flies the husky's carpet shot from the middle of the film. `cover`
 # stays underneath as the share image, which has to be a real file.

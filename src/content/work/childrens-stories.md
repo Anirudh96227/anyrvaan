@@ -2,7 +2,7 @@
 title: "Stories for Children"
 summary: "Two short films for children, both set in India — one told in the last of the daylight, one after the moon is up."
 year: "2026"
-order: 4
+order: 5
 tags: ["Story Films", "Illustration", "AI Art Direction"]
 # The card plays the opening of the first film: the camera pulling back off
 # Alice's face until the whole courtyard, and the title, are in the frame.

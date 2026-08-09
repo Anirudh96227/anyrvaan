@@ -28,9 +28,11 @@ const formatDate = (d: Date) =>
 // a card.
 const FEATURED: Record<string, string> = {
 	metro: 'Twenty-three rides across Delhi, each with one thing in frame that has no business being there.',
+	'wish-vending-machine': 'Three friends, one coin, three different wishes — and a prize they hand to somebody else.',
+	settle: 'One overdue invoice, and the tax already paid on money that never arrived.',
 	'miniature-india': 'India rebuilt at the scale of a keepsake — thirteen places, hand-lit.',
-	'motion-made-with-code': 'Four collections made with code — counters, mandalas, old machines, faked apps.',
 	'echoes-of-eternity': 'One orb watches the whole history of everything, then stops watching.',
+	'motion-made-with-code': 'Four collections made with code — counters, mandalas, old machines, faked apps.',
 };
 const allWork = await getCollection('work', ({ data }) => !data.draft);
 const featuredWork = Object.keys(FEATURED)
