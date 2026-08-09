@@ -3,107 +3,20 @@ import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
-import ToolButton, { type MarkKind } from '../components/ToolButton.tsx';
 
-// Small, single-purpose tools — each one coded, not assembled from a
-// component kit. Every entry below is a real, live thing — no
-// placeholders standing in for work that doesn't exist yet.
+// Held page. The calculators, the browser extensions and the in-browser visual
+// AI tools have all been taken off the site for now; their pages are parked
+// under `src/_parked/microtools/` rather than deleted, so putting the section
+// back is a move, not a rebuild.
 //
-// Both rows are listed small on purpose. Each item's full-size preview
-// belongs on its own page, beside the thing it argues for; here the job is
-// only to say what exists and get out of the way. What each button carries
-// instead is a 64 px live mark — the same gesture as the full preview, at a
-// twentieth of the size and a fraction of the cost.
-type Entry = { name: string; sub: string; href: string; kind: MarkKind; cta?: string };
-
-const calculators: Entry[] = [
-	{
-		name: 'Concrete',
-		sub: 'Slab · Post holes · Rebar',
-		href: '/microtools/concrete-calc',
-		kind: 'concrete',
-	},
-	{
-		name: 'Electrical',
-		sub: 'Load · Generator · Breaker',
-		href: '/microtools/electrical-calc',
-		kind: 'electrical',
-	},
-	{
-		name: 'HVAC',
-		sub: 'Ventilation · Duct sizing',
-		href: '/microtools/hvac-calc',
-		kind: 'hvac',
-	},
-];
-
-// The extensions all live on one page, so these deep-link to their own
-// section of it rather than dropping you at the top to go hunting.
-const extensions: Entry[] = [
-	{
-		name: 'Colourway',
-		sub: 'A different set of colours',
-		href: '/microtools/extensions#colourway',
-		kind: 'colourway',
-		cta: 'See it',
-	},
-	{
-		name: 'Typeset',
-		sub: 'Re-set in a pairing you chose',
-		href: '/microtools/extensions#typeset',
-		kind: 'typeset',
-		cta: 'See it',
-	},
-	{
-		name: 'By Hand',
-		sub: 'The page gets drawn',
-		href: '/microtools/extensions#by-hand',
-		kind: 'by-hand',
-		cta: 'See it',
-	},
-	{
-		name: 'Cold Read',
-		sub: 'Quiz first, then read',
-		href: '/microtools/extensions#cold-read',
-		kind: 'cold-read',
-		cta: 'See it',
-	},
-];
-
-// The four that run a model. They have their own section rather than sitting
-// with the calculators, because they make a different bargain: a real download
-// the first time, in exchange for something no amount of arithmetic could do.
-const visual: Entry[] = [
-	{
-		name: 'Depth & Parallax',
-		sub: 'Estimate depth · 2.5D motion',
-		href: '/microtools/depth-parallax',
-		kind: 'depth',
-	},
-	{
-		name: 'Click-to-Cutout',
-		sub: 'Point at it · cut it out',
-		href: '/microtools/cutout',
-		kind: 'cutout',
-	},
-	{
-		name: 'Image to Prompt',
-		sub: 'Sentence · JSON · breakdown',
-		href: '/microtools/image-to-prompt',
-		kind: 'prompt',
-	},
-	{
-		name: 'Background Remover',
-		sub: 'Matte · feather · replace',
-		href: '/microtools/remove-bg',
-		kind: 'rmbg',
-	},
-];
+// What's left is deliberately close to empty. A section that says "coming
+// soon" and then lists nine things underneath it isn't holding space, it's
+// still selling — so this one holds the space and nothing else.
 ---
 
 <Layout
 	title="Microtools — Anyrvaan"
-	description="Small, single-purpose tools built and shipped one at a time — each one coded from scratch, not assembled from a kit."
+	description="Small, single-purpose tools, built and shipped one at a time. This section is being rebuilt."
 >
 	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
@@ -111,109 +24,17 @@ const visual: Entry[] = [
 			<PageHeader
 				eyebrow="Build"
 				title="Microtools"
-				intro="Small tools, one purpose each, built the same way as everything else here — designed and coded by the same pair of hands. This section fills in as each one ships, not before."
+				intro="Small tools, one purpose each, built the same way as everything else here — designed and coded by the same pair of hands."
 			/>
 
-			<section class="border-t border-white/5 px-6 py-24 sm:py-28">
-				<div class="mx-auto max-w-4xl">
-					<p class="reveal text-eyebrow uppercase text-neutral-400">Calculators</p>
-					<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
-						Three of them, for work that happens outdoors and gets ordered by the bagful. Each
-						shows its formula under the answer, on the grounds that a number you can't check is
-						a number you have to trust.
-					</p>
-					<p class="reveal mt-5 max-w-2xl text-body text-neutral-500">
-						Nothing is sent anywhere — the arithmetic runs in your browser, and every page
-						works the same with the network off.
-					</p>
-
-					<div class="reveal mt-12 grid gap-4 sm:grid-cols-3">
-						{
-							calculators.map((t) => (
-								<ToolButton
-									client:visible
-									kind={t.kind}
-									name={t.name}
-									sub={t.sub}
-									href={t.href}
-									cta={t.cta}
-								/>
-							))
-						}
+			<section class="border-t border-white/5 px-6">
+				<div class="mx-auto flex min-h-[46vh] max-w-4xl items-center py-24 sm:py-32">
+					<div>
+						<p class="reveal text-eyebrow uppercase text-neutral-500">Coming soon</p>
+						<p class="reveal mt-8 max-w-xl text-body-lg text-neutral-400">
+							This section is being rebuilt. It'll fill in as each tool ships, not before.
+						</p>
 					</div>
-				</div>
-			</section>
-
-			<section id="visual" class="border-t border-white/5 px-6 py-24 sm:py-28">
-				<div class="mx-auto max-w-4xl">
-					<p class="reveal text-eyebrow uppercase text-neutral-400">Visual AI</p>
-					<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
-						Four image tools that run a real model in your browser — depth estimation,
-						segmentation, image captioning, matting. No account, no upload, no server doing
-						the work somewhere you can't see.
-					</p>
-					<p class="reveal mt-5 max-w-2xl text-body text-neutral-500">
-						These are the one part of this section that does touch the network: each fetches
-						its model the first time you use it, between about 13 MB and half a gigabyte
-						depending on which you pick. After that it's cached, and the page works offline
-						like everything else here.
-					</p>
-
-					<div class="reveal mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-						{
-							visual.map((t) => (
-								<ToolButton
-									client:visible
-									kind={t.kind}
-									name={t.name}
-									sub={t.sub}
-									href={t.href}
-									cta={t.cta}
-								/>
-							))
-						}
-					</div>
-				</div>
-			</section>
-
-			<section id="extensions" class="border-t border-white/5 px-6 py-24 sm:py-28">
-				<div class="mx-auto max-w-4xl">
-					<p class="reveal text-eyebrow uppercase text-neutral-400">Extensions</p>
-					<p class="reveal mt-8 max-w-2xl text-body-lg text-neutral-300">
-						Four browser extensions, each doing a single thing to whatever page you're
-						already on. Three change how it looks; the fourth covers it up and asks you what
-						you already know. They're easier to show than to describe.
-					</p>
-					<p class="reveal mt-5 max-w-2xl text-body text-neutral-500">
-						None are in a web store — you install them by hand, which means you can also read
-						every line before you do. Chrome, Edge, Brave, or any other Chromium browser.
-					</p>
-
-					<div class="reveal mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-						{
-							extensions.map((t) => (
-								<ToolButton
-									client:visible
-									kind={t.kind}
-									name={t.name}
-									sub={t.sub}
-									href={t.href}
-									cta={t.cta}
-								/>
-							))
-						}
-					</div>
-
-					<a
-						href="/microtools/extensions"
-						class="reveal group mt-10 inline-flex items-center gap-3 text-body text-neutral-400 transition-colors hover:text-neutral-100"
-					>
-						All four, with install steps
-						<span
-							aria-hidden="true"
-							class="text-neutral-600 transition-transform group-hover:translate-x-1">&rarr;</span
-						>
-					</a>
 				</div>
 			</section>
 

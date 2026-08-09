@@ -4,10 +4,11 @@ summary: "Two short films for children, both set in India — one told in the la
 year: "2026"
 order: 4
 tags: ["Story Films", "Illustration", "AI Art Direction"]
-# The card draws itself: bats crossing the moon, dropping seeds, the bank
-# filling in. `cover` stays underneath as the share image, which has to be a
-# real file — but it isn't what the grid shows.
-coverMotion: "night-planting"
+# The card plays the opening of the first film: the camera pulling back off
+# Alice's face until the whole courtyard, and the title, are in the frame.
+# `cover` stays underneath as the share image, which has to be a real file —
+# but it isn't what the grid shows.
+coverVideo: "/videos/stories/stories-hero"
 cover: "../../assets/work/childrens-stories-cover.jpg"
 coverAlt: "Bats crossing a full moon over a lantern-lit river town at night"
 thesis: "Two stories, two hours of the same evening."
