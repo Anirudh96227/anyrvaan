@@ -4,12 +4,11 @@ summary: "The studio's logo, animated — a star, something dark crossing it, an
 year: "2026"
 order: 10
 tags: ["Motion Design", "Identity"]
-# The card holds the first second and runs it back: the mark falling into the
-# star and returning. The film is 9:16, so the loop is centred on black rather
-# than cropped — a 16:9 crop would cut the top and bottom off the mark.
+# The card uses the complete landscape cut, so the star, eclipse and final
+# appearance of the mark can play in the same 16:9 frame as the case study.
 coverVideo: "/videos/mark/mark-hero"
 cover: "../../assets/work/mark.jpg"
-coverAlt: "The mark dissolving into the surface of a blue star, and back again"
+coverAlt: "A dark body crossing a blue star until its corona forms the Anyrvaan mark"
 video: "https://youtu.be/RzGm4QW8XH8"
 thesis: "Nothing draws the logo. Two objects line up and it's there for about a second."
 studiesEyebrow: "Also"
