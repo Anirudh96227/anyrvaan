@@ -41,7 +41,19 @@ pnpm-debug.log*
 # Downloaded render bundles and loose desk files — not site source.
 /2026-*_ANYRVAAN-*/
 /2026-*_remotion-casebook/
+/2026-*_infographic-*/
 /remotion-lab/
+/Short Film/
+/Spec Ads/
+/UNo/
+/Voltra/
+/assets/
+/.brave-research-*/
+/.edge-*/
 /logo.png
 /black_logo.png
 /plain-real-explanation*.md
+/*.png
+!public/**/*.png
+!src/**/*.png
+

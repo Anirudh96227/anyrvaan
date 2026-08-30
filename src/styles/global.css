@@ -1,5 +1,8 @@
 /* 1. Tailwind must be imported first — everything below extends or layers on top of it. */
-@import "tailwindcss";
+/* Scope class detection to this Astro app; the workspace also contains large
+   sibling projects that must not be scanned during every CSS compile. */
+@import "tailwindcss" source(none);
+@source "../";
 
 /* 2. Self-hosted Space Grotesk (variable font).
    One file covers every weight from 300–700, so `font-weight` is a RANGE, not a single value.

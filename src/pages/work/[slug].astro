@@ -14,6 +14,8 @@ import LoopVideo from '../../components/LoopVideo.astro';
 import NewForests from '../../components/NewForests.tsx';
 import FilmStrip from '../../components/FilmStrip.astro';
 import StampSheet from '../../components/StampSheet.astro';
+import SocialStrip from '../../components/SocialStrip.astro';
+
 
 export async function getStaticPaths() {
 	const projects = await getCollection('work', ({ data }) => !data.draft);
@@ -149,6 +151,7 @@ const ogImage = project.data.cover
 // An ambient "world" behind every case study, matched to its subject — no two
 // pages share a ground unless they genuinely share a subject.
 const WORLDS: Record<string, World> = {
+	voltra: 'lightning',
 	'effects-index': 'effects',
 	'spiritual-series': 'spiritual',
 	'retro-computing': 'retro',
@@ -360,6 +363,17 @@ const world = WORLDS[project.id];
 							</figure>
 						)}
 					</div>
+				)
+			}
+
+			{
+				project.data.socialStrip && (
+					<SocialStrip
+						eyebrow={project.data.socialStrip.eyebrow}
+						heading={project.data.socialStrip.heading}
+						intro={project.data.socialStrip.intro}
+						posts={project.data.socialStrip.posts}
+					/>
 				)
 			}
 

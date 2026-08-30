@@ -20,3 +20,7 @@ Consult these guides before working on related tasks:
 - [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
 - [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
 - [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+
+## Creative direction
+
+Before making material decisions for branding, storytelling, motion, music, visual design, generative imagery, or portfolio presentation, read `CREATIVE_IDENTITY.md`. Use it as a thinking reference rather than a rigid visual template.

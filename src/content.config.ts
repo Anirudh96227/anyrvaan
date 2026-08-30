@@ -168,6 +168,25 @@ const work = defineCollection({
 					})
 				)
 				.optional(),
+			// Vertical social media campaign posters / vignettes — shown as a
+			// dedicated section exploring how the concept translates into vertical
+			// social posts across characters and scenarios.
+			socialStrip: z
+				.object({
+					eyebrow: z.string().optional(),
+					heading: z.string().optional(),
+					intro: z.string().optional(),
+					posts: z.array(
+						z.object({
+							image: image(),
+							alt: z.string(),
+							title: z.string().optional(),
+							tagline: z.string().optional(),
+							caption: z.string().optional(),
+						})
+					),
+				})
+				.optional(),
 			draft: z.boolean().default(false),
 		}),
 });

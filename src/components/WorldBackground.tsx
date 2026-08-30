@@ -42,12 +42,16 @@ export type World =
 	| 'code-pulse'
 	| 'suspended-arc'
 	| 'enso'
-	| 'dusk-to-night';
+	| 'dusk-to-night'
+	| 'lightning';
 
 const COBALT = '96, 165, 250'; // the site's one signal blue, rgb
 const PHOSPHOR = '110, 231, 183'; // faint CRT green, retro only
 const AMBER = '240, 190, 120'; // warm ember — diorama-drift only
 const MOON = '186, 205, 240'; // cool moonlight — dusk-to-night only
+const PURPLE = '168, 85, 247'; // electric purple — lightning/voltra only
+const VIOLET_LIGHT = '233, 213, 255'; // high-intensity lightning core, rgb
+
 
 export default function WorldBackground({ theme }: { theme: World }) {
 	const ref = useRef<HTMLCanvasElement>(null);
@@ -148,6 +152,86 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			faintY[i] = Math.random() * h;
 			faintSeed[i] = Math.random() * 1000;
 		}
+
+		// lightning: state for random branching strikes in purple/violet
+		interface BoltPoint {
+			x: number;
+			y: number;
+		}
+		interface BoltBranch {
+			points: BoltPoint[];
+			alphaMult: number;
+			width: number;
+		}
+		interface Strike {
+			startTime: number;
+			duration: number;
+			branches: BoltBranch[];
+			flashX: number;
+			flashY: number;
+		}
+
+		let activeStrike: Strike | null = null;
+		let nextStrikeTime = 1200 + Math.random() * 2500;
+
+		const createBranch = (
+			x1: number,
+			y1: number,
+			x2: number,
+			y2: number,
+			segments: number,
+			spread: number,
+			alphaMult = 1,
+			width = 1.5
+		): BoltBranch => {
+			const pts: BoltPoint[] = [{ x: x1, y: y1 }];
+			for (let s = 1; s < segments; s++) {
+				const frac = s / segments;
+				const baseX = x1 + (x2 - x1) * frac;
+				const baseY = y1 + (y2 - y1) * frac;
+				const jitter = (Math.random() - 0.5) * spread;
+				pts.push({
+					x: baseX + jitter,
+					y: baseY + (Math.random() - 0.5) * (spread * 0.4),
+				});
+			}
+			pts.push({ x: x2, y: y2 });
+			return { points: pts, alphaMult, width };
+		};
+
+		const generateStrike = (time: number): Strike => {
+			const startX = (0.2 + Math.random() * 0.6) * w;
+			const startY = Math.random() * (h * 0.12);
+			const endX = startX + (Math.random() - 0.5) * (w * 0.45);
+			const endY = h * (0.45 + Math.random() * 0.45);
+			const branches: BoltBranch[] = [];
+
+			// Main trunk
+			const trunk = createBranch(startX, startY, endX, endY, lowTier ? 9 : 14, 45, 1, 1.8);
+			branches.push(trunk);
+
+			// Sub branches from main trunk points
+			const numSub = lowTier ? 2 : 3 + Math.floor(Math.random() * 3);
+			for (let b = 0; b < numSub; b++) {
+				const idx = 2 + Math.floor(Math.random() * (trunk.points.length - 4));
+				const origin = trunk.points[idx] || trunk.points[1];
+				const angle = (Math.random() > 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.55);
+				const dist = 50 + Math.random() * 120;
+				const subEndX = origin.x + Math.sin(angle) * dist;
+				const subEndY = origin.y + Math.cos(angle) * dist;
+				branches.push(
+					createBranch(origin.x, origin.y, subEndX, subEndY, 6, 25, 0.65, 1.1)
+				);
+			}
+
+			return {
+				startTime: time,
+				duration: 280 + Math.random() * 140,
+				branches,
+				flashX: startX,
+				flashY: startY + 40,
+			};
+		};
 
 		let scrollMax = 1;
 		const measureScroll = () => {
@@ -567,6 +651,104 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						}
 					}
 				}
+			} else if (theme === 'lightning') {
+				// voltra: calm atmospheric purple presence with intermittent,
+				// organic branching lightning strikes and distant sheet illumination
+				if (!reduce) {
+					if (!activeStrike && t >= nextStrikeTime) {
+						activeStrike = generateStrike(t);
+						nextStrikeTime = t + 2800 + Math.random() * 4200;
+					}
+				}
+
+				// Ambient breathing purple backdrop glow (quiet core)
+				const baseAtmosphere = ctx!.createRadialGradient(
+					cx,
+					h * 0.25,
+					0,
+					cx,
+					h * 0.25,
+					Math.max(w, h) * 0.7
+				);
+				baseAtmosphere.addColorStop(0, `rgba(${PURPLE}, ${(0.07 + 0.04 * worldBreath).toFixed(3)})`);
+				baseAtmosphere.addColorStop(0.65, `rgba(${PURPLE}, ${(0.02 + 0.02 * worldBreath).toFixed(3)})`);
+				baseAtmosphere.addColorStop(1, `rgba(${PURPLE}, 0)`);
+				ctx!.fillStyle = baseAtmosphere;
+				ctx!.fillRect(0, 0, w, h);
+
+				if (activeStrike && !reduce) {
+					const elapsed = t - activeStrike.startTime;
+					if (elapsed >= activeStrike.duration) {
+						activeStrike = null;
+					} else {
+						const phase = elapsed / activeStrike.duration;
+						// Double-pulse flash curve for authentic lightning crack
+						let flashIntensity = 0;
+						if (phase < 0.18) {
+							flashIntensity = Math.sin((phase / 0.18) * Math.PI) * 0.75;
+						} else if (phase < 0.3) {
+							flashIntensity = 0.25;
+						} else if (phase < 0.7) {
+							const p2 = (phase - 0.3) / 0.4;
+							flashIntensity = 1.0 - p2 * 0.4;
+						} else {
+							const p3 = (phase - 0.7) / 0.3;
+							flashIntensity = (1 - p3) * 0.6;
+						}
+
+						// Sheet lightning cloud flash
+						if (flashIntensity > 0.02) {
+							const flashGlow = ctx!.createRadialGradient(
+								activeStrike.flashX,
+								activeStrike.flashY,
+								0,
+								activeStrike.flashX,
+								activeStrike.flashY,
+								Math.max(w, h) * 0.85
+							);
+							flashGlow.addColorStop(
+								0,
+								`rgba(${PURPLE}, ${(0.22 * flashIntensity).toFixed(3)})`
+							);
+							flashGlow.addColorStop(
+								0.5,
+								`rgba(${PURPLE}, ${(0.09 * flashIntensity).toFixed(3)})`
+							);
+							flashGlow.addColorStop(1, `rgba(${PURPLE}, 0)`);
+							ctx!.fillStyle = flashGlow;
+							ctx!.fillRect(0, 0, w, h);
+						}
+
+						// Draw the lightning branches
+						ctx!.lineCap = 'round';
+						ctx!.lineJoin = 'round';
+
+						for (const branch of activeStrike.branches) {
+							const pts = branch.points;
+							if (pts.length < 2) continue;
+
+							// Outer glow pass
+							ctx!.strokeStyle = `rgba(${PURPLE}, ${(0.45 * branch.alphaMult * flashIntensity).toFixed(3)})`;
+							ctx!.lineWidth = branch.width * (lowTier ? 3.5 : 5.5);
+							ctx!.beginPath();
+							ctx!.moveTo(pts[0].x, pts[0].y);
+							for (let i = 1; i < pts.length; i++) {
+								ctx!.lineTo(pts[i].x, pts[i].y);
+							}
+							ctx!.stroke();
+
+							// High-intensity white-violet core line
+							ctx!.strokeStyle = `rgba(${VIOLET_LIGHT}, ${(0.9 * branch.alphaMult * flashIntensity).toFixed(3)})`;
+							ctx!.lineWidth = branch.width * (lowTier ? 1.1 : 1.7);
+							ctx!.beginPath();
+							ctx!.moveTo(pts[0].x, pts[0].y);
+							for (let i = 1; i < pts.length; i++) {
+								ctx!.lineTo(pts[i].x, pts[i].y);
+							}
+							ctx!.stroke();
+						}
+					}
+				}
 			} else {
 				// effects — sparse particles drifting slowly upward
 				for (let i = 0; i < N; i++) {
@@ -582,15 +764,16 @@ export default function WorldBackground({ theme }: { theme: World }) {
 				}
 			}
 
-			// the horizon: a low cobalt glow that rises as you near the page's end.
+			// the horizon: a low cobalt or purple glow that rises as you near the page's end.
 			// dusk-to-night sits this one out — it paints its own sky, and a cobalt
 			// band coming up under a moon would read as a second, competing hour.
 			ctx!.globalAlpha = 1;
 			if (prog > 0.55 && theme !== 'dusk-to-night') {
 				const rise = (prog - 0.55) / 0.45;
+				const horizonColor = theme === 'lightning' ? PURPLE : COBALT;
 				const g = ctx!.createLinearGradient(0, h, 0, h - 260 * rise);
-				g.addColorStop(0, `rgba(${COBALT}, ${(0.16 * rise).toFixed(3)})`);
-				g.addColorStop(1, `rgba(${COBALT}, 0)`);
+				g.addColorStop(0, `rgba(${horizonColor}, ${(0.16 * rise).toFixed(3)})`);
+				g.addColorStop(1, `rgba(${horizonColor}, 0)`);
 				ctx!.fillStyle = g;
 				ctx!.fillRect(0, h - 260 * rise, w, 260 * rise);
 			}
