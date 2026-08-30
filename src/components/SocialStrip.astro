@@ -23,51 +23,49 @@ const { eyebrow, heading, intro, posts } = Astro.props;
 {
 	posts && posts.length > 0 && (
 		<section class="social-strip border-t border-white/5 px-6 py-24 sm:py-32">
-			<div class="mx-auto max-w-5xl">
-				<p class="reveal text-eyebrow uppercase text-neutral-400">
-					{eyebrow ?? 'Spec Campaign — Social'}
-				</p>
-				<h2 class="reveal mt-8 max-w-3xl text-h2 text-neutral-100">
-					{heading ?? 'Four signals in the feed.'}
-				</h2>
-				{intro && (
-					<p class="reveal mt-6 max-w-2xl text-body text-neutral-400">
-						{intro}
+			<div class="mx-auto max-w-4xl">
+				<div class="mx-auto max-w-2xl text-center sm:text-left">
+					<p class="reveal text-eyebrow uppercase text-neutral-400">
+						{eyebrow ?? 'Spec Campaign — Social'}
 					</p>
-				)}
+					<h2 class="reveal mt-6 text-h2 text-neutral-100">
+						{heading ?? 'Four signals in the stream.'}
+					</h2>
+					{intro && (
+						<p class="reveal mt-6 text-body text-neutral-400">
+							{intro}
+						</p>
+					)}
+				</div>
 
-				<div class="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-8">
-					{posts.map((post, i) => (
-						<article class="reveal group relative flex flex-col justify-between">
+				<div class="mt-20 flex flex-col items-center gap-20 sm:gap-28">
+					{posts.map((post) => (
+						<article class="reveal group w-full max-w-2xl">
 							<div class="glow-frame rounded-2xl transition-transform duration-500 ease-out group-hover:-translate-y-1">
-								<div class="glow-frame__inner relative overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/90 transition-colors duration-300 group-hover:border-purple-500/40">
-									<div class="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-eyebrow text-neutral-300 backdrop-blur-md border border-white/10">
-										{String(i + 1).padStart(2, '0')}
-									</div>
-									<div class="aspect-[4/5] sm:aspect-[9/16] overflow-hidden bg-black">
-										<Image
-											src={post.image}
-											alt={post.alt}
-											loading="lazy"
-											class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-										/>
-									</div>
+								<div class="glow-frame__inner overflow-hidden rounded-2xl border border-white/10 bg-black transition-colors duration-300 group-hover:border-purple-500/40">
+									<Image
+										src={post.image}
+										alt={post.alt}
+										format="avif"
+										loading="lazy"
+										class="w-full h-auto block object-contain"
+									/>
 								</div>
 							</div>
 
-							<div class="mt-6 flex flex-1 flex-col">
+							<div class="mt-6 px-1">
 								{post.tagline && (
-									<p class="text-eyebrow uppercase text-purple-400/90 tracking-wider">
+									<p class="text-eyebrow uppercase text-purple-400 tracking-wider">
 										{post.tagline}
 									</p>
 								)}
 								{post.title && (
-									<h3 class="mt-2 text-body-lg font-medium text-neutral-100 group-hover:text-purple-300 transition-colors">
+									<h3 class="mt-2 text-h3 font-medium text-neutral-100 group-hover:text-purple-300 transition-colors">
 										{post.title}
 									</h3>
 								)}
 								{post.caption && (
-									<p class="mt-3 text-small text-neutral-400 leading-relaxed">
+									<p class="mt-3 text-body text-neutral-400 leading-relaxed">
 										{post.caption}
 									</p>
 								)}
