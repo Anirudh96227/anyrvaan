@@ -31,6 +31,8 @@ pnpm-debug.log*
 /Project 2/
 /Downloads/
 *.mp4
+!public/videos/**/*.mp4
+
 
 # Working briefs, handover docs and planning notes kept beside the project.
 # These are desk files, not site source, and some name unreleased work — this

@@ -25,11 +25,11 @@ const { src, label, aspect = 'aspect-video', class: className = '' } = Astro.pro
 	muted
 	loop
 	playsinline
-	preload="metadata"
+	preload="auto"
 	aria-label={label}
 >
-	<source src={`${src}.webm`} type="video/webm" />
 	<source src={`${src}.mp4`} type="video/mp4" />
+	<source src={`${src}.webm`} type="video/webm" />
 </video>
 
 <script>
@@ -40,19 +40,57 @@ const { src, label, aspect = 'aspect-video', class: className = '' } = Astro.pro
 		const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 		document.querySelectorAll<HTMLVideoElement>('.loop-video:not([data-loop-init])').forEach((v) => {
 			v.dataset.loopInit = 'true';
+			// Force properties required by browsers for silent autoplay
+			v.muted = true;
+			v.defaultMuted = true;
+			v.playsInline = true;
+
 			if (reduce.matches) {
 				v.autoplay = false;
 				v.pause();
 				v.removeAttribute('autoplay');
 				return;
 			}
-			if (!('IntersectionObserver' in window)) return;
+
+			const playVideo = () => {
+				v.muted = true;
+				const p = v.play();
+				if (p !== undefined) {
+					p.catch(() => {
+						const retry = () => {
+							v.muted = true;
+							v.play().catch(() => {});
+							window.removeEventListener('click', retry);
+							window.removeEventListener('touchstart', retry);
+							window.removeEventListener('scroll', retry);
+						};
+						window.addEventListener('click', retry, { once: true });
+						window.addEventListener('touchstart', retry, { once: true });
+						window.addEventListener('scroll', retry, { once: true, passive: true });
+					});
+				}
+			};
+
+			// Seamless loop restart fallback
+			v.addEventListener('ended', () => {
+				v.currentTime = 0;
+				playVideo();
+			});
+
+			if (!('IntersectionObserver' in window)) {
+				playVideo();
+				return;
+			}
+
 			const io = new IntersectionObserver(
 				([e]) => {
-					if (e.isIntersecting) void v.play().catch(() => {});
-					else v.pause();
+					if (e.isIntersecting) {
+						playVideo();
+					} else {
+						v.pause();
+					}
 				},
-				{ threshold: 0.15 }
+				{ threshold: 0.1 }
 			);
 			io.observe(v);
 		});
@@ -60,3 +98,4 @@ const { src, label, aspect = 'aspect-video', class: className = '' } = Astro.pro
 	document.addEventListener('astro:page-load', initLoopVideos);
 	initLoopVideos();
 </script>
+
