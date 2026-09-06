@@ -44,8 +44,8 @@ export type World =
 	| 'enso'
 	| 'dusk-to-night'
 	| 'lightning'
-	| 'prismatic-sweep'
-	| 'cave-caustics';
+	| 'realistic-fire'
+	| 'floating-bulbs';
 
 const COBALT = '96, 165, 250'; // the site's one signal blue, rgb
 const PHOSPHOR = '110, 231, 183'; // faint CRT green, retro only
@@ -53,13 +53,13 @@ const AMBER = '240, 190, 120'; // warm ember — diorama-drift only
 const MOON = '186, 205, 240'; // cool moonlight — dusk-to-night only
 const PURPLE = '168, 85, 247'; // electric purple — lightning/voltra only
 const VIOLET_LIGHT = '233, 213, 255'; // high-intensity lightning core, rgb
-const CYAN = '56, 189, 248'; // electric cyan — horizon / signal
-const COBALT_DEEP = '29, 78, 216'; // deep subterranean pool cobalt — cave-caustics / unchosen
-const PRISM_RED = '244, 63, 94'; // rose / red spectral edge — prismatic-sweep
-const PRISM_AMBER = '251, 146, 60'; // amber spectral band — prismatic-sweep
-const PRISM_GREEN = '52, 211, 153'; // emerald spectral band — prismatic-sweep
-const PRISM_CYAN = '56, 189, 248'; // electric cyan spectral band — prismatic-sweep
-const PRISM_VIOLET = '168, 85, 247'; // violet spectral edge — prismatic-sweep
+const FIRE_CRIMSON = '220, 38, 38'; // deep flame red — realistic-fire / unchosen
+const FIRE_ORANGE = '234, 88, 12'; // blaze orange — realistic-fire
+const FIRE_HOT = '254, 240, 138'; // hot white-yellow core — realistic-fire
+const BULB_GOLD = '253, 224, 71'; // incandescent filament gold — floating-bulbs / ideas
+const BULB_AMBER = '245, 158, 11'; // warm radiant aura — floating-bulbs
+const BULB_GLASS = '226, 232, 240'; // bulb envelope glass — floating-bulbs
+const BULB_BASE = '156, 163, 175'; // brass/metal socket cap — floating-bulbs
 
 
 export default function WorldBackground({ theme }: { theme: World }) {
@@ -242,17 +242,170 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			};
 		};
 
-		// Interactive pointer tracking for subtle surface ripple interaction (cave-caustics)
-		let targetPointerX = 0.5;
-		let targetPointerY = 0.5;
-		let currentPointerX = 0.5;
-		let currentPointerY = 0.5;
+		// realistic-fire: rising sparks & embers from the subterranean burning forest
+		const EMBER_N = lowTier ? 32 : 55;
+		const emberX = new Float32Array(EMBER_N);
+		const emberY = new Float32Array(EMBER_N);
+		const emberVy = new Float32Array(EMBER_N);
+		const emberSize = new Float32Array(EMBER_N);
+		const emberLife = new Float32Array(EMBER_N);
+		const emberMaxLife = new Float32Array(EMBER_N);
+		const emberSeed = new Float32Array(EMBER_N);
+		for (let i = 0; i < EMBER_N; i++) {
+			emberX[i] = Math.random() * (w || 1000);
+			emberY[i] = (h || 800) - Math.random() * (h || 800) * 0.75;
+			emberVy[i] = 0.9 + Math.random() * 1.6;
+			emberSize[i] = 0.9 + Math.random() * 1.8;
+			emberLife[i] = Math.random() * 200;
+			emberMaxLife[i] = 140 + Math.random() * 180;
+			emberSeed[i] = Math.random() * 1000;
+		}
 
-		const onPointerMove = (e: PointerEvent) => {
-			targetPointerX = e.clientX / (w || 1);
-			targetPointerY = e.clientY / (h || 1);
+		// floating-bulbs: small incandescent Edison bulbs drifting, glowing warm, and dissipating
+		const BULB_N = lowTier ? 7 : 11;
+		const bulbBaseX = new Float32Array(BULB_N);
+		const bulbBaseY = new Float32Array(BULB_N);
+		const bulbScale = new Float32Array(BULB_N);
+		const bulbBirth = new Float32Array(BULB_N);
+		const bulbDur = new Float32Array(BULB_N);
+		const bulbSeed = new Float32Array(BULB_N);
+		for (let i = 0; i < BULB_N; i++) {
+			const dur = 7500 + Math.random() * 5500;
+			bulbBaseX[i] = 0.08 + Math.random() * 0.84;
+			bulbBaseY[i] = 0.15 + Math.random() * 0.7;
+			bulbScale[i] = 0.75 + Math.random() * 0.45;
+			bulbBirth[i] = -Math.random() * dur; // pre-staggered so some are glowing immediately
+			bulbDur[i] = dur;
+			bulbSeed[i] = Math.random() * 1000;
+		}
+
+		const drawBulb = (
+			c: CanvasRenderingContext2D,
+			bx: number,
+			by: number,
+			scale: number,
+			glow: number
+		) => {
+			const R = 9.5 * scale;
+			const bulbCenterY = by - 4 * scale;
+			const neckY = by + 9 * scale;
+			const neckHalfW = 3.5 * scale;
+
+			// 1. Radial ambient warm light aura when lit
+			if (glow > 0.02) {
+				const auraRad = 52 * scale;
+				const aura = c.createRadialGradient(bx, bulbCenterY, 0, bx, bulbCenterY, auraRad);
+				aura.addColorStop(0, `rgba(${BULB_GOLD}, ${(0.28 * glow).toFixed(3)})`);
+				aura.addColorStop(0.35, `rgba(${BULB_AMBER}, ${(0.11 * glow).toFixed(3)})`);
+				aura.addColorStop(0.75, `rgba(${BULB_AMBER}, ${(0.025 * glow).toFixed(3)})`);
+				aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+				c.fillStyle = aura;
+				c.beginPath();
+				c.arc(bx, bulbCenterY, auraRad, 0, Math.PI * 2);
+				c.fill();
+			}
+
+			// 2. Glass envelope contour
+			c.save();
+			c.beginPath();
+			c.moveTo(bx - neckHalfW, neckY);
+			c.bezierCurveTo(
+				bx - neckHalfW - 2 * scale,
+				neckY - 4 * scale,
+				bx - R,
+				bulbCenterY + 4 * scale,
+				bx - R,
+				bulbCenterY
+			);
+			c.arc(bx, bulbCenterY, R, Math.PI, 0, false);
+			c.bezierCurveTo(
+				bx + R,
+				bulbCenterY + 4 * scale,
+				bx + neckHalfW + 2 * scale,
+				neckY - 4 * scale,
+				bx + neckHalfW,
+				neckY
+			);
+			c.closePath();
+
+			if (glow > 0.04) {
+				c.fillStyle = `rgba(${BULB_AMBER}, ${(0.07 * glow).toFixed(3)})`;
+				c.fill();
+			}
+			c.lineWidth = 1.1;
+			c.strokeStyle = `rgba(${BULB_GLASS}, ${(0.14 + 0.32 * glow).toFixed(3)})`;
+			c.stroke();
+
+			// 3. Threaded metal socket base at bottom
+			const capW = neckHalfW * 2;
+			c.fillStyle = `rgba(${BULB_BASE}, ${(0.3 + 0.3 * glow).toFixed(3)})`;
+			c.fillRect(bx - neckHalfW, neckY, capW, 4.5 * scale);
+			c.strokeStyle = 'rgba(20, 20, 25, 0.4)';
+			c.lineWidth = 0.8;
+			c.beginPath();
+			c.moveTo(bx - neckHalfW, neckY + 1.8 * scale);
+			c.lineTo(bx + neckHalfW, neckY + 1.8 * scale);
+			c.moveTo(bx - neckHalfW, neckY + 3.4 * scale);
+			c.lineTo(bx + neckHalfW, neckY + 3.4 * scale);
+			c.stroke();
+			// Base contact bead
+			c.fillStyle = `rgba(70, 70, 75, ${(0.35 + 0.2 * glow).toFixed(3)})`;
+			c.beginPath();
+			c.arc(bx, neckY + 5.2 * scale, 1.4 * scale, 0, Math.PI);
+			c.fill();
+
+			// 4. Internal lead wires & glowing filament
+			c.strokeStyle = `rgba(180, 180, 190, ${(0.22 + 0.28 * glow).toFixed(3)})`;
+			c.lineWidth = 0.75;
+			c.beginPath();
+			c.moveTo(bx - 1.5 * scale, neckY);
+			c.lineTo(bx - 1.8 * scale, bulbCenterY + 2 * scale);
+			c.moveTo(bx + 1.5 * scale, neckY);
+			c.lineTo(bx + 1.8 * scale, bulbCenterY + 2 * scale);
+			c.stroke();
+
+			// Tungsten filament arch
+			c.beginPath();
+			c.moveTo(bx - 1.8 * scale, bulbCenterY + 2 * scale);
+			c.bezierCurveTo(
+				bx - 3.5 * scale,
+				bulbCenterY - 4 * scale,
+				bx - 0.8 * scale,
+				bulbCenterY - 5 * scale,
+				bx,
+				bulbCenterY - 3.5 * scale
+			);
+			c.bezierCurveTo(
+				bx + 0.8 * scale,
+				bulbCenterY - 5 * scale,
+				bx + 3.5 * scale,
+				bulbCenterY - 4 * scale,
+				bx + 1.8 * scale,
+				bulbCenterY + 2 * scale
+			);
+
+			if (glow > 0.04) {
+				c.strokeStyle = `rgba(${BULB_GOLD}, ${(0.88 * glow).toFixed(3)})`;
+				c.lineWidth = 1.3 * scale;
+				c.stroke();
+				c.strokeStyle = `rgba(255, 255, 245, ${(0.95 * glow).toFixed(3)})`;
+				c.lineWidth = 0.7 * scale;
+				c.stroke();
+			} else {
+				c.strokeStyle = 'rgba(120, 120, 120, 0.2)';
+				c.lineWidth = 0.7 * scale;
+				c.stroke();
+			}
+
+			// Specular curved reflection on upper glass dome
+			c.beginPath();
+			c.arc(bx, bulbCenterY, R * 0.78, -Math.PI * 0.85, -Math.PI * 0.45);
+			c.strokeStyle = `rgba(255, 255, 255, ${(0.16 + 0.24 * glow).toFixed(3)})`;
+			c.lineWidth = 1.0;
+			c.stroke();
+
+			c.restore();
 		};
-		window.addEventListener('pointermove', onPointerMove, { passive: true });
 
 		let scrollMax = 1;
 		const measureScroll = () => {
@@ -770,206 +923,174 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						}
 					}
 				}
-			} else if (theme === 'cave-caustics') {
+			} else if (theme === 'realistic-fire') {
 				// UNCHOSEN:
-				// Very slow, deep cobalt caustic light ripples rolling across the darkness,
-				// as if the page is resting on the surface of undisturbed underground water.
-				if (!reduce) {
-					currentPointerX += (targetPointerX - currentPointerX) * 0.025;
-					currentPointerY += (targetPointerY - currentPointerY) * 0.025;
-				}
+				// Realistic fire style: atmospheric burning forest from the mythic short film.
+				// Deep radiant hearth glow, dynamic licking flame plumes with heat convection,
+				// and rising embers/sparks drifting upward into the dark air.
 
-				// Deep subterranean pool atmospheric glow
-				const poolGlow = ctx!.createRadialGradient(
+				// 1. Fire hearth atmospheric glow at the base
+				const flicker = reduce
+					? 0.9
+					: 0.8 + 0.14 * Math.sin(t * 0.007) + 0.06 * Math.sin(t * 0.021 + 1.3);
+				const fireHearth = ctx!.createRadialGradient(
 					cx,
-					h * 0.55,
+					h,
 					0,
 					cx,
-					h * 0.55,
-					Math.max(w, h) * 0.75
+					h,
+					Math.max(w, h) * 0.7
 				);
-				poolGlow.addColorStop(0, `rgba(${COBALT_DEEP}, ${(0.07 + 0.03 * worldBreath).toFixed(3)})`);
-				poolGlow.addColorStop(0.55, `rgba(${COBALT_DEEP}, ${(0.015 + 0.015 * worldBreath).toFixed(3)})`);
-				poolGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-				ctx!.fillStyle = poolGlow;
+				fireHearth.addColorStop(0, `rgba(${FIRE_ORANGE}, ${(0.14 * flicker * light).toFixed(3)})`);
+				fireHearth.addColorStop(0.35, `rgba(${FIRE_CRIMSON}, ${(0.06 * flicker * light).toFixed(3)})`);
+				fireHearth.addColorStop(0.75, `rgba(${FIRE_CRIMSON}, ${(0.015 * flicker * light).toFixed(3)})`);
+				fireHearth.addColorStop(1, 'rgba(0, 0, 0, 0)');
+				ctx!.fillStyle = fireHearth;
 				ctx!.fillRect(0, 0, w, h);
 
-				// Very slow rolling caustics: undulating horizontal and vertical ribbons
-				const RIBBONS_H = lowTier ? 6 : 9;
-				const RIBBONS_V = lowTier ? 5 : 7;
-				const waveTime = reduce ? 0 : t * 0.00016;
+				// 2. Dynamic licking flame tongues / plumes
+				const NUM_TONGUES = lowTier ? 14 : 22;
+				const tongueWidth = (w / NUM_TONGUES) * 1.55;
+
+				const flameLayers = [
+					{
+						color: FIRE_CRIMSON,
+						heightMult: 1.0,
+						alpha: 0.22,
+						timeSpeed: 0.0045,
+					},
+					{
+						color: FIRE_ORANGE,
+						heightMult: 0.72,
+						alpha: 0.32,
+						timeSpeed: 0.006,
+					},
+					{
+						color: FIRE_HOT,
+						heightMult: 0.42,
+						alpha: 0.48,
+						timeSpeed: 0.0085,
+					},
+				];
 
 				ctx!.save();
-				ctx!.globalCompositeOperation = 'lighter';
+				ctx!.globalCompositeOperation = 'screen';
 
-				// Horizontal water ribbons
-				for (let i = 0; i < RIBBONS_H; i++) {
-					const baseY = ((i + 0.5) / RIBBONS_H) * h;
+				for (const layer of flameLayers) {
+					ctx!.fillStyle = `rgba(${layer.color}, ${(layer.alpha * light).toFixed(3)})`;
 					ctx!.beginPath();
-					for (let x = -40; x <= w + 40; x += 32) {
-						const nx = x / (w || 1);
-						const dist = Math.hypot(nx - currentPointerX, baseY / (h || 1) - currentPointerY);
-						const ripple = Math.exp(-dist * 3.5) * 14 * Math.sin(t * 0.0018 - dist * 9);
-						const y =
-							baseY +
-							Math.sin(nx * 4.2 + waveTime + i * 1.35) * 32 +
-							Math.cos(nx * 7.4 - waveTime * 1.3 + i * 0.8) * 16 +
-							Math.sin(nx * 11.8 + waveTime * 0.7 + i * 2.1) * 7 +
-							(reduce ? 0 : ripple);
-						if (x === -40) ctx!.moveTo(x, y);
-						else ctx!.lineTo(x, y);
+					ctx!.moveTo(-40, h);
+
+					for (let i = 0; i <= NUM_TONGUES + 1; i++) {
+						const baseX = (i / NUM_TONGUES) * w;
+						const seed = i * 2.37;
+						const sway = reduce
+							? 0
+							: Math.sin(t * layer.timeSpeed + seed) * 18 +
+								Math.cos(t * layer.timeSpeed * 1.7 + seed * 0.7) * 10;
+						const baseH =
+							(lowTier ? 90 : 135) *
+							layer.heightMult *
+							(reduce ? 1 : 0.8 + 0.35 * Math.sin(t * layer.timeSpeed * 1.3 + seed * 1.6));
+
+						const tipX = baseX + sway;
+						const tipY = h - baseH;
+
+						ctx!.bezierCurveTo(
+							baseX - tongueWidth * 0.28,
+							h - baseH * 0.45,
+							tipX - 8,
+							tipY + 15,
+							tipX,
+							tipY
+						);
+						ctx!.bezierCurveTo(
+							tipX + 8,
+							tipY + 15,
+							baseX + tongueWidth * 0.28,
+							h - baseH * 0.45,
+							baseX + tongueWidth * 0.5,
+							h
+						);
 					}
 
-					// Broad soft caustic diffusion
-					ctx!.lineWidth = lowTier ? 4 : 6;
-					ctx!.strokeStyle = `rgba(${COBALT_DEEP}, ${(0.035 * light).toFixed(3)})`;
-					ctx!.stroke();
-
-					// Thin focused caustic ridge
-					ctx!.lineWidth = 1.3;
-					ctx!.strokeStyle = `rgba(${COBALT}, ${(0.07 * light).toFixed(3)})`;
-					ctx!.stroke();
+					ctx!.lineTo(w + 40, h);
+					ctx!.lineTo(-40, h);
+					ctx!.closePath();
+					ctx!.fill();
 				}
 
-				// Crossing vertical water ribbons (intersections form bright caustic nodes)
-				for (let j = 0; j < RIBBONS_V; j++) {
-					const baseX = ((j + 0.5) / RIBBONS_V) * w;
-					ctx!.beginPath();
-					for (let y = -40; y <= h + 40; y += 32) {
-						const ny = y / (h || 1);
-						const dist = Math.hypot(baseX / (w || 1) - currentPointerX, ny - currentPointerY);
-						const ripple = Math.exp(-dist * 3.5) * 14 * Math.cos(t * 0.0018 - dist * 9);
-						const x =
-							baseX +
-							Math.sin(ny * 3.9 - waveTime * 1.1 + j * 1.45) * 34 +
-							Math.cos(ny * 6.8 + waveTime * 1.2 + j * 0.85) * 18 +
-							Math.sin(ny * 11.4 - waveTime * 0.65 + j * 2.2) * 7 +
-							(reduce ? 0 : ripple);
-						if (y === -40) ctx!.moveTo(x, y);
-						else ctx!.lineTo(x, y);
-					}
-
-					ctx!.lineWidth = lowTier ? 4 : 6;
-					ctx!.strokeStyle = `rgba(${COBALT_DEEP}, ${(0.035 * light).toFixed(3)})`;
-					ctx!.stroke();
-
-					ctx!.lineWidth = 1.3;
-					ctx!.strokeStyle = `rgba(${COBALT}, ${(0.07 * light).toFixed(3)})`;
-					ctx!.stroke();
-				}
-
-				ctx!.restore();
-			} else if (theme === 'prismatic-sweep') {
-				// Ideas Into Living Systems:
-				// A very subtle, razor-thin beam of pure white light that periodically
-				// sweeps across and splits into faint chromatic spectrum/refraction at the edges—
-				// showing raw thought dispersing into form, color, and medium.
-				const CYCLE = 14000; // 14-second contemplative cadence
-				const phase = reduce ? 0.45 : (t % CYCLE) / CYCLE;
-
-				// 0.00 -> 0.18: deep void / stillness
-				// 0.18 -> 0.78: active light sweep
-				// 0.78 -> 1.00: dissolution back to void
-				let sweepProgress = 0;
-				let beamAlpha = 0;
-
-				if (reduce) {
-					sweepProgress = 0.5;
-					beamAlpha = 0.28;
-				} else if (phase >= 0.18 && phase < 0.78) {
-					const p = (phase - 0.18) / 0.6;
-					sweepProgress = p * p * (3 - 2 * p); // smoothstep
-					beamAlpha = Math.sin(p * Math.PI) * 0.85;
-				}
-
-				if (beamAlpha > 0.01) {
-					const angle = -Math.PI * 0.16; // -29 deg anamorphic sweep angle
-					const cosA = Math.cos(angle);
-					const sinA = Math.sin(angle);
-
-					// Beam traversal across viewport
-					const startDist = -Math.max(w, h) * 0.25;
-					const endDist = Math.max(w, h) * 1.25;
-					const curDist = startDist + sweepProgress * (endDist - startDist);
-
-					const beamCenterX = cx + cosA * (curDist - Math.max(w, h) * 0.5);
-					const beamCenterY = cy + sinA * (curDist - Math.max(w, h) * 0.5);
-
-					// Beam line endpoints
-					const lineLen = Math.max(w, h) * 1.8;
-					const dirX = -sinA;
-					const dirY = cosA;
-
-					const x0 = beamCenterX - dirX * lineLen;
-					const y0 = beamCenterY - dirY * lineLen;
-					const x1 = beamCenterX + dirX * lineLen;
-					const y1 = beamCenterY + dirY * lineLen;
-
-					// Chromatic dispersion expands toward the edges and peak sweep
-					const maxDisp = lowTier ? 5 : 8.5;
-					const dispersion = maxDisp * Math.sin(sweepProgress * Math.PI);
-
-					ctx!.save();
-					ctx!.globalCompositeOperation = 'lighter';
-
-					// Spectral refraction bands (Red, Amber, Green, Cyan, Violet)
-					const spectra = [
-						{ color: PRISM_RED, offset: -dispersion * 1.0, width: 1.1, alpha: 0.22 },
-						{ color: PRISM_AMBER, offset: -dispersion * 0.48, width: 1.1, alpha: 0.24 },
-						{ color: PRISM_GREEN, offset: dispersion * 0.18, width: 1.0, alpha: 0.2 },
-						{ color: PRISM_CYAN, offset: dispersion * 0.58, width: 1.1, alpha: 0.28 },
-						{ color: PRISM_VIOLET, offset: dispersion * 1.0, width: 1.2, alpha: 0.24 },
-					];
-
-					for (const s of spectra) {
-						const offX = cosA * s.offset;
-						const offY = sinA * s.offset;
-						ctx!.strokeStyle = `rgba(${s.color}, ${(s.alpha * beamAlpha * light).toFixed(3)})`;
-						ctx!.lineWidth = s.width;
-						ctx!.beginPath();
-						ctx!.moveTo(x0 + offX, y0 + offY);
-						ctx!.lineTo(x1 + offX, y1 + offY);
-						ctx!.stroke();
-					}
-
-					// Razor-thin pure white core
-					// Sheath glow
-					ctx!.strokeStyle = `rgba(255, 255, 255, ${(0.05 * beamAlpha * light).toFixed(3)})`;
-					ctx!.lineWidth = 5;
-					ctx!.beginPath();
-					ctx!.moveTo(x0, y0);
-					ctx!.lineTo(x1, y1);
-					ctx!.stroke();
-
-					// Razor core
-					ctx!.strokeStyle = `rgba(255, 255, 255, ${(0.55 * beamAlpha * light).toFixed(3)})`;
-					ctx!.lineWidth = 0.95;
-					ctx!.beginPath();
-					ctx!.moveTo(x0, y0);
-					ctx!.lineTo(x1, y1);
-					ctx!.stroke();
-
-					// Traveling optical diamond glints along the refractive beam
+				// 3. Rising glowing embers / sparks
+				for (let i = 0; i < EMBER_N; i++) {
 					if (!reduce) {
-						const glints = [0.32, 0.68];
-						for (let g = 0; g < glints.length; g++) {
-							const frac = (glints[g] + sweepProgress * 0.2) % 1;
-							const gx = x0 + (x1 - x0) * frac;
-							const gy = y0 + (y1 - y0) * frac;
-							const glintSize = 6;
+						emberLife[i] += 1;
+						emberY[i] -= emberVy[i];
+						emberX[i] += Math.sin(t * 0.0035 + emberSeed[i]) * 0.85;
 
-							ctx!.strokeStyle = `rgba(255, 255, 255, ${(0.4 * beamAlpha).toFixed(3)})`;
-							ctx!.lineWidth = 1;
-							ctx!.beginPath();
-							ctx!.moveTo(gx - glintSize, gy);
-							ctx!.lineTo(gx + glintSize, gy);
-							ctx!.moveTo(gx, gy - glintSize);
-							ctx!.lineTo(gx, gy + glintSize);
-							ctx!.stroke();
+						if (emberLife[i] >= emberMaxLife[i] || emberY[i] < -20) {
+							emberX[i] = Math.random() * w;
+							emberY[i] = h - Math.random() * 35;
+							emberVy[i] = 0.8 + Math.random() * 1.6;
+							emberLife[i] = 0;
+							emberMaxLife[i] = 140 + Math.random() * 180;
 						}
 					}
 
-					ctx!.restore();
+					const fraction = Math.max(0, 1 - emberLife[i] / emberMaxLife[i]);
+					if (fraction <= 0.01) continue;
+
+					let emberColor = FIRE_HOT;
+					if (fraction < 0.35) emberColor = FIRE_CRIMSON;
+					else if (fraction < 0.7) emberColor = FIRE_ORANGE;
+
+					const microFlick = reduce
+						? 1
+						: 0.65 + 0.35 * Math.sin(t * 0.02 + emberSeed[i]);
+					const emberAlpha = (fraction * microFlick * 0.75 * light).toFixed(3);
+					const r = emberSize[i] * (0.6 + 0.4 * fraction);
+
+					ctx!.fillStyle = `rgba(${FIRE_ORANGE}, ${(fraction * 0.25 * light).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(emberX[i], emberY[i], r * 3, 0, Math.PI * 2);
+					ctx!.fill();
+
+					ctx!.fillStyle = `rgba(${emberColor}, ${emberAlpha})`;
+					ctx!.beginPath();
+					ctx!.arc(emberX[i], emberY[i], r, 0, Math.PI * 2);
+					ctx!.fill();
+				}
+
+				ctx!.restore();
+			} else if (theme === 'floating-bulbs') {
+				// Ideas Into Living Systems:
+				// Small incandescent Edison bulbs drifting weightlessly,
+				// warming up with a radiant golden filament glow, illuminating the space,
+				// and gracefully drifting away as new ideas emerge.
+				for (let i = 0; i < BULB_N; i++) {
+					const dur = bulbDur[i];
+					let age = (t - bulbBirth[i]) / dur;
+
+					if (age >= 1 && !reduce) {
+						bulbBirth[i] = t;
+						bulbDur[i] = 7500 + Math.random() * 5500;
+						bulbBaseX[i] = 0.08 + Math.random() * 0.84;
+						bulbBaseY[i] = 0.18 + Math.random() * 0.68;
+						bulbScale[i] = 0.75 + Math.random() * 0.45;
+						bulbSeed[i] = Math.random() * 1000;
+						age = 0;
+					}
+
+					const p = reduce ? 0.5 : Math.max(0, Math.min(1, age));
+					const glow = reduce ? 0.75 : Math.sin(p * Math.PI);
+
+					if (glow <= 0.01) continue;
+
+					const floatY = reduce ? 0 : -p * 55;
+					const swayX = reduce ? 0 : Math.sin(t * 0.0011 + bulbSeed[i]) * 15;
+					const bx = bulbBaseX[i] * w + swayX;
+					const by = bulbBaseY[i] * h + floatY;
+
+					drawBulb(ctx!, bx, by, bulbScale[i], glow * light);
 				}
 			} else {
 				// effects — sparse particles drifting slowly upward
@@ -995,8 +1116,8 @@ export default function WorldBackground({ theme }: { theme: World }) {
 				const horizonColor =
 					theme === 'lightning'
 						? PURPLE
-						: theme === 'prismatic-sweep'
-							? CYAN
+						: theme === 'realistic-fire' || theme === 'floating-bulbs'
+							? FIRE_ORANGE
 							: COBALT;
 				const g = ctx!.createLinearGradient(0, h, 0, h - 260 * rise);
 				g.addColorStop(0, `rgba(${horizonColor}, ${(0.16 * rise).toFixed(3)})`);
@@ -1065,7 +1186,6 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			document.removeEventListener('visibilitychange', onVis);
 			window.removeEventListener('resize', onResize);
 			window.removeEventListener('scroll', onStaticScroll);
-			window.removeEventListener('pointermove', onPointerMove);
 			if (staticRaf) cancelAnimationFrame(staticRaf);
 			clearTimeout(rt);
 		};
