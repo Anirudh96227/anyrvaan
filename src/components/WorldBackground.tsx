@@ -44,8 +44,8 @@ export type World =
 	| 'enso'
 	| 'dusk-to-night'
 	| 'lightning'
-	| 'magnetic-nodes'
-	| 'suspended-rain';
+	| 'prismatic-sweep'
+	| 'cave-caustics';
 
 const COBALT = '96, 165, 250'; // the site's one signal blue, rgb
 const PHOSPHOR = '110, 231, 183'; // faint CRT green, retro only
@@ -53,9 +53,13 @@ const AMBER = '240, 190, 120'; // warm ember — diorama-drift only
 const MOON = '186, 205, 240'; // cool moonlight — dusk-to-night only
 const PURPLE = '168, 85, 247'; // electric purple — lightning/voltra only
 const VIOLET_LIGHT = '233, 213, 255'; // high-intensity lightning core, rgb
-const CYAN = '56, 189, 248'; // electric cyan — magnetic-nodes / ideas manifesto
-const GRAPHITE = '148, 163, 184'; // graphite slate — structural grid & coordinates
-const GLASS_SILVER = '226, 232, 240'; // pure glass silver — suspended-rain / unchosen
+const CYAN = '56, 189, 248'; // electric cyan — horizon / signal
+const COBALT_DEEP = '29, 78, 216'; // deep subterranean pool cobalt — cave-caustics / unchosen
+const PRISM_RED = '244, 63, 94'; // rose / red spectral edge — prismatic-sweep
+const PRISM_AMBER = '251, 146, 60'; // amber spectral band — prismatic-sweep
+const PRISM_GREEN = '52, 211, 153'; // emerald spectral band — prismatic-sweep
+const PRISM_CYAN = '56, 189, 248'; // electric cyan spectral band — prismatic-sweep
+const PRISM_VIOLET = '168, 85, 247'; // violet spectral edge — prismatic-sweep
 
 
 export default function WorldBackground({ theme }: { theme: World }) {
@@ -238,70 +242,15 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			};
 		};
 
-		// magnetic-nodes: 7 independent design choices that drift and periodically snap into modular columns
-		const NODE_N = 7;
-		const nodeSeedX = new Float32Array(NODE_N);
-		const nodeSeedY = new Float32Array(NODE_N);
-		const nodeSpeedX = new Float32Array(NODE_N);
-		const nodeSpeedY = new Float32Array(NODE_N);
-		const nodeAmpX = new Float32Array(NODE_N);
-		const nodeAmpY = new Float32Array(NODE_N);
-		const nodeLabels = [
-			'01 // FORM',
-			'02 // TYPE',
-			'03 // COLOUR',
-			'04 // MOTION',
-			'05 // RHYTHM',
-			'06 // SYSTEM',
-			'07 // WORLD',
-		];
-		const nodeCol = [0, 1, 0, 2, 1, 0, 2];
-		const nodeRow = [0, 0, 1, 1, 2, 3, 3];
-		const nodeLinks: [number, number][] = [
-			[0, 1],
-			[0, 2],
-			[1, 4],
-			[2, 3],
-			[2, 5],
-			[3, 6],
-			[4, 6],
-		];
-		for (let i = 0; i < NODE_N; i++) {
-			nodeSeedX[i] = 0.16 + Math.random() * 0.68;
-			nodeSeedY[i] = 0.16 + Math.random() * 0.68;
-			nodeSpeedX[i] = 0.00014 + Math.random() * 0.00012;
-			nodeSpeedY[i] = 0.00017 + Math.random() * 0.00012;
-			nodeAmpX[i] = 35 + Math.random() * 45;
-			nodeAmpY[i] = 25 + Math.random() * 40;
-		}
-
-		// suspended-rain: droplets suspended in mid-air in the stopped cave chamber
-		const RAIN_N = lowTier ? 80 : 150;
-		const rainNormX = new Float32Array(RAIN_N);
-		const rainNormY = new Float32Array(RAIN_N);
-		const rainR = new Float32Array(RAIN_N);
-		const rainLen = new Float32Array(RAIN_N);
-		const rainDepth = new Float32Array(RAIN_N);
-		const rainSeed = new Float32Array(RAIN_N);
-		const rainCobalt = new Uint8Array(RAIN_N);
-		for (let i = 0; i < RAIN_N; i++) {
-			rainNormX[i] = Math.random();
-			rainNormY[i] = Math.random();
-			rainDepth[i] = 0.25 + Math.random() * 0.75;
-			rainR[i] = 0.75 + rainDepth[i] * 1.3;
-			rainLen[i] = 1.9 + Math.random() * 0.8;
-			rainSeed[i] = Math.random() * 1000;
-			rainCobalt[i] = Math.random() < 0.32 ? 1 : 0;
-		}
-
-		let targetParallaxX = 0;
-		let targetParallaxY = 0;
-		let currentParallaxX = 0;
-		let currentParallaxY = 0;
+		// Interactive pointer tracking for subtle surface ripple interaction (cave-caustics)
+		let targetPointerX = 0.5;
+		let targetPointerY = 0.5;
+		let currentPointerX = 0.5;
+		let currentPointerY = 0.5;
 
 		const onPointerMove = (e: PointerEvent) => {
-			targetParallaxX = (e.clientX / (w || 1) - 0.5) * 2;
-			targetParallaxY = (e.clientY / (h || 1) - 0.5) * 2;
+			targetPointerX = e.clientX / (w || 1);
+			targetPointerY = e.clientY / (h || 1);
 		};
 		window.addEventListener('pointermove', onPointerMove, { passive: true });
 
@@ -821,193 +770,206 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						}
 					}
 				}
-			} else if (theme === 'magnetic-nodes') {
-				// Ideas Into Living Systems:
-				// Independent design choices (FORM, TYPE, COLOUR, MOTION...) floating freely,
-				// occasionally drawn into modular column alignment by system gravitation,
-				// holding as one living system, and gently releasing.
-				const CYCLE = 16000;
-				const phase = reduce ? 0.6 : (t % CYCLE) / CYCLE;
-				let snapWeight = 0;
-				if (reduce) {
-					snapWeight = 0.85;
-				} else if (phase < 0.36) {
-					snapWeight = 0;
-				} else if (phase < 0.52) {
-					const p = (phase - 0.36) / 0.16;
-					snapWeight = p * p * (3 - 2 * p);
-				} else if (phase < 0.78) {
-					snapWeight = 1;
-				} else {
-					const p = (phase - 0.78) / 0.22;
-					snapWeight = 1 - p * p * (3 - 2 * p);
-				}
-
-				// Grid coordinates
-				const colGap = Math.min(w * 0.28, 260);
-				const cols = [cx - colGap, cx, cx + colGap];
-				const rowSpacing = Math.min(h * 0.14, 95);
-				const rows = [
-					cy - rowSpacing * 1.5,
-					cy - rowSpacing * 0.5,
-					cy + rowSpacing * 0.5,
-					cy + rowSpacing * 1.5,
-				];
-
-				const posX = new Float32Array(NODE_N);
-				const posY = new Float32Array(NODE_N);
-
-				for (let i = 0; i < NODE_N; i++) {
-					const baseX = w * nodeSeedX[i];
-					const baseY = h * nodeSeedY[i];
-					const driftX = baseX + Math.sin(t * nodeSpeedX[i] + i * 2.1) * nodeAmpX[i];
-					const driftY = baseY + Math.cos(t * nodeSpeedY[i] + i * 1.7) * nodeAmpY[i];
-					const snapX = cols[nodeCol[i]];
-					const snapY = rows[nodeRow[i]];
-
-					posX[i] = driftX + (snapX - driftX) * snapWeight;
-					posY[i] = driftY + (snapY - driftY) * snapWeight;
-				}
-
-				// Modular vertical column guide lines
-				if (snapWeight > 0.03) {
-					ctx!.setLineDash([2, 5]);
-					ctx!.strokeStyle = `rgba(${GRAPHITE}, ${(0.11 * snapWeight).toFixed(3)})`;
-					ctx!.lineWidth = 1;
-					for (let c = 0; c < cols.length; c++) {
-						ctx!.beginPath();
-						ctx!.moveTo(cols[c], Math.max(0, rows[0] - 60));
-						ctx!.lineTo(cols[c], Math.min(h, rows[3] + 60));
-						ctx!.stroke();
-					}
-
-					// System relation links connecting the nodes
-					ctx!.strokeStyle = `rgba(${CYAN}, ${(0.16 * snapWeight).toFixed(3)})`;
-					for (const [a, b] of nodeLinks) {
-						ctx!.beginPath();
-						ctx!.moveTo(posX[a], posY[a]);
-						ctx!.lineTo(posX[b], posY[b]);
-						ctx!.stroke();
-					}
-					ctx!.setLineDash([]);
-
-					// Signal flow pulse during hold phase
-					if (snapWeight > 0.5 && !reduce) {
-						const pulseCycle = (t * 0.0006) % 1;
-						for (let l = 0; l < nodeLinks.length; l++) {
-							const [a, b] = nodeLinks[l];
-							const frac = (pulseCycle + l * 0.14) % 1;
-							const px = posX[a] + (posX[b] - posX[a]) * frac;
-							const py = posY[a] + (posY[b] - posY[a]) * frac;
-							ctx!.fillStyle = `rgba(${CYAN}, ${(0.55 * snapWeight).toFixed(3)})`;
-							ctx!.beginPath();
-							ctx!.arc(px, py, 1.4, 0, Math.PI * 2);
-							ctx!.fill();
-						}
-					}
-				}
-
-				// Draw individual nodes
-				for (let i = 0; i < NODE_N; i++) {
-					const x = posX[i];
-					const y = posY[i];
-
-					// Crosshair ticks
-					const tick = 3.5;
-					ctx!.strokeStyle = `rgba(${CYAN}, ${(0.32 + 0.35 * snapWeight).toFixed(3)})`;
-					ctx!.lineWidth = 1;
-					ctx!.beginPath();
-					ctx!.moveTo(x - tick, y);
-					ctx!.lineTo(x + tick, y);
-					ctx!.moveTo(x, y - tick);
-					ctx!.lineTo(x, y + tick);
-					ctx!.stroke();
-
-					// Center core
-					ctx!.fillStyle = `rgba(240, 248, 255, ${(0.65 + 0.3 * snapWeight).toFixed(3)})`;
-					ctx!.beginPath();
-					ctx!.arc(x, y, 1.5, 0, Math.PI * 2);
-					ctx!.fill();
-
-					// Gravitational halo / radius
-					const haloR = 7 + (1 - snapWeight) * 6 + Math.sin(t * 0.003 + i) * 2;
-					ctx!.strokeStyle = `rgba(${CYAN}, ${(0.07 + 0.08 * snapWeight).toFixed(3)})`;
-					ctx!.lineWidth = 1;
-					ctx!.beginPath();
-					ctx!.arc(x, y, haloR, 0, Math.PI * 2);
-					ctx!.stroke();
-
-					// Typographic label
-					ctx!.font = '9px "JetBrains Mono", ui-monospace, monospace';
-					ctx!.fillStyle = `rgba(${GRAPHITE}, ${(0.28 + 0.32 * snapWeight).toFixed(3)})`;
-					ctx!.fillText(nodeLabels[i], x + 9, y + 3);
-				}
-			} else if (theme === 'suspended-rain') {
+			} else if (theme === 'cave-caustics') {
 				// UNCHOSEN:
-				// A moment inside the Cave where time ceases: rain falling from an
-				// underground roof hangs frozen in mid-air. Tiny droplets trembling with
-				// micro-vibrations, subtly shifting in 3D parallax on mouse move.
+				// Very slow, deep cobalt caustic light ripples rolling across the darkness,
+				// as if the page is resting on the surface of undisturbed underground water.
 				if (!reduce) {
-					currentParallaxX += (targetParallaxX - currentParallaxX) * 0.06;
-					currentParallaxY += (targetParallaxY - currentParallaxY) * 0.06;
+					currentPointerX += (targetPointerX - currentPointerX) * 0.025;
+					currentPointerY += (targetPointerY - currentPointerY) * 0.025;
 				}
 
-				// Atmospheric subterranean cave wash in the lower depths
-				const caveWash = ctx!.createRadialGradient(
+				// Deep subterranean pool atmospheric glow
+				const poolGlow = ctx!.createRadialGradient(
 					cx,
-					h * 0.7,
+					h * 0.55,
 					0,
 					cx,
-					h * 0.7,
+					h * 0.55,
 					Math.max(w, h) * 0.75
 				);
-				caveWash.addColorStop(0, `rgba(${COBALT}, ${(0.06 + 0.03 * worldBreath).toFixed(3)})`);
-				caveWash.addColorStop(0.6, `rgba(${COBALT}, ${(0.015 + 0.015 * worldBreath).toFixed(3)})`);
-				caveWash.addColorStop(1, 'rgba(0, 0, 0, 0)');
-				ctx!.fillStyle = caveWash;
+				poolGlow.addColorStop(0, `rgba(${COBALT_DEEP}, ${(0.07 + 0.03 * worldBreath).toFixed(3)})`);
+				poolGlow.addColorStop(0.55, `rgba(${COBALT_DEEP}, ${(0.015 + 0.015 * worldBreath).toFixed(3)})`);
+				poolGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+				ctx!.fillStyle = poolGlow;
 				ctx!.fillRect(0, 0, w, h);
 
-				// Render suspended droplets
-				for (let i = 0; i < RAIN_N; i++) {
-					const depth = rainDepth[i];
-					const s = rainSeed[i];
+				// Very slow rolling caustics: undulating horizontal and vertical ribbons
+				const RIBBONS_H = lowTier ? 6 : 9;
+				const RIBBONS_V = lowTier ? 5 : 7;
+				const waveTime = reduce ? 0 : t * 0.00016;
 
-					// Micro-vibration: sub-pixel surface tension tremble inside the stopped chamber
-					const vibX = reduce ? 0 : Math.sin(t * 0.008 + s * 7.1) * (0.3 + depth * 0.2);
-					const vibY = reduce ? 0 : Math.cos(t * 0.007 + s * 5.3) * (0.45 + depth * 0.3);
+				ctx!.save();
+				ctx!.globalCompositeOperation = 'lighter';
 
-					// Parallax shift from visitor's cursor
-					const px = currentParallaxX * depth * 28;
-					const py = currentParallaxY * depth * 18;
-
-					let dx = rainNormX[i] * w + vibX + px;
-					let dy = rainNormY[i] * h + vibY + py;
-
-					// Soft wrap within viewport bounds
-					if (dx < -10) dx += w + 20;
-					else if (dx > w + 10) dx -= w + 20;
-					if (dy < -10) dy += h + 20;
-					else if (dy > h + 10) dy -= h + 20;
-
-					const rx = rainR[i] * 0.75;
-					const ry = rainR[i] * rainLen[i];
-					const shimmer = reduce ? 0.85 : 0.72 + 0.28 * Math.sin(t * 0.0035 + s);
-					const alpha = (0.16 + depth * 0.38) * shimmer;
-
-					const color = rainCobalt[i] ? COBALT : GLASS_SILVER;
-
+				// Horizontal water ribbons
+				for (let i = 0; i < RIBBONS_H; i++) {
+					const baseY = ((i + 0.5) / RIBBONS_H) * h;
 					ctx!.beginPath();
-					ctx!.ellipse(dx, dy, rx, ry, 0, 0, Math.PI * 2);
-					ctx!.fillStyle = `rgba(${color}, ${alpha.toFixed(3)})`;
-					ctx!.fill();
-
-					// Specular glass highlight at the top tip of closer droplets
-					if (depth > 0.55) {
-						ctx!.fillStyle = `rgba(255, 255, 255, ${(0.45 * alpha).toFixed(3)})`;
-						ctx!.beginPath();
-						ctx!.arc(dx - rx * 0.2, dy - ry * 0.42, Math.max(0.4, rx * 0.35), 0, Math.PI * 2);
-						ctx!.fill();
+					for (let x = -40; x <= w + 40; x += 32) {
+						const nx = x / (w || 1);
+						const dist = Math.hypot(nx - currentPointerX, baseY / (h || 1) - currentPointerY);
+						const ripple = Math.exp(-dist * 3.5) * 14 * Math.sin(t * 0.0018 - dist * 9);
+						const y =
+							baseY +
+							Math.sin(nx * 4.2 + waveTime + i * 1.35) * 32 +
+							Math.cos(nx * 7.4 - waveTime * 1.3 + i * 0.8) * 16 +
+							Math.sin(nx * 11.8 + waveTime * 0.7 + i * 2.1) * 7 +
+							(reduce ? 0 : ripple);
+						if (x === -40) ctx!.moveTo(x, y);
+						else ctx!.lineTo(x, y);
 					}
+
+					// Broad soft caustic diffusion
+					ctx!.lineWidth = lowTier ? 4 : 6;
+					ctx!.strokeStyle = `rgba(${COBALT_DEEP}, ${(0.035 * light).toFixed(3)})`;
+					ctx!.stroke();
+
+					// Thin focused caustic ridge
+					ctx!.lineWidth = 1.3;
+					ctx!.strokeStyle = `rgba(${COBALT}, ${(0.07 * light).toFixed(3)})`;
+					ctx!.stroke();
+				}
+
+				// Crossing vertical water ribbons (intersections form bright caustic nodes)
+				for (let j = 0; j < RIBBONS_V; j++) {
+					const baseX = ((j + 0.5) / RIBBONS_V) * w;
+					ctx!.beginPath();
+					for (let y = -40; y <= h + 40; y += 32) {
+						const ny = y / (h || 1);
+						const dist = Math.hypot(baseX / (w || 1) - currentPointerX, ny - currentPointerY);
+						const ripple = Math.exp(-dist * 3.5) * 14 * Math.cos(t * 0.0018 - dist * 9);
+						const x =
+							baseX +
+							Math.sin(ny * 3.9 - waveTime * 1.1 + j * 1.45) * 34 +
+							Math.cos(ny * 6.8 + waveTime * 1.2 + j * 0.85) * 18 +
+							Math.sin(ny * 11.4 - waveTime * 0.65 + j * 2.2) * 7 +
+							(reduce ? 0 : ripple);
+						if (y === -40) ctx!.moveTo(x, y);
+						else ctx!.lineTo(x, y);
+					}
+
+					ctx!.lineWidth = lowTier ? 4 : 6;
+					ctx!.strokeStyle = `rgba(${COBALT_DEEP}, ${(0.035 * light).toFixed(3)})`;
+					ctx!.stroke();
+
+					ctx!.lineWidth = 1.3;
+					ctx!.strokeStyle = `rgba(${COBALT}, ${(0.07 * light).toFixed(3)})`;
+					ctx!.stroke();
+				}
+
+				ctx!.restore();
+			} else if (theme === 'prismatic-sweep') {
+				// Ideas Into Living Systems:
+				// A very subtle, razor-thin beam of pure white light that periodically
+				// sweeps across and splits into faint chromatic spectrum/refraction at the edges—
+				// showing raw thought dispersing into form, color, and medium.
+				const CYCLE = 14000; // 14-second contemplative cadence
+				const phase = reduce ? 0.45 : (t % CYCLE) / CYCLE;
+
+				// 0.00 -> 0.18: deep void / stillness
+				// 0.18 -> 0.78: active light sweep
+				// 0.78 -> 1.00: dissolution back to void
+				let sweepProgress = 0;
+				let beamAlpha = 0;
+
+				if (reduce) {
+					sweepProgress = 0.5;
+					beamAlpha = 0.28;
+				} else if (phase >= 0.18 && phase < 0.78) {
+					const p = (phase - 0.18) / 0.6;
+					sweepProgress = p * p * (3 - 2 * p); // smoothstep
+					beamAlpha = Math.sin(p * Math.PI) * 0.85;
+				}
+
+				if (beamAlpha > 0.01) {
+					const angle = -Math.PI * 0.16; // -29 deg anamorphic sweep angle
+					const cosA = Math.cos(angle);
+					const sinA = Math.sin(angle);
+
+					// Beam traversal across viewport
+					const startDist = -Math.max(w, h) * 0.25;
+					const endDist = Math.max(w, h) * 1.25;
+					const curDist = startDist + sweepProgress * (endDist - startDist);
+
+					const beamCenterX = cx + cosA * (curDist - Math.max(w, h) * 0.5);
+					const beamCenterY = cy + sinA * (curDist - Math.max(w, h) * 0.5);
+
+					// Beam line endpoints
+					const lineLen = Math.max(w, h) * 1.8;
+					const dirX = -sinA;
+					const dirY = cosA;
+
+					const x0 = beamCenterX - dirX * lineLen;
+					const y0 = beamCenterY - dirY * lineLen;
+					const x1 = beamCenterX + dirX * lineLen;
+					const y1 = beamCenterY + dirY * lineLen;
+
+					// Chromatic dispersion expands toward the edges and peak sweep
+					const maxDisp = lowTier ? 5 : 8.5;
+					const dispersion = maxDisp * Math.sin(sweepProgress * Math.PI);
+
+					ctx!.save();
+					ctx!.globalCompositeOperation = 'lighter';
+
+					// Spectral refraction bands (Red, Amber, Green, Cyan, Violet)
+					const spectra = [
+						{ color: PRISM_RED, offset: -dispersion * 1.0, width: 1.1, alpha: 0.22 },
+						{ color: PRISM_AMBER, offset: -dispersion * 0.48, width: 1.1, alpha: 0.24 },
+						{ color: PRISM_GREEN, offset: dispersion * 0.18, width: 1.0, alpha: 0.2 },
+						{ color: PRISM_CYAN, offset: dispersion * 0.58, width: 1.1, alpha: 0.28 },
+						{ color: PRISM_VIOLET, offset: dispersion * 1.0, width: 1.2, alpha: 0.24 },
+					];
+
+					for (const s of spectra) {
+						const offX = cosA * s.offset;
+						const offY = sinA * s.offset;
+						ctx!.strokeStyle = `rgba(${s.color}, ${(s.alpha * beamAlpha * light).toFixed(3)})`;
+						ctx!.lineWidth = s.width;
+						ctx!.beginPath();
+						ctx!.moveTo(x0 + offX, y0 + offY);
+						ctx!.lineTo(x1 + offX, y1 + offY);
+						ctx!.stroke();
+					}
+
+					// Razor-thin pure white core
+					// Sheath glow
+					ctx!.strokeStyle = `rgba(255, 255, 255, ${(0.05 * beamAlpha * light).toFixed(3)})`;
+					ctx!.lineWidth = 5;
+					ctx!.beginPath();
+					ctx!.moveTo(x0, y0);
+					ctx!.lineTo(x1, y1);
+					ctx!.stroke();
+
+					// Razor core
+					ctx!.strokeStyle = `rgba(255, 255, 255, ${(0.55 * beamAlpha * light).toFixed(3)})`;
+					ctx!.lineWidth = 0.95;
+					ctx!.beginPath();
+					ctx!.moveTo(x0, y0);
+					ctx!.lineTo(x1, y1);
+					ctx!.stroke();
+
+					// Traveling optical diamond glints along the refractive beam
+					if (!reduce) {
+						const glints = [0.32, 0.68];
+						for (let g = 0; g < glints.length; g++) {
+							const frac = (glints[g] + sweepProgress * 0.2) % 1;
+							const gx = x0 + (x1 - x0) * frac;
+							const gy = y0 + (y1 - y0) * frac;
+							const glintSize = 6;
+
+							ctx!.strokeStyle = `rgba(255, 255, 255, ${(0.4 * beamAlpha).toFixed(3)})`;
+							ctx!.lineWidth = 1;
+							ctx!.beginPath();
+							ctx!.moveTo(gx - glintSize, gy);
+							ctx!.lineTo(gx + glintSize, gy);
+							ctx!.moveTo(gx, gy - glintSize);
+							ctx!.lineTo(gx, gy + glintSize);
+							ctx!.stroke();
+						}
+					}
+
+					ctx!.restore();
 				}
 			} else {
 				// effects — sparse particles drifting slowly upward
@@ -1033,7 +995,7 @@ export default function WorldBackground({ theme }: { theme: World }) {
 				const horizonColor =
 					theme === 'lightning'
 						? PURPLE
-						: theme === 'magnetic-nodes'
+						: theme === 'prismatic-sweep'
 							? CYAN
 							: COBALT;
 				const g = ctx!.createLinearGradient(0, h, 0, h - 260 * rise);
