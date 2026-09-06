@@ -261,23 +261,147 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			emberSeed[i] = Math.random() * 1000;
 		}
 
-		// floating-bulbs: small incandescent Edison bulbs drifting, glowing warm, and dissipating
-		const BULB_N = lowTier ? 7 : 11;
+		// floating-bulbs: small incandescent Edison bulbs in the side margins (never behind text)
+		const BULB_N = lowTier ? 6 : 10;
 		const bulbBaseX = new Float32Array(BULB_N);
 		const bulbBaseY = new Float32Array(BULB_N);
 		const bulbScale = new Float32Array(BULB_N);
 		const bulbBirth = new Float32Array(BULB_N);
 		const bulbDur = new Float32Array(BULB_N);
 		const bulbSeed = new Float32Array(BULB_N);
-		for (let i = 0; i < BULB_N; i++) {
-			const dur = 7500 + Math.random() * 5500;
-			bulbBaseX[i] = 0.08 + Math.random() * 0.84;
-			bulbBaseY[i] = 0.15 + Math.random() * 0.7;
-			bulbScale[i] = 0.75 + Math.random() * 0.45;
-			bulbBirth[i] = -Math.random() * dur; // pre-staggered so some are glowing immediately
-			bulbDur[i] = dur;
-			bulbSeed[i] = Math.random() * 1000;
+		const bulbSide = new Uint8Array(BULB_N); // 0 = left gutter, 1 = right gutter
+		const bulbSurgeTime = new Float32Array(BULB_N); // timestamp when clicked to surge and burst
+		const bulbBurst = new Uint8Array(BULB_N); // 1 if popped/burst
+		const bulbPosX = new Float32Array(BULB_N);
+		const bulbPosY = new Float32Array(BULB_N);
+		const bulbActiveGlow = new Float32Array(BULB_N);
+
+		// Sparks and stardust created when bulbs burst
+		interface Spark {
+			x: number;
+			y: number;
+			vx: number;
+			vy: number;
+			size: number;
+			life: number;
+			maxLife: number;
+			color: string;
 		}
+		const sparks: Spark[] = [];
+
+		interface BurstRing {
+			x: number;
+			y: number;
+			radius: number;
+			alpha: number;
+		}
+		const burstRings: BurstRing[] = [];
+
+		const getGutterBounds = () => {
+			const contentHalfW = Math.min(w * 0.44, 460);
+			const hasWideGutters = w > 960;
+			const leftMax = hasWideGutters
+				? Math.max(50, w / 2 - contentHalfW - 35)
+				: Math.max(28, w * 0.12);
+			const rightMin = hasWideGutters
+				? Math.min(w - 50, w / 2 + contentHalfW + 35)
+				: Math.min(w - 28, w * 0.88);
+			return { leftMax, rightMin };
+		};
+
+		const resetBulb = (i: number, time: number) => {
+			const { leftMax, rightMin } = getGutterBounds();
+			const side = i % 2;
+			bulbSide[i] = side;
+
+			if (side === 0) {
+				// Left gutter
+				bulbBaseX[i] = 30 + Math.random() * Math.max(15, leftMax - 45);
+			} else {
+				// Right gutter
+				bulbBaseX[i] = rightMin + Math.random() * Math.max(15, w - rightMin - 45);
+			}
+
+			bulbBaseY[i] = 0.14 + Math.random() * 0.72;
+			bulbScale[i] = 0.75 + Math.random() * 0.4;
+			bulbDur[i] = 8000 + Math.random() * 6000;
+			bulbBirth[i] = time;
+			bulbSeed[i] = Math.random() * 1000;
+			bulbSurgeTime[i] = 0;
+			bulbBurst[i] = 0;
+		};
+
+		for (let i = 0; i < BULB_N; i++) {
+			const dur = 8000 + Math.random() * 6000;
+			resetBulb(i, -Math.random() * dur); // pre-staggered
+		}
+
+		const triggerBurst = (i: number, x: number, y: number, scale: number) => {
+			bulbBurst[i] = 1;
+			const count = lowTier ? 20 : 32;
+			for (let s = 0; s < count; s++) {
+				const angle = Math.random() * Math.PI * 2;
+				const speed = (2.2 + Math.random() * 5.5) * scale;
+				sparks.push({
+					x,
+					y,
+					vx: Math.cos(angle) * speed,
+					vy: Math.sin(angle) * speed - 1.2,
+					size: 1.2 + Math.random() * 2.2,
+					life: 0,
+					maxLife: 35 + Math.random() * 30,
+					color: Math.random() < 0.45 ? '255, 255, 255' : BULB_GOLD,
+				});
+			}
+			burstRings.push({
+				x,
+				y,
+				radius: 8 * scale,
+				alpha: 0.9,
+			});
+		};
+
+		let hoveredBulb = false;
+
+		const onPointerMove = (e: PointerEvent) => {
+			if (theme !== 'floating-bulbs') return;
+			const mx = e.clientX;
+			const my = e.clientY;
+			let found = false;
+			for (let i = 0; i < BULB_N; i++) {
+				if (bulbBurst[i] === 0 && bulbActiveGlow[i] > 0.08) {
+					const d = Math.hypot(mx - bulbPosX[i], my - bulbPosY[i]);
+					if (d < 35 * bulbScale[i]) {
+						found = true;
+						break;
+					}
+				}
+			}
+			if (found !== hoveredBulb) {
+				hoveredBulb = found;
+				document.body.style.cursor = found ? 'pointer' : '';
+			}
+		};
+
+		const onPointerDown = (e: PointerEvent) => {
+			if (theme !== 'floating-bulbs') return;
+			const mx = e.clientX;
+			const my = e.clientY;
+			const now = performance.now();
+
+			for (let i = 0; i < BULB_N; i++) {
+				if (bulbBurst[i] === 0 && bulbSurgeTime[i] === 0 && bulbActiveGlow[i] > 0.08) {
+					const d = Math.hypot(mx - bulbPosX[i], my - bulbPosY[i]);
+					if (d < 38 * bulbScale[i]) {
+						bulbSurgeTime[i] = now;
+						break;
+					}
+				}
+			}
+		};
+
+		window.addEventListener('pointermove', onPointerMove, { passive: true });
+		window.addEventListener('pointerdown', onPointerDown, { passive: true });
 
 		const drawBulb = (
 			c: CanvasRenderingContext2D,
@@ -293,11 +417,11 @@ export default function WorldBackground({ theme }: { theme: World }) {
 
 			// 1. Radial ambient warm light aura when lit
 			if (glow > 0.02) {
-				const auraRad = 52 * scale;
+				const auraRad = Math.min(130, 52 * scale * (glow > 1 ? 1.8 : 1));
 				const aura = c.createRadialGradient(bx, bulbCenterY, 0, bx, bulbCenterY, auraRad);
-				aura.addColorStop(0, `rgba(${BULB_GOLD}, ${(0.28 * glow).toFixed(3)})`);
-				aura.addColorStop(0.35, `rgba(${BULB_AMBER}, ${(0.11 * glow).toFixed(3)})`);
-				aura.addColorStop(0.75, `rgba(${BULB_AMBER}, ${(0.025 * glow).toFixed(3)})`);
+				aura.addColorStop(0, `rgba(${BULB_GOLD}, ${Math.min(1, 0.32 * glow).toFixed(3)})`);
+				aura.addColorStop(0.35, `rgba(${BULB_AMBER}, ${Math.min(1, 0.14 * glow).toFixed(3)})`);
+				aura.addColorStop(0.75, `rgba(${BULB_AMBER}, ${Math.min(1, 0.03 * glow).toFixed(3)})`);
 				aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
 				c.fillStyle = aura;
 				c.beginPath();
@@ -329,16 +453,16 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			c.closePath();
 
 			if (glow > 0.04) {
-				c.fillStyle = `rgba(${BULB_AMBER}, ${(0.07 * glow).toFixed(3)})`;
+				c.fillStyle = `rgba(${BULB_AMBER}, ${Math.min(0.6, 0.08 * glow).toFixed(3)})`;
 				c.fill();
 			}
 			c.lineWidth = 1.1;
-			c.strokeStyle = `rgba(${BULB_GLASS}, ${(0.14 + 0.32 * glow).toFixed(3)})`;
+			c.strokeStyle = `rgba(${BULB_GLASS}, ${Math.min(1, 0.14 + 0.35 * glow).toFixed(3)})`;
 			c.stroke();
 
 			// 3. Threaded metal socket base at bottom
 			const capW = neckHalfW * 2;
-			c.fillStyle = `rgba(${BULB_BASE}, ${(0.3 + 0.3 * glow).toFixed(3)})`;
+			c.fillStyle = `rgba(${BULB_BASE}, ${Math.min(1, 0.3 + 0.3 * glow).toFixed(3)})`;
 			c.fillRect(bx - neckHalfW, neckY, capW, 4.5 * scale);
 			c.strokeStyle = 'rgba(20, 20, 25, 0.4)';
 			c.lineWidth = 0.8;
@@ -349,13 +473,13 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			c.lineTo(bx + neckHalfW, neckY + 3.4 * scale);
 			c.stroke();
 			// Base contact bead
-			c.fillStyle = `rgba(70, 70, 75, ${(0.35 + 0.2 * glow).toFixed(3)})`;
+			c.fillStyle = `rgba(70, 70, 75, ${Math.min(1, 0.35 + 0.2 * glow).toFixed(3)})`;
 			c.beginPath();
 			c.arc(bx, neckY + 5.2 * scale, 1.4 * scale, 0, Math.PI);
 			c.fill();
 
 			// 4. Internal lead wires & glowing filament
-			c.strokeStyle = `rgba(180, 180, 190, ${(0.22 + 0.28 * glow).toFixed(3)})`;
+			c.strokeStyle = `rgba(180, 180, 190, ${Math.min(1, 0.22 + 0.28 * glow).toFixed(3)})`;
 			c.lineWidth = 0.75;
 			c.beginPath();
 			c.moveTo(bx - 1.5 * scale, neckY);
@@ -385,11 +509,11 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			);
 
 			if (glow > 0.04) {
-				c.strokeStyle = `rgba(${BULB_GOLD}, ${(0.88 * glow).toFixed(3)})`;
-				c.lineWidth = 1.3 * scale;
+				c.strokeStyle = `rgba(${BULB_GOLD}, ${Math.min(1, 0.88 * glow).toFixed(3)})`;
+				c.lineWidth = Math.min(3.5, 1.3 * scale * (glow > 1 ? 1.6 : 1));
 				c.stroke();
-				c.strokeStyle = `rgba(255, 255, 245, ${(0.95 * glow).toFixed(3)})`;
-				c.lineWidth = 0.7 * scale;
+				c.strokeStyle = `rgba(255, 255, 245, ${Math.min(1, 0.95 * glow).toFixed(3)})`;
+				c.lineWidth = Math.min(2.0, 0.7 * scale * (glow > 1 ? 1.4 : 1));
 				c.stroke();
 			} else {
 				c.strokeStyle = 'rgba(120, 120, 120, 0.2)';
@@ -400,7 +524,7 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			// Specular curved reflection on upper glass dome
 			c.beginPath();
 			c.arc(bx, bulbCenterY, R * 0.78, -Math.PI * 0.85, -Math.PI * 0.45);
-			c.strokeStyle = `rgba(255, 255, 255, ${(0.16 + 0.24 * glow).toFixed(3)})`;
+			c.strokeStyle = `rgba(255, 255, 255, ${Math.min(1, 0.16 + 0.24 * glow).toFixed(3)})`;
 			c.lineWidth = 1.0;
 			c.stroke();
 
@@ -1063,35 +1187,125 @@ export default function WorldBackground({ theme }: { theme: World }) {
 				ctx!.restore();
 			} else if (theme === 'floating-bulbs') {
 				// Ideas Into Living Systems:
-				// Small incandescent Edison bulbs drifting weightlessly,
-				// warming up with a radiant golden filament glow, illuminating the space,
-				// and gracefully drifting away as new ideas emerge.
+				// Small incandescent Edison bulbs floating strictly in side margins (never behind text).
+				// When clicked, they surge into a radiant white-gold glow, then burst into sparks!
+				const { leftMax, rightMin } = getGutterBounds();
+
 				for (let i = 0; i < BULB_N; i++) {
+					// Check if clicked and surging
+					if (bulbSurgeTime[i] > 0 && bulbBurst[i] === 0) {
+						const surgeElapsed = t - bulbSurgeTime[i];
+						if (surgeElapsed < 190) {
+							// SURGE: glow more! Filament turns supernova white-gold, aura expands
+							const surgeProgress = surgeElapsed / 190;
+							const superGlow = 1.0 + surgeProgress * 2.2;
+							bulbActiveGlow[i] = superGlow;
+
+							drawBulb(
+								ctx!,
+								bulbPosX[i],
+								bulbPosY[i],
+								bulbScale[i] * (1 + surgeProgress * 0.22),
+								superGlow
+							);
+							continue;
+						} else {
+							// BURST! Pop into sparks & stardust
+							triggerBurst(i, bulbPosX[i], bulbPosY[i], bulbScale[i]);
+						}
+					}
+
+					if (bulbBurst[i] === 1) {
+						// Waiting to respawn after burst
+						if (t - bulbSurgeTime[i] > 2600 && !reduce) {
+							resetBulb(i, t);
+						}
+						bulbActiveGlow[i] = 0;
+						continue;
+					}
+
 					const dur = bulbDur[i];
 					let age = (t - bulbBirth[i]) / dur;
 
 					if (age >= 1 && !reduce) {
-						bulbBirth[i] = t;
-						bulbDur[i] = 7500 + Math.random() * 5500;
-						bulbBaseX[i] = 0.08 + Math.random() * 0.84;
-						bulbBaseY[i] = 0.18 + Math.random() * 0.68;
-						bulbScale[i] = 0.75 + Math.random() * 0.45;
-						bulbSeed[i] = Math.random() * 1000;
+						resetBulb(i, t);
 						age = 0;
 					}
 
 					const p = reduce ? 0.5 : Math.max(0, Math.min(1, age));
 					const glow = reduce ? 0.75 : Math.sin(p * Math.PI);
+					bulbActiveGlow[i] = glow;
 
 					if (glow <= 0.01) continue;
 
 					const floatY = reduce ? 0 : -p * 55;
-					const swayX = reduce ? 0 : Math.sin(t * 0.0011 + bulbSeed[i]) * 15;
-					const bx = bulbBaseX[i] * w + swayX;
-					const by = bulbBaseY[i] * h + floatY;
+					const swayX = reduce ? 0 : Math.sin(t * 0.0011 + bulbSeed[i]) * 14;
 
-					drawBulb(ctx!, bx, by, bulbScale[i], glow * light);
+					// Clamp x strictly to left or right margin so it never touches text
+					let curX = bulbBaseX[i] + swayX;
+					if (bulbSide[i] === 0) {
+						curX = Math.min(leftMax, Math.max(25, curX));
+					} else {
+						curX = Math.max(rightMin, Math.min(w - 25, curX));
+					}
+					const curY = bulbBaseY[i] * h + floatY;
+
+					bulbPosX[i] = curX;
+					bulbPosY[i] = curY;
+
+					drawBulb(ctx!, curX, curY, bulbScale[i], glow * light);
 				}
+
+				// Draw and update burst sparks
+				ctx!.save();
+				ctx!.globalCompositeOperation = 'lighter';
+
+				for (let s = sparks.length - 1; s >= 0; s--) {
+					const sp = sparks[s];
+					sp.x += sp.vx;
+					sp.y += sp.vy;
+					sp.vx *= 0.94;
+					sp.vy = sp.vy * 0.94 + 0.07; // gentle gravity
+					sp.life += 1;
+
+					const alpha = Math.max(0, 1 - sp.life / sp.maxLife);
+					if (alpha <= 0.01) {
+						sparks.splice(s, 1);
+						continue;
+					}
+
+					// Spark outer glow
+					ctx!.fillStyle = `rgba(${BULB_AMBER}, ${(alpha * 0.45 * light).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(sp.x, sp.y, sp.size * 2.2, 0, Math.PI * 2);
+					ctx!.fill();
+
+					// Spark bright core
+					ctx!.fillStyle = `rgba(${sp.color}, ${(alpha * light).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
+					ctx!.fill();
+				}
+
+				// Draw and update shockwave burst rings
+				ctx!.lineWidth = 1.4;
+				for (let r = burstRings.length - 1; r >= 0; r--) {
+					const br = burstRings[r];
+					br.radius += 3.4;
+					br.alpha *= 0.92;
+
+					if (br.alpha <= 0.02) {
+						burstRings.splice(r, 1);
+						continue;
+					}
+
+					ctx!.strokeStyle = `rgba(${BULB_GOLD}, ${(br.alpha * light).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(br.x, br.y, br.radius, 0, Math.PI * 2);
+					ctx!.stroke();
+				}
+
+				ctx!.restore();
 			} else {
 				// effects — sparse particles drifting slowly upward
 				for (let i = 0; i < N; i++) {
@@ -1186,6 +1400,9 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			document.removeEventListener('visibilitychange', onVis);
 			window.removeEventListener('resize', onResize);
 			window.removeEventListener('scroll', onStaticScroll);
+			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('pointerdown', onPointerDown);
+			document.body.style.cursor = '';
 			if (staticRaf) cancelAnimationFrame(staticRaf);
 			clearTimeout(rt);
 		};
