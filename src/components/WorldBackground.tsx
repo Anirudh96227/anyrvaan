@@ -43,7 +43,9 @@ export type World =
 	| 'suspended-arc'
 	| 'enso'
 	| 'dusk-to-night'
-	| 'lightning';
+	| 'lightning'
+	| 'magnetic-nodes'
+	| 'suspended-rain';
 
 const COBALT = '96, 165, 250'; // the site's one signal blue, rgb
 const PHOSPHOR = '110, 231, 183'; // faint CRT green, retro only
@@ -51,6 +53,9 @@ const AMBER = '240, 190, 120'; // warm ember — diorama-drift only
 const MOON = '186, 205, 240'; // cool moonlight — dusk-to-night only
 const PURPLE = '168, 85, 247'; // electric purple — lightning/voltra only
 const VIOLET_LIGHT = '233, 213, 255'; // high-intensity lightning core, rgb
+const CYAN = '56, 189, 248'; // electric cyan — magnetic-nodes / ideas manifesto
+const GRAPHITE = '148, 163, 184'; // graphite slate — structural grid & coordinates
+const GLASS_SILVER = '226, 232, 240'; // pure glass silver — suspended-rain / unchosen
 
 
 export default function WorldBackground({ theme }: { theme: World }) {
@@ -232,6 +237,73 @@ export default function WorldBackground({ theme }: { theme: World }) {
 				flashY: startY + 40,
 			};
 		};
+
+		// magnetic-nodes: 7 independent design choices that drift and periodically snap into modular columns
+		const NODE_N = 7;
+		const nodeSeedX = new Float32Array(NODE_N);
+		const nodeSeedY = new Float32Array(NODE_N);
+		const nodeSpeedX = new Float32Array(NODE_N);
+		const nodeSpeedY = new Float32Array(NODE_N);
+		const nodeAmpX = new Float32Array(NODE_N);
+		const nodeAmpY = new Float32Array(NODE_N);
+		const nodeLabels = [
+			'01 // FORM',
+			'02 // TYPE',
+			'03 // COLOUR',
+			'04 // MOTION',
+			'05 // RHYTHM',
+			'06 // SYSTEM',
+			'07 // WORLD',
+		];
+		const nodeCol = [0, 1, 0, 2, 1, 0, 2];
+		const nodeRow = [0, 0, 1, 1, 2, 3, 3];
+		const nodeLinks: [number, number][] = [
+			[0, 1],
+			[0, 2],
+			[1, 4],
+			[2, 3],
+			[2, 5],
+			[3, 6],
+			[4, 6],
+		];
+		for (let i = 0; i < NODE_N; i++) {
+			nodeSeedX[i] = 0.16 + Math.random() * 0.68;
+			nodeSeedY[i] = 0.16 + Math.random() * 0.68;
+			nodeSpeedX[i] = 0.00014 + Math.random() * 0.00012;
+			nodeSpeedY[i] = 0.00017 + Math.random() * 0.00012;
+			nodeAmpX[i] = 35 + Math.random() * 45;
+			nodeAmpY[i] = 25 + Math.random() * 40;
+		}
+
+		// suspended-rain: droplets suspended in mid-air in the stopped cave chamber
+		const RAIN_N = lowTier ? 80 : 150;
+		const rainNormX = new Float32Array(RAIN_N);
+		const rainNormY = new Float32Array(RAIN_N);
+		const rainR = new Float32Array(RAIN_N);
+		const rainLen = new Float32Array(RAIN_N);
+		const rainDepth = new Float32Array(RAIN_N);
+		const rainSeed = new Float32Array(RAIN_N);
+		const rainCobalt = new Uint8Array(RAIN_N);
+		for (let i = 0; i < RAIN_N; i++) {
+			rainNormX[i] = Math.random();
+			rainNormY[i] = Math.random();
+			rainDepth[i] = 0.25 + Math.random() * 0.75;
+			rainR[i] = 0.75 + rainDepth[i] * 1.3;
+			rainLen[i] = 1.9 + Math.random() * 0.8;
+			rainSeed[i] = Math.random() * 1000;
+			rainCobalt[i] = Math.random() < 0.32 ? 1 : 0;
+		}
+
+		let targetParallaxX = 0;
+		let targetParallaxY = 0;
+		let currentParallaxX = 0;
+		let currentParallaxY = 0;
+
+		const onPointerMove = (e: PointerEvent) => {
+			targetParallaxX = (e.clientX / (w || 1) - 0.5) * 2;
+			targetParallaxY = (e.clientY / (h || 1) - 0.5) * 2;
+		};
+		window.addEventListener('pointermove', onPointerMove, { passive: true });
 
 		let scrollMax = 1;
 		const measureScroll = () => {
@@ -749,6 +821,194 @@ export default function WorldBackground({ theme }: { theme: World }) {
 						}
 					}
 				}
+			} else if (theme === 'magnetic-nodes') {
+				// Ideas Into Living Systems:
+				// Independent design choices (FORM, TYPE, COLOUR, MOTION...) floating freely,
+				// occasionally drawn into modular column alignment by system gravitation,
+				// holding as one living system, and gently releasing.
+				const CYCLE = 16000;
+				const phase = reduce ? 0.6 : (t % CYCLE) / CYCLE;
+				let snapWeight = 0;
+				if (reduce) {
+					snapWeight = 0.85;
+				} else if (phase < 0.36) {
+					snapWeight = 0;
+				} else if (phase < 0.52) {
+					const p = (phase - 0.36) / 0.16;
+					snapWeight = p * p * (3 - 2 * p);
+				} else if (phase < 0.78) {
+					snapWeight = 1;
+				} else {
+					const p = (phase - 0.78) / 0.22;
+					snapWeight = 1 - p * p * (3 - 2 * p);
+				}
+
+				// Grid coordinates
+				const colGap = Math.min(w * 0.28, 260);
+				const cols = [cx - colGap, cx, cx + colGap];
+				const rowSpacing = Math.min(h * 0.14, 95);
+				const rows = [
+					cy - rowSpacing * 1.5,
+					cy - rowSpacing * 0.5,
+					cy + rowSpacing * 0.5,
+					cy + rowSpacing * 1.5,
+				];
+
+				const posX = new Float32Array(NODE_N);
+				const posY = new Float32Array(NODE_N);
+
+				for (let i = 0; i < NODE_N; i++) {
+					const baseX = w * nodeSeedX[i];
+					const baseY = h * nodeSeedY[i];
+					const driftX = baseX + Math.sin(t * nodeSpeedX[i] + i * 2.1) * nodeAmpX[i];
+					const driftY = baseY + Math.cos(t * nodeSpeedY[i] + i * 1.7) * nodeAmpY[i];
+					const snapX = cols[nodeCol[i]];
+					const snapY = rows[nodeRow[i]];
+
+					posX[i] = driftX + (snapX - driftX) * snapWeight;
+					posY[i] = driftY + (snapY - driftY) * snapWeight;
+				}
+
+				// Modular vertical column guide lines
+				if (snapWeight > 0.03) {
+					ctx!.setLineDash([2, 5]);
+					ctx!.strokeStyle = `rgba(${GRAPHITE}, ${(0.11 * snapWeight).toFixed(3)})`;
+					ctx!.lineWidth = 1;
+					for (let c = 0; c < cols.length; c++) {
+						ctx!.beginPath();
+						ctx!.moveTo(cols[c], Math.max(0, rows[0] - 60));
+						ctx!.lineTo(cols[c], Math.min(h, rows[3] + 60));
+						ctx!.stroke();
+					}
+
+					// System relation links connecting the nodes
+					ctx!.strokeStyle = `rgba(${CYAN}, ${(0.16 * snapWeight).toFixed(3)})`;
+					for (const [a, b] of nodeLinks) {
+						ctx!.beginPath();
+						ctx!.moveTo(posX[a], posY[a]);
+						ctx!.lineTo(posX[b], posY[b]);
+						ctx!.stroke();
+					}
+					ctx!.setLineDash([]);
+
+					// Signal flow pulse during hold phase
+					if (snapWeight > 0.5 && !reduce) {
+						const pulseCycle = (t * 0.0006) % 1;
+						for (let l = 0; l < nodeLinks.length; l++) {
+							const [a, b] = nodeLinks[l];
+							const frac = (pulseCycle + l * 0.14) % 1;
+							const px = posX[a] + (posX[b] - posX[a]) * frac;
+							const py = posY[a] + (posY[b] - posY[a]) * frac;
+							ctx!.fillStyle = `rgba(${CYAN}, ${(0.55 * snapWeight).toFixed(3)})`;
+							ctx!.beginPath();
+							ctx!.arc(px, py, 1.4, 0, Math.PI * 2);
+							ctx!.fill();
+						}
+					}
+				}
+
+				// Draw individual nodes
+				for (let i = 0; i < NODE_N; i++) {
+					const x = posX[i];
+					const y = posY[i];
+
+					// Crosshair ticks
+					const tick = 3.5;
+					ctx!.strokeStyle = `rgba(${CYAN}, ${(0.32 + 0.35 * snapWeight).toFixed(3)})`;
+					ctx!.lineWidth = 1;
+					ctx!.beginPath();
+					ctx!.moveTo(x - tick, y);
+					ctx!.lineTo(x + tick, y);
+					ctx!.moveTo(x, y - tick);
+					ctx!.lineTo(x, y + tick);
+					ctx!.stroke();
+
+					// Center core
+					ctx!.fillStyle = `rgba(240, 248, 255, ${(0.65 + 0.3 * snapWeight).toFixed(3)})`;
+					ctx!.beginPath();
+					ctx!.arc(x, y, 1.5, 0, Math.PI * 2);
+					ctx!.fill();
+
+					// Gravitational halo / radius
+					const haloR = 7 + (1 - snapWeight) * 6 + Math.sin(t * 0.003 + i) * 2;
+					ctx!.strokeStyle = `rgba(${CYAN}, ${(0.07 + 0.08 * snapWeight).toFixed(3)})`;
+					ctx!.lineWidth = 1;
+					ctx!.beginPath();
+					ctx!.arc(x, y, haloR, 0, Math.PI * 2);
+					ctx!.stroke();
+
+					// Typographic label
+					ctx!.font = '9px "JetBrains Mono", ui-monospace, monospace';
+					ctx!.fillStyle = `rgba(${GRAPHITE}, ${(0.28 + 0.32 * snapWeight).toFixed(3)})`;
+					ctx!.fillText(nodeLabels[i], x + 9, y + 3);
+				}
+			} else if (theme === 'suspended-rain') {
+				// UNCHOSEN:
+				// A moment inside the Cave where time ceases: rain falling from an
+				// underground roof hangs frozen in mid-air. Tiny droplets trembling with
+				// micro-vibrations, subtly shifting in 3D parallax on mouse move.
+				if (!reduce) {
+					currentParallaxX += (targetParallaxX - currentParallaxX) * 0.06;
+					currentParallaxY += (targetParallaxY - currentParallaxY) * 0.06;
+				}
+
+				// Atmospheric subterranean cave wash in the lower depths
+				const caveWash = ctx!.createRadialGradient(
+					cx,
+					h * 0.7,
+					0,
+					cx,
+					h * 0.7,
+					Math.max(w, h) * 0.75
+				);
+				caveWash.addColorStop(0, `rgba(${COBALT}, ${(0.06 + 0.03 * worldBreath).toFixed(3)})`);
+				caveWash.addColorStop(0.6, `rgba(${COBALT}, ${(0.015 + 0.015 * worldBreath).toFixed(3)})`);
+				caveWash.addColorStop(1, 'rgba(0, 0, 0, 0)');
+				ctx!.fillStyle = caveWash;
+				ctx!.fillRect(0, 0, w, h);
+
+				// Render suspended droplets
+				for (let i = 0; i < RAIN_N; i++) {
+					const depth = rainDepth[i];
+					const s = rainSeed[i];
+
+					// Micro-vibration: sub-pixel surface tension tremble inside the stopped chamber
+					const vibX = reduce ? 0 : Math.sin(t * 0.008 + s * 7.1) * (0.3 + depth * 0.2);
+					const vibY = reduce ? 0 : Math.cos(t * 0.007 + s * 5.3) * (0.45 + depth * 0.3);
+
+					// Parallax shift from visitor's cursor
+					const px = currentParallaxX * depth * 28;
+					const py = currentParallaxY * depth * 18;
+
+					let dx = rainNormX[i] * w + vibX + px;
+					let dy = rainNormY[i] * h + vibY + py;
+
+					// Soft wrap within viewport bounds
+					if (dx < -10) dx += w + 20;
+					else if (dx > w + 10) dx -= w + 20;
+					if (dy < -10) dy += h + 20;
+					else if (dy > h + 10) dy -= h + 20;
+
+					const rx = rainR[i] * 0.75;
+					const ry = rainR[i] * rainLen[i];
+					const shimmer = reduce ? 0.85 : 0.72 + 0.28 * Math.sin(t * 0.0035 + s);
+					const alpha = (0.16 + depth * 0.38) * shimmer;
+
+					const color = rainCobalt[i] ? COBALT : GLASS_SILVER;
+
+					ctx!.beginPath();
+					ctx!.ellipse(dx, dy, rx, ry, 0, 0, Math.PI * 2);
+					ctx!.fillStyle = `rgba(${color}, ${alpha.toFixed(3)})`;
+					ctx!.fill();
+
+					// Specular glass highlight at the top tip of closer droplets
+					if (depth > 0.55) {
+						ctx!.fillStyle = `rgba(255, 255, 255, ${(0.45 * alpha).toFixed(3)})`;
+						ctx!.beginPath();
+						ctx!.arc(dx - rx * 0.2, dy - ry * 0.42, Math.max(0.4, rx * 0.35), 0, Math.PI * 2);
+						ctx!.fill();
+					}
+				}
 			} else {
 				// effects — sparse particles drifting slowly upward
 				for (let i = 0; i < N; i++) {
@@ -770,7 +1030,12 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			ctx!.globalAlpha = 1;
 			if (prog > 0.55 && theme !== 'dusk-to-night') {
 				const rise = (prog - 0.55) / 0.45;
-				const horizonColor = theme === 'lightning' ? PURPLE : COBALT;
+				const horizonColor =
+					theme === 'lightning'
+						? PURPLE
+						: theme === 'magnetic-nodes'
+							? CYAN
+							: COBALT;
 				const g = ctx!.createLinearGradient(0, h, 0, h - 260 * rise);
 				g.addColorStop(0, `rgba(${horizonColor}, ${(0.16 * rise).toFixed(3)})`);
 				g.addColorStop(1, `rgba(${horizonColor}, 0)`);
@@ -838,6 +1103,7 @@ export default function WorldBackground({ theme }: { theme: World }) {
 			document.removeEventListener('visibilitychange', onVis);
 			window.removeEventListener('resize', onResize);
 			window.removeEventListener('scroll', onStaticScroll);
+			window.removeEventListener('pointermove', onPointerMove);
 			if (staticRaf) cancelAnimationFrame(staticRaf);
 			clearTimeout(rt);
 		};
