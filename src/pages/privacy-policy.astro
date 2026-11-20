@@ -1,0 +1,157 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const lastUpdated = '21 November 2026';
+---
+
+<Layout
+  title="Privacy Policy — Kshyv X Aum Social Publishing Engine"
+  description="How Kshyv X Aum's owner-operated Pinterest publishing integration handles authorized account data, tokens, scheduling records, and requests for deletion."
+>
+  <div class="min-h-screen bg-neutral-950 text-neutral-50">
+    <Nav />
+    <main id="main-content" class="policy-page">
+      <article class="policy-content">
+        <header class="policy-header">
+          <p class="eyebrow">Kshyv X Aum / Anyrvaan Studio</p>
+          <h1>Privacy policy<span class="full-stop">.</span></h1>
+          <p class="intro">
+            A clear explanation of how the Kshyv X Aum Social Publishing Engine
+            handles Pinterest account access. It is a private tool used by the
+            account owner to schedule and publish their own devotional music and visual content.
+          </p>
+          <p class="updated">Last updated: {lastUpdated}</p>
+        </header>
+
+        <section aria-labelledby="operator">
+          <h2 id="operator">01 / Who operates the tool</h2>
+          <p>
+            The Kshyv X Aum Social Publishing Engine is operated by Anirudh Khurana
+            under the Kshyv X Aum creative identity and Anyrvaan Studio.
+            For privacy questions, contact
+            <a href="mailto:anyrvaan@gmail.com">anyrvaan@gmail.com</a>.
+            The integration is intended for the operator's own Pinterest business account,
+            not a public sign-up service or a tool offered to customers.
+          </p>
+        </section>
+
+        <section aria-labelledby="access">
+          <h2 id="access">02 / Pinterest information accessed</h2>
+          <p>
+            With the account owner's permission through Pinterest OAuth, the tool may access
+            the authorized account's username or ID, its boards and board identifiers,
+            and its own Pins and publication status. The tool needs this information
+            to choose the correct board, create Pins, and confirm publication outcomes.
+            It does not seek private information from unrelated Pinterest users.
+          </p>
+        </section>
+
+        <section aria-labelledby="purpose">
+          <h2 id="purpose">03 / How the information is used</h2>
+          <p>
+            The engine prepares and schedules approved Pins containing the owner's images,
+            videos, titles, descriptions, and destination links to music or related content.
+            The owner reviews and approves each destination before a live publish attempt.
+            It also keeps local records of scheduling, approvals, attempts, and returned Pin IDs
+            so the same item is not silently posted twice after a failed or uncertain request.
+          </p>
+          <p>
+            Pinterest account data is not sold, used for third-party advertising,
+            or used to train or fine-tune artificial-intelligence models.
+          </p>
+        </section>
+
+        <section aria-labelledby="authentication">
+          <h2 id="authentication">04 / Authorization and security</h2>
+          <p>
+            The integration uses Pinterest's official OAuth authorization process.
+            It does not ask for or store the Pinterest account password.
+            When connected, API access and refresh tokens are stored in a private,
+            owner-controlled configuration location on the operator's computer,
+            outside the public website and source repository. They are sent to Pinterest
+            only as needed to perform authorized API requests.
+          </p>
+        </section>
+
+        <section aria-labelledby="sharing">
+          <h2 id="sharing">05 / Sharing and hosting</h2>
+          <p>
+            Approved Pin content and the necessary authorization information are sent to Pinterest
+            through its API to carry out publishing. The publishing engine does not sell or
+            distribute Pinterest account data to other businesses. This public policy page
+            is hosted as part of anyrvaan.com; its hosting provider may process ordinary
+            technical web-request information to deliver and secure the page.
+          </p>
+          <p>
+            Pinterest's own handling of data is governed by its
+            <a href="https://policy.pinterest.com/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+          </p>
+        </section>
+
+        <section aria-labelledby="retention">
+          <h2 id="retention">06 / Retention and deletion</h2>
+          <p>
+            Local scheduling and publication records are kept for as long as they are needed
+            to operate the engine, audit publishing outcomes, and avoid accidental duplicate posts.
+            OAuth credentials can be removed when the connection is no longer needed.
+            For access, correction, or deletion requests relating to locally stored Pinterest
+            integration information, email
+            <a href="mailto:anyrvaan@gmail.com">anyrvaan@gmail.com</a>.
+            Existing Pins on Pinterest may remain there until deleted through Pinterest.
+          </p>
+        </section>
+
+        <section aria-labelledby="control">
+          <h2 id="control">07 / Your choices</h2>
+          <p>
+            The account owner can disconnect the app by revoking access in Pinterest's connected-app
+            settings. Revocation stops future authorized API access; locally held credentials should
+            then be removed. The engine does not publish on behalf of other accounts without
+            a separate, explicit authorization.
+          </p>
+        </section>
+
+        <section aria-labelledby="updates">
+          <h2 id="updates">08 / Updates</h2>
+          <p>
+            This policy may change if the integration's features or data-handling practices change.
+            The date above will be updated to show the latest revision.
+            Questions can be sent to
+            <a href="mailto:anyrvaan@gmail.com">anyrvaan@gmail.com</a>.
+          </p>
+        </section>
+
+        <div class="policy-footer">
+          <a href="/">Return to Anyrvaan</a>
+          <a href="https://in.pinterest.com/kshyvxaum/" target="_blank" rel="noopener noreferrer">Kshyv X Aum on Pinterest</a>
+        </div>
+      </article>
+    </main>
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  .policy-page { padding: clamp(3rem, 7vw, 7rem) 1.5rem 6rem; }
+  .policy-content { max-width: 48rem; margin: 0 auto; }
+  .policy-header { padding-bottom: clamp(3rem, 6vw, 5rem); }
+  .eyebrow { color: #a1a1aa; font-size: .73rem; text-transform: uppercase; letter-spacing: .16em; }
+  h1 { margin-top: 1.5rem; font-size: clamp(2.8rem, 8vw, 6.5rem); line-height: 1.02; letter-spacing: -.055em; font-weight: 400; }
+  .full-stop { color: #60a5fa; }
+  .intro { margin-top: 2rem; max-width: 39rem; font-size: clamp(1rem, 1.6vw, 1.2rem); line-height: 1.75; color: #d4d4d8; }
+  .updated { margin-top: 1.5rem; color: #a1a1aa; font-size: .83rem; }
+  section { display: grid; grid-template-columns: minmax(0, 12.5rem) minmax(0, 1fr); gap: 2.5rem; padding: 2.6rem 0; border-top: 1px solid #303038; }
+  h2 { color: #f4f4f5; font-size: .85rem; letter-spacing: .02em; line-height: 1.55; font-weight: 500; }
+  section p { grid-column: 2; margin: 0; font-size: .95rem; line-height: 1.85; color: #b8b8c1; }
+  section p + p { margin-top: -.65rem; }
+  a { color: #c4dcff; text-decoration: underline; text-decoration-color: #6f819e; text-underline-offset: .25em; overflow-wrap: anywhere; }
+  a:hover { color: #fff; text-decoration-color: #fff; }
+  .policy-footer { border-top: 1px solid #303038; display: flex; flex-wrap: wrap; gap: 1.5rem 2.5rem; padding-top: 2.5rem; font-size: .85rem; }
+  @media (max-width: 680px) {
+    section { display: block; padding: 2rem 0; }
+    section p { margin-top: 1rem; }
+    section p + p { margin-top: 1rem; }
+  }
+</style>
