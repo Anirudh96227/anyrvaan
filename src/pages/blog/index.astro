@@ -1,113 +1,15 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Nav from '../../components/Nav.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import Footer from '../../components/Footer.astro';
-import PostHero from '../../components/PostHero.tsx';
-
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-);
-
-const formatDate = (d: Date) =>
-	new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-// A newspaper, not a stack of identical cards: the newest post leads large,
-// the rest sit in a dense dated index below.
-//
-// Each row's face is that post's own coded hero, run in card mode — the same
-// motif that opens the post, not a separate thumbnail. Posts without a `hero`
-// simply keep the older text-only row, so the page degrades cleanly.
-const [lead, ...rest] = posts;
 ---
 
 <Layout title="Journal — Anyrvaan" description="Field notes on design, technology, and process.">
 	<div class="page-shell min-h-screen bg-neutral-950 text-neutral-50">
 		<Nav />
 		<main>
-			<PageHeader
-				eyebrow="Notes & Writing"
-				title="Journal"
-				intro="Notes on the work while it's happening — what broke, what I changed my mind about, what I had to look up."
-			/>
-
-			<!-- Lead story -->
-			{
-				lead && (
-					<section class="mx-auto max-w-5xl px-6">
-						<a href={`/blog/${lead.id}/`} class="reveal group block border-t border-white/10 pt-10">
-							{lead.data.hero && (
-								<div class="mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black">
-									<div class="transition-transform duration-700 ease-out group-hover:scale-[1.02]">
-										<PostHero client:visible variant={lead.data.hero} compact />
-									</div>
-								</div>
-							)}
-							<div class="flex flex-wrap items-center justify-between gap-2">
-								<span class="text-eyebrow uppercase text-neutral-400">
-									{lead.data.tags[0] ? capitalize(lead.data.tags[0]) : 'Journal'}
-								</span>
-								<span class="text-small tabular-nums text-neutral-500">
-									{formatDate(lead.data.date)}
-								</span>
-							</div>
-							<h2 class="mt-6 max-w-4xl text-h1 leading-[1.05] text-neutral-50 transition-colors group-hover:text-neutral-200">
-								{lead.data.title}
-							</h2>
-							<p class="mt-6 max-w-2xl text-body-lg text-neutral-400">{lead.data.description}</p>
-							<span class="mt-6 inline-flex items-center gap-2 text-small text-neutral-300 transition-colors group-hover:text-neutral-50">
-								Read
-								<span aria-hidden="true" class="transition-transform group-hover:translate-x-1">
-									&rarr;
-								</span>
-							</span>
-						</a>
-					</section>
-				)
-			}
-
-			<!-- The index — dense dated rows -->
-			<section class="mx-auto max-w-5xl px-6 pb-32 pt-16">
-				<p class="reveal text-eyebrow uppercase text-neutral-500">The Index</p>
-				<ul class="mt-6 border-t border-white/10">
-					{
-						rest.map((post) => (
-							<li class="reveal border-b border-white/5">
-								<a
-									href={`/blog/${post.id}/`}
-									class="group grid grid-cols-1 gap-x-8 gap-y-4 py-7 sm:grid-cols-[11rem_1fr_auto] sm:items-start"
-								>
-									<div>
-										{post.data.hero && (
-											<div class="mb-3 overflow-hidden rounded-lg border border-white/10 bg-black">
-												<div class="transition-transform duration-700 ease-out group-hover:scale-[1.04]">
-													<PostHero client:visible variant={post.data.hero} compact />
-												</div>
-											</div>
-										)}
-										<span class="text-small uppercase tracking-wide text-neutral-500">
-											{post.data.tags[0] ? capitalize(post.data.tags[0]) : 'Journal'}
-										</span>
-									</div>
-									<div>
-										<h3 class="text-h3 text-neutral-100 transition-colors group-hover:text-neutral-50">
-											{post.data.title}
-										</h3>
-										<p class="mt-2 max-w-2xl text-small leading-relaxed text-neutral-500">
-											{post.data.description}
-										</p>
-									</div>
-									<span class="text-small tabular-nums text-neutral-500 sm:text-right">
-										{formatDate(post.data.date)}
-									</span>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
+			<PageHeader eyebrow="Notes & Writing" title="Journal" intro="Coming soon." />
 		</main>
 		<Footer />
 	</div>
