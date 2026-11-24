@@ -1,5 +1,5 @@
 ---
-title: "NIVA — The Whole You, Connected"
+title: "NIVA"
 summary: "A 32-second concept film for an imaginary health-data brand, told in one continuous take: your health shatters into a hundred places, and a heartbeat calls every piece home."
 year: "2026"
 order: -4
@@ -13,7 +13,7 @@ facade:
     youtube: "https://youtu.be/IK5WtmpbTV8"
     poster: "/videos/niva/poster.jpg"
     posterAlt: "NIVA — glowing cells trapped in glass bell jars across a dark field"
-    caption: "NIVA — The Whole You, Connected. Concept film, one continuous take."
+    caption: "NIVA — concept film, one continuous take."
 draft: false
 ---
 
