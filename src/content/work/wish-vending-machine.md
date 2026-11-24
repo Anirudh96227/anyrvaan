@@ -9,7 +9,12 @@ tags: ["Story Films", "3D Animation", "AI Art Direction"]
 coverVideo: "/videos/wish/wish-hero"
 cover: "../../assets/work/wish.jpg"
 coverAlt: "A husky puppy flying on a picnic blanket through a sky of biscuits and sweets"
-video: "https://youtu.be/KZ6IvQZrZVQ"
+facade:
+  hero:
+    youtube: "https://youtu.be/KZ6IvQZrZVQ"
+    poster: "/videos/wish/poster.jpg"
+    posterAlt: "A glowing vending machine fires a soda can while a husky, a kitten and a corgi watch"
+    caption: "The Wish Vending Machine — the complete film."
 thesis: "They win the prize and give it away about four seconds later. Everything good in the film happens after that."
 frames:
   - src: "../../assets/work/frames/wish-01.jpg"

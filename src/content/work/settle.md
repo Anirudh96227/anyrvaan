@@ -10,7 +10,12 @@ tags: ["Product Film", "Motion Design", "Fintech"]
 coverVideo: "/videos/settle/settle-hero"
 cover: "../../assets/work/settle.jpg"
 coverAlt: "An overdue tax invoice printing itself out of a strip of green light"
-video: "https://youtu.be/6uUu4CN_tbI"
+facade:
+  hero:
+    youtube: "https://youtu.be/6uUu4CN_tbI"
+    poster: "/videos/settle/poster.jpg"
+    posterAlt: "An overdue tax invoice, 47 days overdue, with a Settle Now button nobody presses"
+    caption: "Settle — the complete film."
 thesis: "Nobody presses the button. The only thing that moves is the number of days."
 draft: false
 ---
