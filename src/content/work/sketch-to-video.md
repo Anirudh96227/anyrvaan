@@ -1,6 +1,6 @@
 ---
 title: "Sketch to Video"
-summary: "Eight graphite drawings, each one turned into a few seconds of film — the same moment made twice, once still and once moving."
+summary: "Five graphite drawings, each one turned into a few seconds of film — the same moment made twice, once still and once moving."
 year: "2026"
 order: 8
 tags: ["Motion Design", "Drawing", "AI Art Direction"]
@@ -9,7 +9,7 @@ coverFadeTo: "../../assets/work/sketch-to-video-frame.jpg"
 coverAlt: "Graphite drawing of a kneeling figure before a dancing figure in a ring of clouds"
 thesis: "The drawing decides what the shot is. The film only has to agree with it."
 studiesEyebrow: "The Pairs"
-studiesHeading: "Eight drawings, eight films."
+studiesHeading: "Five drawings, five films."
 studiesIntro: "Each card is the drawing. Press it and the film of the same scene plays."
 draft: false
 ---
@@ -18,4 +18,4 @@ Each of these started as a pencil drawing and ended as a few seconds of video. T
 
 By the time a drawing is finished, most of the decisions are already made. The film has less freedom than it looks like it has, and that's the point. What I'm watching for afterwards isn't whether the video is impressive; it's whether it agrees with the drawing.
 
-Kshyv and I made eight. He goes toward devotion and mythology, I go toward light and fire and elemental force, and we kept landing on the same kind of image anyway. None of the films resolve — each one runs a few seconds and stops right where it would have paid off. That part I did keep from the drawings, which don't resolve either. A pencil sketch is always a thing caught partway.
+Kshyv and I made these five. He goes toward devotion and mythology, I go toward light and fire and elemental force, and we kept landing on the same kind of image anyway. None of the films resolve — each one runs a few seconds and stops right where it would have paid off. That part I did keep from the drawings, which don't resolve either. A pencil sketch is always a thing caught partway.
